@@ -211,9 +211,30 @@ tr:hover td{background:#f4f6fa;}
 .quote-card p{font-size:12px;color:#666;}
 .quote-meta{display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap;}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
-<div class="app">
+
+<div id="login-screen" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,#0c1e3a 0%,#1a3a6a 100%);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:40px 48px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="font-size:36px;margin-bottom:10px;">&#x1F6E1;</div>
+      <h1 style="font-size:22px;font-weight:800;color:#0c1e3a;margin:0 0 4px;">Fortex Insurance Group</h1>
+      <p style="color:#666;font-size:14px;margin:0;">Agency Management Dashboard</p>
+    </div>
+    <div style="margin-bottom:16px;">
+      <label style="display:block;font-size:13px;font-weight:600;color:#333;margin-bottom:6px;">Email</label>
+      <input id="login-email" type="email" value="paul@fortexinsure.com" style="width:100%;padding:10px 14px;border:1.5px solid #d0d5dd;border-radius:8px;font-size:14px;box-sizing:border-box;outline:none;font-family:inherit;" onkeydown="if(event.key==='Enter')document.getElementById('login-password').focus()">
+    </div>
+    <div style="margin-bottom:8px;">
+      <label style="display:block;font-size:13px;font-weight:600;color:#333;margin-bottom:6px;">Password</label>
+      <input id="login-password" type="password" style="width:100%;padding:10px 14px;border:1.5px solid #d0d5dd;border-radius:8px;font-size:14px;box-sizing:border-box;outline:none;font-family:inherit;" onkeydown="if(event.key==='Enter')handleLogin()">
+    </div>
+    <div id="login-error" style="color:#c43a3a;font-size:13px;margin-bottom:14px;min-height:20px;"></div>
+    <button id="login-btn" onclick="handleLogin()" style="width:100%;padding:12px;background:#0c1e3a;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">Sign In</button>
+  </div>
+</div>
+<div class="app" id="app">
 <div class="sidebar">
   <div class="sidebar-logo">
     <h1>Fortex Insurance Group</h1>
@@ -246,9 +267,9 @@ tr:hover td{background:#f4f6fa;}
   <div style="margin-top:auto;padding:16px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);">
     <div id="sync-status-pill" style="font-size:11px;color:#5a7090;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
       <span id="sync-dot" style="width:7px;height:7px;border-radius:50%;background:#5a7090;flex-shrink:0;display:inline-block;"></span>
-      <span id="sync-label">Not connected to Sheets</span>
+      <span id="sync-label">Connecting...</span>
     </div>
-    <button onclick="openModal('sync-modal')" style="width:100%;padding:9px 14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#8a9bb5;font-size:13px;cursor:pointer;text-align:left;font-family:'Segoe UI',Arial,sans-serif;transition:all 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'">⚙ Google Sheets Sync</button>
+    <button onclick="logout()" style="width:100%;padding:9px 14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#8a9bb5;font-size:13px;cursor:pointer;text-align:left;font-family:'Segoe UI',Arial,sans-serif;transition:all 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'">⏏ Sign Out</button>
   </div>
 </div>
 <div class="main">
@@ -784,51 +805,28 @@ tr:hover td{background:#f4f6fa;}
   </div>
 </div>
 
-<!-- GOOGLE SHEETS SYNC MODAL -->
-<div class="modal-overlay" id="sync-modal">
-  <div class="modal">
-    <div class="modal-header"><h3>Google Sheets Sync</h3><button class="modal-close" onclick="closeModal('sync-modal')">×</button></div>
-    <div class="modal-body">
-      <div style="background:#e8edf8;border-radius:10px;padding:16px;margin-bottom:20px;">
-        <p style="font-size:14px;font-weight:700;color:#0c1e3a;margin-bottom:6px;">How this works</p>
-        <p style="font-size:13px;color:#444;line-height:1.6;">Paste your Google Apps Script Web App URL below. Every time you save anything, your data automatically backs up to your Google Sheet — accessible from any device.</p>
-      </div>
-      <div class="form-group" style="margin-bottom:16px;">
-        <label>Apps Script Web App URL</label>
-        <input id="sheets-url-input" type="text" placeholder="https://script.google.com/macros/s/.../exec" style="font-family:monospace;font-size:13px;">
-        <span style="font-size:12px;color:#888;margin-top:4px;display:block;">From Apps Script → Deploy → New deployment → Web app → Copy URL</span>
-      </div>
-      <div id="sync-indicator" style="font-size:13px;color:#666;min-height:20px;margin-bottom:16px;padding:8px 0;"></div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn btn-primary" onclick="connectSheets()" style="flex:1;">Save &amp; Connect</button>
-        <button class="btn btn-gold" onclick="pullFromSheets()">↓ Pull from Sheets</button>
-        <button class="btn" onclick="syncToSheets(false)">↑ Push to Sheets</button>
-      </div>
-      <div style="margin-top:18px;border-top:1px solid #eef0f4;padding-top:16px;">
-        <p style="font-size:13px;font-weight:700;color:#0c1e3a;margin-bottom:10px;">What syncs</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;color:#555;">
-          <div>✓ All client records</div><div>✓ Policies + commissions</div>
-          <div>✓ Follow-up tasks</div><div>✓ Quote pipeline</div>
-          <div>✓ Re-shop queue</div><div>✓ Vehicles &amp; properties</div>
-        </div>
-      </div>
-      <div style="margin-top:16px;border-top:1px solid #eef0f4;padding-top:14px;">
-        <button class="btn btn-danger btn-sm" onclick="disconnectSheets()">Disconnect Google Sheets</button>
-      </div>
-    </div>
-  </div>
-</div>
+
 
 <script>
-// ==================== DATA ====================
+// ==================== SUPABASE + DATA ====================
+const _supabase = window.supabase.createClient(
+  'https://nuatfftxifgpyjugjqsb.supabase.co',
+  'sb_publishable_lOQ00uauC67uZNImp8xPAw_cnovSP-w'
+);
 let data={clients:[],policies:[],tasks:[],reshop:[],quotes:[],vehicles:[],properties:[]};
-try{const s=localStorage.getItem('fortex_v2');if(s)data=JSON.parse(s);}catch(e){}
 if(!data.vehicles)data.vehicles=[];
 if(!data.properties)data.properties=[];
 if(!data.quotes)data.quotes=[];
 
 
-function save(){try{localStorage.setItem('fortex_v2',JSON.stringify(data));}catch(e){}}
+function save(){
+  refreshCurrentPage();
+  _supabase.from('fortex_data').upsert({id:'main',data:data}).then(()=>{
+    updateSyncStatus(true,'Saved ✓');
+  }).catch(()=>{
+    updateSyncStatus(false,'Save error');
+  });
+}
 function cn(id){const c=data.clients.find(x=>x.id===id);return c?c.first+' '+c.last:'Unknown';}
 function du(ds){if(!ds)return 9999;const t=new Date();t.setHours(0,0,0,0);const d=new Date(ds);d.setHours(0,0,0,0);return Math.round((d-t)/86400000);}
 function rb(days){if(days<=30)return`<span class="badge badge-red">${days}d</span>`;if(days<=60)return`<span class="badge badge-amber">${days}d</span>`;return`<span class="badge badge-green">${days}d</span>`;}
@@ -1786,134 +1784,70 @@ function closeDriverModal(){
 }
 
 // ==================== GOOGLE SHEETS SYNC ====================
-let sheetsUrl = '';
-try { sheetsUrl = localStorage.getItem('fortex_sheets_url') || ''; } catch(e) {}
-
 function updateSyncStatus(connected, msg) {
   const dot = document.getElementById('sync-dot');
   const label = document.getElementById('sync-label');
   if (!dot || !label) return;
   if (connected) {
     dot.style.background = '#2a7a4a';
-    label.textContent = msg || 'Synced to Google Sheets';
+    label.textContent = msg || 'Cloud connected';
     label.style.color = '#4a9a6a';
   } else {
-    dot.style.background = '#5a7090';
-    label.textContent = msg || 'Not connected to Sheets';
-    label.style.color = '#5a7090';
+    dot.style.background = '#c43a3a';
+    label.textContent = msg || 'Connection error';
+    label.style.color = '#c43a3a';
   }
 }
 
-async function syncToSheets(silent) {
-  if (!sheetsUrl) return;
-  if (!silent) {
-    updateSyncStatus(false, 'Syncing...');
-    document.getElementById('sync-indicator').textContent = 'Syncing...';
-    document.getElementById('sync-indicator').style.color = '#b07010';
-  }
-  try {
-    const resp = await fetch(sheetsUrl, {
-      method: 'POST',
-      body: JSON.stringify(data),
-      headers: { 'Content-Type': 'text/plain' }
-    });
-    const result = await resp.json();
-    if (result.success) {
-      updateSyncStatus(true, 'Synced ' + new Date().toLocaleTimeString());
-      if (!silent) {
-        document.getElementById('sync-indicator').textContent = '✓ Synced to Google Sheets!';
-        document.getElementById('sync-indicator').style.color = '#2a7a4a';
-      }
-    } else {
-      throw new Error('Sync failed');
-    }
-  } catch(err) {
-    updateSyncStatus(false, 'Sync error — check URL');
-    if (!silent) {
-      document.getElementById('sync-indicator').textContent = '✗ Could not reach Google Sheets. Check your URL.';
-      document.getElementById('sync-indicator').style.color = '#c43a3a';
-    }
-  }
+async function logout() {
+  await _supabase.auth.signOut();
+  location.reload();
 }
 
-async function loadFromSheets() {
-  if (!sheetsUrl) return false;
-  try {
-    updateSyncStatus(false, 'Loading from Sheets...');
-    const resp = await fetch(sheetsUrl + '?t=' + Date.now());
-    const remote = await resp.json();
-    if (remote && Array.isArray(remote.clients)) {
-      data = remote;
-      if (!data.vehicles)   data.vehicles   = [];
-      if (!data.properties) data.properties = [];
-      if (!data.quotes)     data.quotes     = [];
-      if (!data.reshop)     data.reshop     = [];
-      if (!data.tasks)      data.tasks      = [];
-      if (!data.policies)   data.policies   = [];
-      localStorage.setItem('fortex_v2', JSON.stringify(data));
-      updateSyncStatus(true, 'Loaded from Sheets');
-      return true;
-    }
-  } catch(e) {
-    updateSyncStatus(false, 'Could not load from Sheets');
-  }
-  return false;
-}
-
-const _origSave = save;
-save = function() {
-  _origSave();
-  refreshCurrentPage();
-  if (sheetsUrl) syncToSheets(true);
-};
-
-async function connectSheets() {
-  const url = document.getElementById('sheets-url-input').value.trim();
-  if (!url || !url.includes('script.google.com')) {
-    document.getElementById('sync-indicator').textContent = '✗ That doesn\'t look like a valid Apps Script URL. Make sure it ends in /exec';
-    document.getElementById('sync-indicator').style.color = '#c43a3a';
+async function handleLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+  errEl.textContent = '';
+  btn.textContent = 'Signing in...';
+  btn.disabled = true;
+  const { error } = await _supabase.auth.signInWithPassword({ email, password });
+  if (error) {
+    errEl.textContent = 'Incorrect email or password. Please try again.';
+    btn.textContent = 'Sign In';
+    btn.disabled = false;
     return;
   }
-  sheetsUrl = url;
-  localStorage.setItem('fortex_sheets_url', url);
-  document.getElementById('sync-indicator').textContent = 'Connecting...';
-  document.getElementById('sync-indicator').style.color = '#b07010';
-  await syncToSheets(false);
+  location.reload();
 }
 
-function disconnectSheets() {
-  sheetsUrl = '';
-  localStorage.removeItem('fortex_sheets_url');
-  updateSyncStatus(false, 'Disconnected');
-  document.getElementById('sheets-url-input').value = '';
-  document.getElementById('sync-indicator').textContent = 'Disconnected from Google Sheets.';
-  document.getElementById('sync-indicator').style.color = '#666';
-}
-
-async function pullFromSheets() {
-  document.getElementById('sync-indicator').textContent = 'Pulling latest data from Google Sheets...';
-  document.getElementById('sync-indicator').style.color = '#b07010';
-  const ok = await loadFromSheets();
-  if (ok) {
-    renderDashboard();
-    document.getElementById('sync-indicator').textContent = '✓ Data pulled from Google Sheets!';
-    document.getElementById('sync-indicator').style.color = '#2a7a4a';
-  } else {
-    document.getElementById('sync-indicator').textContent = '✗ Could not pull data — check your connection.';
-    document.getElementById('sync-indicator').style.color = '#c43a3a';
+async function init() {
+  const { data: { session } } = await _supabase.auth.getSession();
+  if (!session) {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    return;
   }
+  // Logged in — load data from Supabase
+  const { data: rows, error } = await _supabase
+    .from('fortex_data')
+    .select('data')
+    .eq('id', 'main')
+    .single();
+  if (!error && rows && rows.data) {
+    data = rows.data;
+    if (!data.vehicles)   data.vehicles   = [];
+    if (!data.properties) data.properties = [];
+    if (!data.quotes)     data.quotes     = [];
+    if (!data.reshop)     data.reshop     = [];
+    if (!data.tasks)      data.tasks      = [];
+    if (!data.policies)   data.policies   = [];
+  }
+  updateSyncStatus(true, 'Cloud connected');
+  renderDashboard();
 }
 
-// ==================== INIT ====================
-(function init() {
-  const inp = document.getElementById('sheets-url-input');
-  if (inp) inp.value = sheetsUrl;
-  loadFromSheets().then(ok => {
-    if (ok) renderDashboard();
-  });
-})();
-
-renderDashboard();
+init();
 </script>
 </body>
-</html>
