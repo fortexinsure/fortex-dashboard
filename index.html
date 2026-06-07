@@ -1,0 +1,1919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fortex Insurance Group Dashboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#eef0f4;color:#1a1a1a;min-height:100vh;font-size:15px;}
+.app{display:grid;grid-template-columns:260px 1fr;min-height:100vh;}
+.sidebar{background:#0c1e3a;color:#e8edf5;display:flex;flex-direction:column;min-height:100vh;}
+.sidebar-logo{padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.sidebar-logo h1{font-size:17px;font-weight:700;color:#f0c060;line-height:1.3;}
+.sidebar-logo p{font-size:12px;color:#8a9bb5;margin-top:4px;}
+.nav-section{padding:14px 0;}
+.nav-label{font-size:10px;color:#4a6080;letter-spacing:1.2px;text-transform:uppercase;padding:0 20px 8px;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 20px;cursor:pointer;font-size:14px;color:#8a9bb5;transition:all 0.15s;border-left:3px solid transparent;}
+.nav-item:hover{background:rgba(255,255,255,0.05);color:#e8edf5;}
+.nav-item.active{background:rgba(240,192,96,0.12);color:#f0c060;border-left-color:#f0c060;}
+.nav-icon{width:18px;text-align:center;font-size:15px;}
+.main{display:flex;flex-direction:column;min-height:100vh;overflow:hidden;}
+.page{display:none;flex-direction:column;height:100vh;}
+.page.active{display:flex;}
+.page-header{padding:20px 32px 16px;border-bottom:1px solid #d8dbe3;background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;}
+.page-header-left h2{font-size:22px;font-weight:700;color:#0c1e3a;}
+.page-header-left p{font-size:13px;color:#666;margin-top:2px;}
+.page-body{padding:24px 32px;overflow-y:auto;flex:1;}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:24px;}
+.metric-card{background:#fff;border-radius:10px;padding:20px 22px;border:1px solid #d8dbe3;}
+.metric-label{font-size:12px;color:#888;text-transform:uppercase;letter-spacing:0.6px;font-weight:600;}
+.metric-value{font-size:30px;font-weight:700;margin-top:6px;line-height:1;color:#0c1e3a;}
+.metric-sub{font-size:12px;color:#888;margin-top:6px;}
+.metric-urgent .metric-value{color:#c43a3a;}
+.metric-warn .metric-value{color:#b07010;}
+.metric-gold .metric-value{color:#8a6200;}
+.section-card{background:#fff;border:1px solid #d8dbe3;border-radius:12px;margin-bottom:18px;overflow:hidden;}
+.section-card-header{padding:14px 20px;border-bottom:1px solid #d8dbe3;display:flex;align-items:center;justify-content:space-between;}
+.section-card-header h3{font-size:15px;font-weight:700;color:#0c1e3a;}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th{padding:11px 16px;text-align:left;font-size:12px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.4px;border-bottom:1px solid #d8dbe3;background:#f8f9fb;}
+td{padding:12px 16px;border-bottom:1px solid #eef0f4;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#f4f6fa;}
+.row-link{cursor:pointer;}
+.row-link:hover td{background:#eef3fb;}
+.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600;}
+.badge-red{background:#fde8e8;color:#9b2c2c;}
+.badge-amber{background:#fef3e0;color:#8a4f10;}
+.badge-green{background:#e6f5ec;color:#1a6b3a;}
+.badge-blue{background:#e6f0fb;color:#1a4a8a;}
+.badge-gray{background:#eef0f4;color:#555;}
+.badge-navy{background:#e8edf8;color:#0c1e3a;}
+.badge-gold{background:#fdf3d0;color:#7a5500;}
+.badge-purple{background:#f0eaff;color:#5a2d9a;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#1a1a1a;font-size:14px;cursor:pointer;transition:all 0.15s;font-family:'Segoe UI',Arial,sans-serif;}
+.btn:hover{background:#eef0f4;}
+.btn:disabled{opacity:0.5;cursor:not-allowed;}
+.btn-primary{background:#0c1e3a;color:#f0c060;border-color:#0c1e3a;}
+.btn-primary:hover{background:#163050;}
+.btn-sm{padding:5px 12px;font-size:12px;}
+.btn-danger{color:#c43a3a;border-color:#e0b0b0;}
+.btn-danger:hover{background:#fde8e8;}
+.btn-gold{background:#f0c060;color:#0c1e3a;border-color:#d4a830;font-weight:600;}
+.btn-gold:hover{background:#e8b44a;}
+.btn-green{background:#2a7a4a;color:#fff;border-color:#2a7a4a;}
+.btn-green:hover{background:#1e6038;}
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:18px;flex-wrap:wrap;}
+.toolbar input,.toolbar select{padding:9px 14px;border:1px solid #ccc;border-radius:8px;font-size:14px;background:#fff;color:#1a1a1a;outline:none;font-family:'Segoe UI',Arial,sans-serif;}
+.toolbar input:focus,.toolbar select:focus{border-color:#0c1e3a;}
+.toolbar input{flex:1;max-width:340px;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:400;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:14px;border:1px solid #d8dbe3;width:600px;max-width:96vw;max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.18);}
+.modal-lg{width:720px;}
+.modal-header{padding:18px 24px;border-bottom:1px solid #d8dbe3;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:1;}
+.modal-header h3{font-size:17px;font-weight:700;color:#0c1e3a;}
+.modal-close{cursor:pointer;font-size:22px;color:#888;background:none;border:none;line-height:1;}
+.modal-close:hover{color:#c43a3a;}
+.modal-body{padding:24px;}
+.modal-footer{padding:16px 24px;border-top:1px solid #d8dbe3;display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:0;background:#fff;}
+.form-section{margin-bottom:22px;}
+.form-section-title{font-size:13px;font-weight:700;color:#0c1e3a;text-transform:uppercase;letter-spacing:0.6px;padding-bottom:8px;border-bottom:2px solid #f0c060;margin-bottom:14px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.form-row.cols3{grid-template-columns:1fr 1fr 1fr;}
+.form-row.cols4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.form-row.single{grid-template-columns:1fr;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group label{font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.4px;}
+.form-group input,.form-group select,.form-group textarea{padding:9px 12px;border:1px solid #ccc;border-radius:8px;font-size:14px;background:#fff;color:#1a1a1a;font-family:'Segoe UI',Arial,sans-serif;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:#0c1e3a;outline:none;}
+.form-group textarea{resize:vertical;min-height:70px;}
+
+/* PROFILE PANEL */
+.profile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:300;}
+.profile-overlay.open{display:block;}
+.profile-panel{position:fixed;top:0;right:0;width:820px;max-width:96vw;height:100vh;background:#fff;box-shadow:-4px 0 40px rgba(0,0,0,0.18);display:flex;flex-direction:column;z-index:301;transform:translateX(100%);transition:transform 0.25s ease;}
+.profile-panel.open{transform:translateX(0);}
+.profile-header{padding:20px 28px;border-bottom:1px solid #d8dbe3;display:flex;align-items:center;gap:16px;background:#0c1e3a;flex-shrink:0;}
+.profile-avatar{width:52px;height:52px;border-radius:50%;background:#f0c060;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#0c1e3a;flex-shrink:0;}
+.profile-header-info h2{font-size:20px;font-weight:700;color:#fff;}
+.profile-header-info p{font-size:13px;color:#8a9bb5;margin-top:2px;}
+.profile-close{margin-left:auto;background:none;border:none;color:#8a9bb5;font-size:26px;cursor:pointer;padding:4px;}
+.profile-close:hover{color:#fff;}
+.profile-tabs{display:flex;border-bottom:1px solid #d8dbe3;background:#f8f9fb;flex-shrink:0;overflow-x:auto;}
+.profile-tab{padding:12px 20px;cursor:pointer;font-size:14px;font-weight:600;color:#888;border-bottom:3px solid transparent;transition:all 0.15s;white-space:nowrap;}
+.profile-tab.active{color:#0c1e3a;border-bottom-color:#f0c060;background:#fff;}
+.profile-body{padding:24px 28px;overflow-y:auto;flex:1;}
+.profile-tab-content{display:none;}
+.profile-tab-content.active{display:block;}
+.detail-section{margin-bottom:28px;}
+.detail-section-title{font-size:11px;font-weight:700;color:#0c1e3a;text-transform:uppercase;letter-spacing:0.8px;padding-bottom:10px;border-bottom:2px solid #f0c060;margin-bottom:0;}
+
+/* Grid container — border wraps around the whole block, radius on bottom corners */
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #e0e4ed;border-top:none;border-radius:0 0 8px 8px;overflow:hidden;background:#fff;}
+.detail-grid.cols3{grid-template-columns:1fr 1fr 1fr;}
+
+/* Every cell: equal padding + top border for row separation */
+.detail-field{padding:13px 16px;border-top:1px solid #e0e4ed;min-height:54px;box-sizing:border-box;}
+
+/* Column dividers — right border on all but the last column */
+.detail-grid:not(.cols3) .detail-field:nth-child(odd){border-right:1px solid #e0e4ed;}
+.detail-grid.cols3 .detail-field:nth-child(3n+1),
+.detail-grid.cols3 .detail-field:nth-child(3n+2){border-right:1px solid #e0e4ed;}
+
+/* Alternating row tint for readability */
+.detail-grid:not(.cols3) .detail-field:nth-child(4n+1),
+.detail-grid:not(.cols3) .detail-field:nth-child(4n+2){background:#f9fafb;}
+.detail-grid.cols3 .detail-field:nth-child(6n+1),
+.detail-grid.cols3 .detail-field:nth-child(6n+2),
+.detail-grid.cols3 .detail-field:nth-child(6n+3){background:#f9fafb;}
+
+.detail-field label{display:block;font-size:10px;font-weight:700;color:#8a9bb5;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:5px;}
+.detail-field .val{font-size:14px;color:#1a1a1a;font-weight:500;line-height:1.35;}
+.detail-field .val.empty{color:#c4cad4;font-style:italic;font-weight:400;font-size:13px;}
+.detail-field input,.detail-field select,.detail-field textarea{width:100%;padding:7px 10px;border:1px solid #c4cdd8;border-radius:6px;font-size:14px;background:#f8fafd;color:#1a1a1a;font-family:'Segoe UI',Arial,sans-serif;box-sizing:border-box;}
+.detail-field input:focus,.detail-field select:focus,.detail-field textarea:focus{border-color:#0c1e3a;outline:none;background:#fff;}
+.profile-actions{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.notes-entry{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
+.notes-entry textarea{width:100%;padding:10px 12px;border:1px solid #ccc;border-radius:8px;font-size:14px;resize:vertical;min-height:70px;font-family:'Segoe UI',Arial,sans-serif;}
+.note-item{background:#f8f9fb;border:1px solid #eef0f4;border-radius:8px;padding:12px 16px;margin-bottom:8px;}
+.note-item .note-date{font-size:11px;color:#999;margin-bottom:5px;font-weight:600;}
+.note-item .note-text{font-size:14px;color:#1a1a1a;line-height:1.5;}
+.policy-mini-card{background:#f8f9fb;border:1px solid #d8dbe3;border-radius:10px;padding:14px 18px;margin-bottom:10px;}
+.policy-mini-top{display:flex;justify-content:space-between;align-items:flex-start;}
+.policy-mini-left h4{font-size:15px;font-weight:700;color:#0c1e3a;}
+.policy-mini-left p{font-size:13px;color:#666;margin-top:3px;}
+.policy-mini-right{text-align:right;}
+.policy-mini-right .premium{font-size:18px;font-weight:700;color:#0c1e3a;}
+.policy-mini-right .commission{font-size:12px;color:#2a7a4a;font-weight:600;margin-top:2px;}
+.policy-mini-right .renewal{font-size:12px;color:#888;margin-top:2px;}
+.vehicle-card{background:#f8f9fb;border:1px solid #d8dbe3;border-radius:10px;padding:14px 18px;margin-bottom:10px;}
+.vehicle-card h4{font-size:15px;font-weight:700;color:#0c1e3a;margin-bottom:6px;}
+.vehicle-card .vrow{display:flex;gap:24px;flex-wrap:wrap;}
+.vehicle-card .vfield{display:flex;flex-direction:column;gap:2px;}
+.vehicle-card .vfield span:first-child{font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:0.4px;}
+.vehicle-card .vfield span:last-child{font-size:13px;color:#1a1a1a;}
+
+/* PIPELINE */
+.pipeline{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;}
+.pipeline-col{background:#eef0f4;border-radius:12px;padding:14px;}
+.pipeline-col-header{font-size:13px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;}
+.task-card{background:#fff;border:1px solid #d8dbe3;border-radius:10px;padding:12px 16px;margin-bottom:10px;}
+.task-card h4{font-size:14px;font-weight:700;color:#0c1e3a;margin-bottom:4px;}
+.task-card p{font-size:13px;color:#666;}
+.task-meta{display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap;}
+
+/* RENEWAL ROWS */
+.renewal-row-urgent td:first-child{border-left:4px solid #c43a3a;}
+.renewal-row-soon td:first-child{border-left:4px solid #b07010;}
+.renewal-row-ok td:first-child{border-left:4px solid #2a7a4a;}
+
+/* MISC */
+.empty-state{text-align:center;padding:48px;color:#999;font-size:14px;}
+.tabs{display:flex;border-bottom:1px solid #d8dbe3;margin-bottom:18px;}
+.tab{padding:10px 20px;cursor:pointer;font-size:14px;font-weight:600;color:#888;border-bottom:3px solid transparent;transition:all 0.15s;}
+.tab.active{color:#0c1e3a;border-bottom-color:#0c1e3a;}
+.stat-row{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+.mini-stat{background:#fff;border:1px solid #d8dbe3;border-radius:10px;padding:12px 18px;font-size:13px;}
+.mini-stat strong{display:block;font-size:20px;font-weight:700;color:#0c1e3a;}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.dash-row{padding:11px 18px;border-bottom:1px solid #eef0f4;font-size:14px;display:flex;justify-content:space-between;align-items:center;}
+.dash-row:last-child{border-bottom:none;}
+
+/* DIGEST MODAL */
+.digest-preview{background:#f8f9fb;border:1px solid #d8dbe3;border-radius:8px;padding:16px;font-size:13px;line-height:1.7;max-height:360px;overflow-y:auto;white-space:pre-wrap;font-family:'Segoe UI',Arial,sans-serif;}
+.digest-status{padding:10px 14px;border-radius:8px;font-size:13px;margin-top:12px;display:none;}
+.digest-status.success{background:#e6f5ec;color:#1a6b3a;border:1px solid #b0d8b8;display:block;}
+.digest-status.error{background:#fde8e8;color:#9b2c2c;border:1px solid #f0b8b8;display:block;}
+.digest-status.loading{background:#eef3fb;color:#1a4a8a;border:1px solid #b0c8f0;display:block;}
+
+/* COMMISSION SUMMARY */
+.comm-table{width:100%;border-collapse:collapse;font-size:14px;}
+.comm-table th{padding:10px 14px;text-align:left;font-size:12px;font-weight:700;color:#666;text-transform:uppercase;border-bottom:1px solid #d8dbe3;background:#f8f9fb;}
+.comm-table td{padding:10px 14px;border-bottom:1px solid #eef0f4;}
+.comm-table tr:last-child td{border-bottom:none;font-weight:700;background:#f8f9fb;}
+
+/* WIDE MODAL */
+.modal-xl{width:900px;}
+
+/* CO-APPLICANT TOGGLE */
+.coapp-toggle{width:100%;text-align:left;background:#f4f7fb;border:1px dashed #b0bdd0;border-radius:8px;padding:10px 16px;color:#0c1e3a;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all 0.15s;font-family:'Segoe UI',Arial,sans-serif;margin-top:2px;}
+.coapp-toggle:hover{background:#e8edf8;border-color:#0c1e3a;}
+.coapp-section{margin-top:16px;padding-top:16px;border-top:2px dashed #f0c060;}
+
+/* QUOTE PIPELINE */
+.quote-board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;}
+.quote-col{background:#eef0f4;border-radius:12px;padding:12px;}
+.quote-col-header{font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+.quote-card{background:#fff;border:1px solid #d8dbe3;border-radius:8px;padding:10px 14px;margin-bottom:8px;}
+.quote-card h4{font-size:13px;font-weight:700;color:#0c1e3a;margin-bottom:3px;}
+.quote-card p{font-size:12px;color:#666;}
+.quote-meta{display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap;}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <h1>Fortex Insurance Group</h1>
+    <p>Agency Management Dashboard</p>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Overview</div>
+    <div class="nav-item active" onclick="nav('dashboard',this)"><span class="nav-icon">◈</span>Dashboard</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Management</div>
+    <div class="nav-item" onclick="nav('clients',this)"><span class="nav-icon">◉</span>Clients</div>
+    <div class="nav-item" onclick="nav('policies',this)"><span class="nav-icon">◧</span>Policies</div>
+    <div class="nav-item" onclick="nav('renewals',this)"><span class="nav-icon">◷</span>Renewals</div>
+    <div class="nav-item" onclick="nav('reshop',this)"><span class="nav-icon">↺</span>Re-Shop Queue</div>
+    <div class="nav-item" onclick="nav('quotes',this)"><span class="nav-icon">◎</span>Quote Pipeline</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Pipeline</div>
+    <div class="nav-item" onclick="nav('followups',this)"><span class="nav-icon">◌</span>Follow-Ups</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Financials</div>
+    <div class="nav-item" onclick="nav('commissions',this)"><span class="nav-icon">$</span>Commissions</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Reports</div>
+    <div class="nav-item" onclick="nav('reports',this)"><span class="nav-icon">◫</span>Reports &amp; Export</div>
+  </div>
+  <div style="margin-top:auto;padding:16px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);">
+    <div id="sync-status-pill" style="font-size:11px;color:#5a7090;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+      <span id="sync-dot" style="width:7px;height:7px;border-radius:50%;background:#5a7090;flex-shrink:0;display:inline-block;"></span>
+      <span id="sync-label">Not connected to Sheets</span>
+    </div>
+    <button onclick="openModal('sync-modal')" style="width:100%;padding:9px 14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#8a9bb5;font-size:13px;cursor:pointer;text-align:left;font-family:'Segoe UI',Arial,sans-serif;transition:all 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'">⚙ Google Sheets Sync</button>
+  </div>
+</div>
+<div class="main">
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h2>Fortex Insurance Group Dashboard</h2>
+      <p id="dash-date">Loading...</p>
+    </div>
+    <button class="btn btn-green" onclick="openDigestModal()" style="gap:8px;">
+      ✉ Send Daily Digest to Gmail
+    </button>
+  </div>
+  <div class="page-body">
+    <div class="metrics" id="dash-metrics"></div>
+    <div class="dash-grid">
+      <div class="section-card"><div class="section-card-header"><h3>🔴 Urgent Renewals (≤30 days)</h3></div><div id="dash-urgent-list"></div></div>
+      <div class="section-card"><div class="section-card-header"><h3>📋 Open Follow-Up Tasks</h3></div><div id="dash-tasks-list"></div></div>
+    </div>
+    <div class="dash-grid" style="margin-top:18px;">
+      <div class="section-card"><div class="section-card-header"><h3>🟡 Renewals 31–60 Days Out</h3></div><div id="dash-soon-list"></div></div>
+      <div class="section-card"><div class="section-card-header"><h3>💰 Commission This Month</h3></div><div id="dash-comm-list"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- CLIENTS -->
+<div class="page" id="page-clients">
+  <div class="page-header"><div class="page-header-left"><h2>Clients</h2><p>Click any row to open full profile</p></div><button class="btn btn-primary" onclick="openModal('client-modal')">+ Add Client</button></div>
+  <div class="page-body">
+    <div class="toolbar">
+      <input type="text" id="client-search" placeholder="Search by name, phone, email..." oninput="renderClients()">
+      <select id="client-filter-tag" onchange="renderClients()"><option value="">All Clients</option><option>Personal Lines</option><option>Commercial</option><option>VIP</option><option>Prospect</option><option>Inactive</option><option>Do Not Renew</option></select>
+    </div>
+    <div class="section-card"><table><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>City</th><th>Policies</th><th>Added</th><th></th></tr></thead><tbody id="clients-tbody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- POLICIES -->
+<div class="page" id="page-policies">
+  <div class="page-header"><div class="page-header-left"><h2>Policies</h2><p>All active policies — including commission rates</p></div><button class="btn btn-primary" onclick="openModal('policy-modal')">+ Add Policy</button></div>
+  <div class="page-body">
+    <div class="toolbar">
+      <input type="text" id="policy-search" placeholder="Search client or policy #..." oninput="renderPolicies()">
+      <select id="policy-filter-type" onchange="renderPolicies()"><option value="">All Types</option><option>Personal Auto</option><option>Home/Property</option><option>Commercial</option><option>Life/Health</option><option>Other</option></select>
+      <select id="policy-filter-status" onchange="renderPolicies()"><option value="">All Statuses</option><option>Active</option><option>Pending Cancellation</option><option>Cancelled</option><option>Non-Renewed</option><option>Lapsed</option></select>
+      <select id="policy-filter-carrier" onchange="renderPolicies()"><option value="">All Carriers</option></select>
+    </div>
+    <div class="section-card"><table><thead><tr><th>Client</th><th>Type</th><th>Carrier</th><th>Policy #</th><th>Premium</th><th>NB% / Ren%</th><th>Commission</th><th>Renewal</th><th>Status</th><th></th></tr></thead><tbody id="policies-tbody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- RENEWALS -->
+<div class="page" id="page-renewals">
+  <div class="page-header"><div class="page-header-left"><h2>Renewal Reminders</h2><p>Upcoming renewals sorted by urgency</p></div></div>
+  <div class="page-body">
+    <div class="tabs"><div class="tab active" onclick="switchRenewalTab(30,this)">Urgent (≤30 days)</div><div class="tab" onclick="switchRenewalTab(60,this)">Soon (31–60 days)</div><div class="tab" onclick="switchRenewalTab(90,this)">Upcoming (61–90 days)</div><div class="tab" onclick="switchRenewalTab(999,this)">All Active</div></div>
+    <div class="section-card"><table><thead><tr><th>Client</th><th>Type</th><th>Carrier</th><th>Renewal Date</th><th>Days Left</th><th>Premium</th><th>Commission</th><th>Action</th></tr></thead><tbody id="renewals-tbody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- RE-SHOP -->
+<div class="page" id="page-reshop">
+  <div class="page-header"><div class="page-header-left"><h2>Re-Shop Queue</h2><p>Policies flagged for remarketing</p></div><button class="btn btn-primary" onclick="openModal('reshop-modal')">+ Add to Queue</button></div>
+  <div class="page-body">
+    <div class="section-card"><table><thead><tr><th>Client</th><th>Policy Type</th><th>Carrier</th><th>Current Premium</th><th>Reason</th><th>Due Date</th><th>Status</th><th></th></tr></thead><tbody id="reshop-tbody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- QUOTE PIPELINE -->
+<div class="page" id="page-quotes">
+  <div class="page-header"><div class="page-header-left"><h2>Quote Pipeline</h2><p>Track every prospect from first call to close</p></div><button class="btn btn-primary" onclick="openModal('quote-modal')">+ New Quote</button></div>
+  <div class="page-body">
+    <div class="stat-row" id="quote-stats"></div>
+    <div class="quote-board" id="quote-board"></div>
+  </div>
+</div>
+
+<!-- FOLLOW-UPS -->
+<div class="page" id="page-followups">
+  <div class="page-header"><div class="page-header-left"><h2>Follow-Up Pipeline</h2><p>Track every lead, callback, and pending action</p></div><button class="btn btn-primary" onclick="openModal('task-modal')">+ Add Task</button></div>
+  <div class="page-body"><div class="pipeline" id="pipeline-board"></div></div>
+</div>
+
+<!-- COMMISSIONS -->
+<div class="page" id="page-commissions">
+  <div class="page-header"><div class="page-header-left"><h2>Commission Tracking</h2><p>Earnings by policy, carrier, and time period</p></div></div>
+  <div class="page-body">
+    <div class="metrics" id="comm-metrics"></div>
+    <div class="dash-grid">
+      <div class="section-card">
+        <div class="section-card-header"><h3>Commission by Carrier</h3></div>
+        <div style="padding:4px 0;" id="comm-by-carrier"></div>
+      </div>
+      <div class="section-card">
+        <div class="section-card-header"><h3>Commission by Line of Business</h3></div>
+        <div style="padding:4px 0;" id="comm-by-lob"></div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-card-header"><h3>All Policies — Commission Detail</h3></div>
+      <table class="comm-table"><thead><tr><th>Client</th><th>Type</th><th>Carrier</th><th>Annual Premium</th><th>NB Comm %</th><th>Ren Comm %</th><th>Annual Commission</th><th>Monthly Est.</th></tr></thead>
+      <tbody id="comm-detail-tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- REPORTS -->
+<div class="page" id="page-reports">
+  <div class="page-header"><div class="page-header-left"><h2>Reports &amp; Export</h2><p>Download data compatible with EZLynx</p></div></div>
+  <div class="page-body">
+    <div class="stat-row" id="report-stats"></div>
+    <div class="section-card" style="margin-bottom:18px;">
+      <div class="section-card-header"><h3>EZLynx-Compatible CSV Exports</h3></div>
+      <div style="padding:18px;display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #eef0f4;"><div><strong>Client List</strong><p style="font-size:13px;color:#666;margin-top:2px;">All clients with full contact and demographic info</p></div><button class="btn btn-sm" onclick="exportCSV('clients')">Export CSV</button></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #eef0f4;"><div><strong>Policy Register</strong><p style="font-size:13px;color:#666;margin-top:2px;">All policies with carrier, premium, commission, dates</p></div><button class="btn btn-sm" onclick="exportCSV('policies')">Export CSV</button></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #eef0f4;"><div><strong>Renewal Report</strong><p style="font-size:13px;color:#666;margin-top:2px;">90-day renewal window by urgency</p></div><button class="btn btn-sm" onclick="exportCSV('renewals')">Export CSV</button></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #eef0f4;"><div><strong>Commission Report</strong><p style="font-size:13px;color:#666;margin-top:2px;">All commissions by carrier and line</p></div><button class="btn btn-sm" onclick="exportCSV('commissions')">Export CSV</button></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;"><div><strong>Re-Shop Queue</strong><p style="font-size:13px;color:#666;margin-top:2px;">Policies flagged for remarketing</p></div><button class="btn btn-sm" onclick="exportCSV('reshop')">Export CSV</button></div>
+      </div>
+    </div>
+    <div class="section-card"><div class="section-card-header"><h3>Import from EZLynx CSV</h3></div><div style="padding:18px;"><p style="font-size:14px;color:#666;margin-bottom:14px;">Export a client or policy CSV from EZLynx and drop it here to sync your data.</p><input type="file" accept=".csv" onchange="importCSV(event)" style="font-size:14px;"></div></div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- =================== CLIENT PROFILE PANEL =================== -->
+<div class="profile-overlay" id="profile-overlay" onclick="closeProfile()"></div>
+<div class="profile-panel" id="profile-panel">
+  <div class="profile-header">
+    <div class="profile-avatar" id="prof-avatar">??</div>
+    <div class="profile-header-info"><h2 id="prof-name">—</h2><p id="prof-sub">—</p></div>
+    <button class="profile-close" onclick="closeProfile()">×</button>
+  </div>
+  <div class="profile-tabs">
+    <div class="profile-tab active" onclick="switchProfileTab('details',this)">Details</div>
+    <div class="profile-tab" onclick="switchProfileTab('policies',this)">Policies</div>
+    <div class="profile-tab" onclick="switchProfileTab('vehicles',this)">Vehicles</div>
+    <div class="profile-tab" onclick="switchProfileTab('property',this)">Properties</div>
+    <div class="profile-tab" onclick="switchProfileTab('notes',this)">Notes</div>
+    <div class="profile-tab" onclick="switchProfileTab('driver',this)">Driver / ID</div>
+  </div>
+  <div class="profile-body">
+
+    <!-- DETAILS -->
+    <div class="profile-tab-content active" id="ptab-details">
+      <div class="profile-actions">
+        <button class="btn btn-gold" id="prof-edit-btn" onclick="toggleProfileEdit()">Edit Profile</button>
+        <button class="btn btn-primary" id="prof-save-btn" onclick="saveProfileEdits()" style="display:none;">Save Changes</button>
+        <button class="btn" id="prof-cancel-btn" onclick="cancelProfileEdit()" style="display:none;">Cancel</button>
+      </div>
+      <div class="detail-section"><div class="detail-section-title">Personal Information</div>
+        <div class="detail-grid cols3">
+          <div class="detail-field"><label>First Name</label><div class="val empty" id="df-first">—</div></div>
+          <div class="detail-field"><label>Middle Name</label><div class="val empty" id="df-middle">—</div></div>
+          <div class="detail-field"><label>Last Name</label><div class="val empty" id="df-last">—</div></div>
+          <div class="detail-field"><label>Suffix</label><div class="val empty" id="df-suffix">—</div></div>
+          <div class="detail-field"><label>Date of Birth</label><div class="val empty" id="df-dob">—</div></div>
+          <div class="detail-field"><label>Gender</label><div class="val empty" id="df-gender">—</div></div>
+          <div class="detail-field"><label>Marital Status</label><div class="val empty" id="df-marital">—</div></div>
+          <div class="detail-field"><label>Occupation</label><div class="val empty" id="df-occupation">—</div></div>
+          <div class="detail-field"><label>SSN (Last 4)</label><div class="val empty" id="df-ssn">—</div></div>
+        </div>
+      </div>
+      <div class="detail-section"><div class="detail-section-title">Contact Information</div>
+        <div class="detail-grid cols3">
+          <div class="detail-field"><label>Cell Phone</label><div class="val empty" id="df-phone-cell">—</div></div>
+          <div class="detail-field"><label>Home Phone</label><div class="val empty" id="df-phone-home">—</div></div>
+          <div class="detail-field"><label>Work Phone</label><div class="val empty" id="df-phone-work">—</div></div>
+          <div class="detail-field"><label>Primary Email</label><div class="val empty" id="df-email1">—</div></div>
+          <div class="detail-field"><label>Secondary Email</label><div class="val empty" id="df-email2">—</div></div>
+          <div class="detail-field"><label>Preferred Contact</label><div class="val empty" id="df-pref-contact">—</div></div>
+          <div class="detail-field"><label>Best Time to Call</label><div class="val empty" id="df-best-time">—</div></div>
+          <div class="detail-field"><label>Fax</label><div class="val empty" id="df-fax">—</div></div>
+          <div class="detail-field"><label>Do Not Contact</label><div class="val" id="df-dnc">No</div></div>
+        </div>
+      </div>
+      <div class="detail-section"><div class="detail-section-title">Physical Address</div>
+        <div class="detail-grid">
+          <div class="detail-field"><label>Street Address</label><div class="val empty" id="df-addr1">—</div></div>
+          <div class="detail-field"><label>Address Line 2</label><div class="val empty" id="df-addr2">—</div></div>
+          <div class="detail-field"><label>City</label><div class="val empty" id="df-city">—</div></div>
+          <div class="detail-field"><label>State</label><div class="val empty" id="df-state">—</div></div>
+          <div class="detail-field"><label>ZIP Code</label><div class="val empty" id="df-zip">—</div></div>
+          <div class="detail-field"><label>County</label><div class="val empty" id="df-county">—</div></div>
+        </div>
+      </div>
+      <div class="detail-section"><div class="detail-section-title">Mailing Address (if different)</div>
+        <div class="detail-grid">
+          <div class="detail-field"><label>Street Address</label><div class="val empty" id="df-mail-addr1">Same as above</div></div>
+          <div class="detail-field"><label>Address Line 2</label><div class="val empty" id="df-mail-addr2">—</div></div>
+          <div class="detail-field"><label>City</label><div class="val empty" id="df-mail-city">—</div></div>
+          <div class="detail-field"><label>State</label><div class="val empty" id="df-mail-state">—</div></div>
+          <div class="detail-field"><label>ZIP Code</label><div class="val empty" id="df-mail-zip">—</div></div>
+          <div class="detail-field"><label>County</label><div class="val empty" id="df-mail-county">—</div></div>
+        </div>
+      </div>
+      <div class="detail-section"><div class="detail-section-title">Business / Agency Info</div>
+        <div class="detail-grid">
+          <div class="detail-field"><label>Business Name</label><div class="val empty" id="df-biz-name">—</div></div>
+          <div class="detail-field"><label>Business Type</label><div class="val empty" id="df-biz-type">—</div></div>
+          <div class="detail-field"><label>FEIN / Tax ID</label><div class="val empty" id="df-fein">—</div></div>
+          <div class="detail-field"><label>Lead Source</label><div class="val empty" id="df-lead-source">—</div></div>
+          <div class="detail-field"><label>Agent / Producer</label><div class="val empty" id="df-agent">—</div></div>
+          <div class="detail-field"><label>Client Tag</label><div class="val empty" id="df-tag">—</div></div>
+        </div>
+      </div>
+
+      <!-- CO-APPLICANT (hidden until data present or edit mode) -->
+      <div class="detail-section" id="coa-detail-section" style="display:none;">
+        <div class="detail-section-title" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Co-Applicant / Spouse</span>
+          <button class="btn btn-sm" id="coa-edit-btn" onclick="toggleCoApplicantEdit()">Edit Co-Applicant</button>
+          <button class="btn btn-sm btn-primary" id="coa-save-btn" onclick="saveCoApplicantEdits()" style="display:none;">Save</button>
+          <button class="btn btn-sm" id="coa-cancel-btn" onclick="cancelCoApplicantEdit()" style="display:none;">Cancel</button>
+        </div>
+        <div class="detail-grid cols3" style="margin-top:10px;">
+          <div class="detail-field"><label>First Name</label><div class="val empty" id="df-coa-first">—</div></div>
+          <div class="detail-field"><label>Last Name</label><div class="val empty" id="df-coa-last">—</div></div>
+          <div class="detail-field"><label>Relationship</label><div class="val empty" id="df-coa-rel">—</div></div>
+          <div class="detail-field"><label>Date of Birth</label><div class="val empty" id="df-coa-dob">—</div></div>
+          <div class="detail-field"><label>Gender</label><div class="val empty" id="df-coa-gender">—</div></div>
+          <div class="detail-field"><label>Cell Phone</label><div class="val empty" id="df-coa-phone">—</div></div>
+          <div class="detail-field"><label>Email</label><div class="val empty" id="df-coa-email">—</div></div>
+          <div class="detail-field"><label>DL Number</label><div class="val empty" id="df-coa-dl-num">—</div></div>
+          <div class="detail-field"><label>DL State</label><div class="val empty" id="df-coa-dl-state">—</div></div>
+          <div class="detail-field"><label>DL Expiry</label><div class="val empty" id="df-coa-dl-exp">—</div></div>
+          <div class="detail-field"><label>DL Class</label><div class="val empty" id="df-coa-dl-class">—</div></div>
+          <div class="detail-field"><label>SR-22 Required</label><div class="val" id="df-coa-sr22">No</div></div>
+        </div>
+      </div>
+      <!-- ADD CO-APPLICANT button (shown when no co-applicant exists in edit mode) -->
+      <div id="coa-add-section" style="display:none;margin-top:4px;">
+        <button class="coapp-toggle" onclick="showCoApplicantAddInProfile()">
+          <span>➕</span> Add Co-Applicant / Spouse
+        </button>
+      </div>
+
+    </div>
+
+    <!-- POLICIES TAB -->
+    <div class="profile-tab-content" id="ptab-policies">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+        <button class="btn btn-primary" onclick="openPolicyModalForClient()">+ Add Policy</button>
+      </div>
+      <div id="prof-policies-list"></div>
+    </div>
+
+    <!-- VEHICLES TAB -->
+    <div class="profile-tab-content" id="ptab-vehicles">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+        <button class="btn btn-primary" onclick="openModal('vehicle-modal')">+ Add Vehicle</button>
+      </div>
+      <div id="prof-vehicles-list"></div>
+    </div>
+
+    <!-- PROPERTIES TAB -->
+    <div class="profile-tab-content" id="ptab-property">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+        <button class="btn btn-primary" onclick="openModal('property-modal')">+ Add Property</button>
+      </div>
+      <div id="prof-properties-list"></div>
+    </div>
+
+    <!-- NOTES TAB -->
+    <div class="profile-tab-content" id="ptab-notes">
+      <div class="notes-entry">
+        <textarea id="new-note-text" placeholder="Add a note, activity log, callback result, or reminder..."></textarea>
+        <div style="display:flex;justify-content:flex-end;"><button class="btn btn-primary" onclick="addNote()">Add Note</button></div>
+      </div>
+      <div id="prof-notes-list"></div>
+    </div>
+
+    <!-- DRIVER TAB -->
+    <div class="profile-tab-content" id="ptab-driver">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+        <button class="btn btn-primary" onclick="openAddDriverModal()">+ Add Driver</button>
+      </div>
+      <div id="prof-drivers-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- =================== MODALS =================== -->
+
+<!-- DIGEST MODAL -->
+<div class="modal-overlay" id="digest-modal">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h3>Daily Digest — Send to Gmail</h3><button class="modal-close" onclick="closeModal('digest-modal')">×</button></div>
+    <div class="modal-body">
+      <div class="form-row single" style="margin-bottom:14px;">
+        <div class="form-group"><label>Send To (your email)</label><input id="digest-email" type="email" placeholder="your@email.com"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;"><label>Preview</label></div>
+      <div class="digest-preview" id="digest-preview"></div>
+      <div class="digest-status" id="digest-status"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="copyDigest()">Copy to Clipboard</button>
+      <button class="btn" onclick="closeModal('digest-modal')">Cancel</button>
+      <button class="btn btn-green" id="send-digest-btn" onclick="sendDigest()">✉ Send via Gmail</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CLIENT -->
+<div class="modal-overlay" id="client-modal">
+  <div class="modal modal-xl">
+    <div class="modal-header"><h3>Add New Client</h3><button class="modal-close" onclick="closeModal('client-modal')">×</button></div>
+    <div class="modal-body">
+
+      <div class="form-section"><div class="form-section-title">Personal Information</div>
+        <div class="form-row cols3">
+          <div class="form-group"><label>First Name *</label><input id="cf-first" type="text"></div>
+          <div class="form-group"><label>Middle Name</label><input id="cf-middle" type="text"></div>
+          <div class="form-group"><label>Last Name *</label><input id="cf-last" type="text"></div>
+        </div>
+        <div class="form-row cols3">
+          <div class="form-group"><label>Date of Birth</label><input id="cf-dob" type="date"></div>
+          <div class="form-group"><label>Gender</label><select id="cf-gender"><option value="">—</option><option>Male</option><option>Female</option><option>Non-binary</option><option>Prefer not to say</option></select></div>
+          <div class="form-group"><label>Marital Status</label><select id="cf-marital"><option value="">—</option><option>Single</option><option>Married</option><option>Divorced</option><option>Widowed</option><option>Separated</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Occupation</label><input id="cf-occupation" type="text"></div>
+          <div class="form-group"><label>SSN (Last 4 digits)</label><input id="cf-ssn" type="text" maxlength="4" placeholder="####"></div>
+        </div>
+      </div>
+
+      <div class="form-section"><div class="form-section-title">Contact Information</div>
+        <div class="form-row cols3">
+          <div class="form-group"><label>Cell Phone</label><input id="cf-phone-cell" type="tel" placeholder="(xxx) xxx-xxxx"></div>
+          <div class="form-group"><label>Home Phone</label><input id="cf-phone-home" type="tel" placeholder="(xxx) xxx-xxxx"></div>
+          <div class="form-group"><label>Work Phone</label><input id="cf-phone-work" type="tel" placeholder="(xxx) xxx-xxxx"></div>
+        </div>
+        <div class="form-row cols3">
+          <div class="form-group"><label>Primary Email</label><input id="cf-email1" type="email"></div>
+          <div class="form-group"><label>Secondary Email</label><input id="cf-email2" type="email"></div>
+          <div class="form-group"><label>Preferred Contact</label><select id="cf-pref-contact"><option value="">—</option><option>Cell Phone</option><option>Home Phone</option><option>Email</option><option>Text</option></select></div>
+        </div>
+      </div>
+
+      <div class="form-section"><div class="form-section-title">Address</div>
+        <div class="form-row">
+          <div class="form-group"><label>Street Address</label><input id="cf-addr1" type="text"></div>
+          <div class="form-group"><label>Address Line 2 (Apt, Suite, etc.)</label><input id="cf-addr2" type="text"></div>
+        </div>
+        <div class="form-row cols3">
+          <div class="form-group"><label>City</label><input id="cf-city" type="text"></div>
+          <div class="form-group"><label>State</label><input id="cf-state" type="text" maxlength="2" placeholder="TX"></div>
+          <div class="form-group"><label>ZIP Code</label><input id="cf-zip" type="text" placeholder="75000"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>County</label><input id="cf-county" type="text"></div>
+          <div class="form-group"><label>Lead Source</label><select id="cf-lead-source"><option value="">—</option><option>Referral</option><option>Walk-in</option><option>Online</option><option>Social Media</option><option>EZLynx Import</option><option>Other</option></select></div>
+        </div>
+      </div>
+
+      <div class="form-section"><div class="form-section-title">Agency</div>
+        <div class="form-row cols3">
+          <div class="form-group"><label>Client Tag</label><select id="cf-tag"><option value="">—</option><option>Personal Lines</option><option>Commercial</option><option>VIP</option><option>Prospect</option><option>Inactive</option><option>Do Not Renew</option></select></div>
+          <div class="form-group"><label>Agent / Producer</label><input id="cf-agent" type="text"></div>
+          <div class="form-group"><label>Do Not Contact</label><select id="cf-dnc"><option>No</option><option>Yes</option></select></div>
+        </div>
+        <div class="form-row single"><div class="form-group"><label>Initial Notes</label><textarea id="cf-notes" style="min-height:60px;"></textarea></div></div>
+      </div>
+
+      <!-- CO-APPLICANT SECTION -->
+      <div class="form-section" style="margin-bottom:0;">
+        <button type="button" class="coapp-toggle" id="coapp-btn" onclick="toggleCoApplicant()">
+          <span id="coapp-icon">➕</span> Add Co-Applicant / Spouse (Optional)
+        </button>
+        <div class="coapp-section" id="coapp-section" style="display:none;">
+          <div class="form-section-title" style="margin-bottom:14px;">Co-Applicant Information</div>
+          <div class="form-row cols3">
+            <div class="form-group"><label>First Name</label><input id="coa-first" type="text"></div>
+            <div class="form-group"><label>Last Name</label><input id="coa-last" type="text"></div>
+            <div class="form-group"><label>Relationship</label><select id="coa-rel"><option value="">—</option><option>Spouse</option><option>Domestic Partner</option><option>Parent</option><option>Child</option><option>Sibling</option><option>Other</option></select></div>
+          </div>
+          <div class="form-row cols3">
+            <div class="form-group"><label>Date of Birth</label><input id="coa-dob" type="date"></div>
+            <div class="form-group"><label>Gender</label><select id="coa-gender"><option value="">—</option><option>Male</option><option>Female</option><option>Non-binary</option></select></div>
+            <div class="form-group"><label>Cell Phone</label><input id="coa-phone" type="tel" placeholder="(xxx) xxx-xxxx"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Email</label><input id="coa-email" type="email"></div>
+            <div class="form-group"><label>SSN (Last 4)</label><input id="coa-ssn" type="text" maxlength="4" placeholder="####"></div>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:#0c1e3a;text-transform:uppercase;letter-spacing:0.5px;margin:10px 0 10px;">Driver's License</div>
+          <div class="form-row cols3">
+            <div class="form-group"><label>DL Number</label><input id="coa-dl-num" type="text"></div>
+            <div class="form-group"><label>State</label><input id="coa-dl-state" type="text" maxlength="2" placeholder="TX"></div>
+            <div class="form-group"><label>Expiration Date</label><input id="coa-dl-exp" type="date"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>DL Class</label><select id="coa-dl-class"><option value="">—</option><option>A</option><option>B</option><option>C</option><option>Commercial</option><option>Motorcycle</option></select></div>
+            <div class="form-group"><label>SR-22 Required</label><select id="coa-sr22"><option>No</option><option>Yes</option></select></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('client-modal')">Cancel</button><button class="btn btn-primary" onclick="saveClient()">Save Client</button></div>
+  </div>
+</div>
+
+<!-- ADD POLICY -->
+<div class="modal-overlay" id="policy-modal">
+  <div class="modal">
+    <div class="modal-header"><h3>Add Policy</h3><button class="modal-close" onclick="closeModal('policy-modal')">×</button></div>
+    <div class="modal-body">
+      <div class="form-row single"><div class="form-group"><label>Client *</label><select id="pf-client"></select></div></div>
+      <div class="form-row"><div class="form-group"><label>Policy Type</label><select id="pf-type"><option>Personal Auto</option><option>Home/Property</option><option>Commercial</option><option>Life/Health</option><option>Other</option></select></div><div class="form-group"><label>Carrier *</label><input id="pf-carrier" type="text"></div></div>
+      <div class="form-row"><div class="form-group"><label>Policy Number</label><input id="pf-number" type="text"></div><div class="form-group"><label>Annual Premium ($) *</label><input id="pf-premium" type="number"></div></div>
+      <div class="form-row"><div class="form-group"><label>New Business Comm Rate (%)</label><input id="pf-comm-rate" type="number" step="0.1" placeholder="e.g. 15"></div><div class="form-group"><label>Renewal Comm Rate (%)</label><input id="pf-comm-rate-renewal" type="number" step="0.1" placeholder="e.g. 12"></div></div>
+      <div class="form-row"><div class="form-group"><label>Commission Type</label><select id="pf-comm-type"><option>New Business</option><option>Renewal</option><option>Both</option></select></div><div class="form-group"><label>Policy Status</label><select id="pf-status"><option value="Active">Active</option><option value="Pending Cancellation">Pending Cancellation</option><option value="Cancelled">Cancelled</option><option value="Non-Renewed">Non-Renewed</option><option value="Lapsed">Lapsed</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label>Effective Date</label><input id="pf-effective" type="date"></div><div class="form-group"><label>Renewal Date *</label><input id="pf-renewal" type="date"></div></div>
+      <div class="form-row single"><div class="form-group"><label>Notes</label><textarea id="pf-notes"></textarea></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('policy-modal')">Cancel</button><button class="btn btn-primary" onclick="savePolicy()">Save Policy</button></div>
+  </div>
+</div>
+
+<!-- ADD VEHICLE -->
+<div class="modal-overlay" id="vehicle-modal">
+  <div class="modal">
+    <div class="modal-header"><h3>Add Vehicle</h3><button class="modal-close" onclick="closeModal('vehicle-modal')">×</button></div>
+    <div class="modal-body">
+      <div class="form-row cols3"><div class="form-group"><label>Year *</label><input id="vf-year" type="text" placeholder="2022"></div><div class="form-group"><label>Make *</label><input id="vf-make" type="text" placeholder="Toyota"></div><div class="form-group"><label>Model *</label><input id="vf-model" type="text" placeholder="Camry"></div></div>
+      <div class="form-row"><div class="form-group"><label>VIN</label><input id="vf-vin" type="text" placeholder="17-character VIN"></div><div class="form-group"><label>Body Type</label><select id="vf-body"><option>Sedan</option><option>SUV / Crossover</option><option>Truck</option><option>Van / Minivan</option><option>Coupe</option><option>Convertible</option><option>Motorcycle</option><option>Commercial</option><option>Other</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label>Use Type</label><select id="vf-use"><option>Personal / Pleasure</option><option>Commute</option><option>Business</option><option>Farm / Ranch</option><option>Commercial</option></select></div><div class="form-group"><label>Annual Mileage</label><input id="vf-miles" type="number" placeholder="12000"></div></div>
+      <div class="form-row"><div class="form-group"><label>Garaging ZIP Code</label><input id="vf-garage-zip" type="text"></div><div class="form-group"><label>Ownership</label><select id="vf-ownership"><option>Owned</option><option>Financed / Leased</option><option>Company Owned</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label>Lienholder / Bank</label><input id="vf-lien" type="text"></div><div class="form-group"><label>Linked Policy #</label><input id="vf-policy" type="text" placeholder="Optional"></div></div>
+      <div class="form-row single"><div class="form-group"><label>Notes</label><textarea id="vf-notes"></textarea></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('vehicle-modal')">Cancel</button><button class="btn btn-primary" onclick="saveVehicle()">Save Vehicle</button></div>
+  </div>
+</div>
+
+<!-- ADD PROPERTY -->
+<div class="modal-overlay" id="property-modal">
+  <div class="modal">
+    <div class="modal-header"><h3>Add Property</h3><button class="modal-close" onclick="closeModal('property-modal')">×</button></div>
+    <div class="modal-body">
+      <div class="form-row single"><div class="form-group"><label>Property Address *</label><input id="propf-addr" type="text"></div></div>
+      <div class="form-row cols3"><div class="form-group"><label>City</label><input id="propf-city" type="text"></div><div class="form-group"><label>State</label><input id="propf-state" type="text" maxlength="2"></div><div class="form-group"><label>ZIP</label><input id="propf-zip" type="text"></div></div>
+      <div class="form-row"><div class="form-group"><label>Property Type</label><select id="propf-type"><option>Single Family Home</option><option>Condo / Townhome</option><option>Mobile Home</option><option>Rental Property</option><option>Commercial Building</option><option>Vacant Land</option><option>Other</option></select></div><div class="form-group"><label>Year Built</label><input id="propf-year" type="text" placeholder="1998"></div></div>
+      <div class="form-row"><div class="form-group"><label>Square Footage</label><input id="propf-sqft" type="number"></div><div class="form-group"><label>Construction Type</label><select id="propf-construction"><option>Frame</option><option>Masonry / Brick</option><option>Log</option><option>Metal</option><option>Other</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label>Roof Type</label><select id="propf-roof"><option>Shingle</option><option>Metal</option><option>Tile</option><option>Flat</option><option>Other</option></select></div><div class="form-group"><label>Roof Year</label><input id="propf-roof-year" type="text" placeholder="2018"></div></div>
+      <div class="form-row"><div class="form-group"><label>Occupancy</label><select id="propf-occupancy"><option>Owner Occupied</option><option>Tenant Occupied</option><option>Vacant</option><option>Secondary / Seasonal</option></select></div><div class="form-group"><label>Estimated Replacement Value ($)</label><input id="propf-value" type="number"></div></div>
+      <div class="form-row"><div class="form-group"><label>Mortgage Company</label><input id="propf-mortgage" type="text"></div><div class="form-group"><label>Linked Policy #</label><input id="propf-policy" type="text" placeholder="Optional"></div></div>
+      <div class="form-row single"><div class="form-group"><label>Notes</label><textarea id="propf-notes"></textarea></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('property-modal')">Cancel</button><button class="btn btn-primary" onclick="saveProperty()">Save Property</button></div>
+  </div>
+</div>
+
+<!-- ADD TASK -->
+<div class="modal-overlay" id="task-modal">
+  <div class="modal">
+    <div class="modal-header"><h3>Add Follow-Up Task</h3><button class="modal-close" onclick="closeModal('task-modal')">×</button></div>
+    <div class="modal-body">
+      <div class="form-row single"><div class="form-group"><label>Task Title *</label><input id="tf-title" type="text"></div></div>
+      <div class="form-row"><div class="form-group"><label>Client (optional)</label><select id="tf-client"><option value="">None</option></select></div><div class="form-group"><label>Category</label><select id="tf-cat"><option>Callback</option><option>Quote</option><option>Renewal</option><option>New Business</option><option>Claims</option><option>Other</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label>Due Date</label><input id="tf-due" type="date"></div><div class="form-group"><label>Priority</label><select id="tf-priority"><option>High</option><option>Medium</option><option>Low</option></select></div></div>
+      <div class="form-row single"><div class="form-group"><label>Notes</label><textarea id="tf-notes"></textarea></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('task-modal')">Cancel</button><button class="btn btn-primary" onclick="saveTask()">Save Task</button></div>
+  </div>
+</div>
+
+<!-- ADD RE-SHOP -->
+<div class="modal-overlay" id="reshop-modal">
+  <div class="modal">
+    <div class="modal-header"><h3>Add to Re-Shop Queue</h3><button class="modal-close" onclick="closeModal('reshop-modal')">×</button></div>
+    <div class="modal-body">
+      <div class="form-row single"><div class="form-group"><label>Client *</label><select id="rf-client"></select></div></div>
+      <div class="form-row"><div class="form-group"><label>Policy Type</label><select id="rf-type"><option>Personal Auto</option><option>Home/Property</option><option>Commercial</option><option>Life/Health</option><option>Other</option></select></div><div class="form-group"><label>Current Carrier</label><input id="rf-carrier" type="text"></div></div>
+      <div class="form-row"><div class="form-group"><label>Current Premium ($)</label><input id="rf-premium" type="number"></div><div class="form-group"><label>Due Date</label><input id="rf-due" type="date"></div></div>
+      <div class="form-row single"><div class="form-group"><label>Reason for Re-Shop</label><select id="rf-reason"><option>Rate Increase</option><option>Client Request</option><option>Annual Review</option><option>Coverage Gap</option><option>Competitive Quote</option><option>Other</option></select></div></div>
+      <div class="form-row single"><div class="form-group"><label>Notes</label><textarea id="rf-notes"></textarea></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('reshop-modal')">Cancel</button><button class="btn btn-primary" onclick="saveReshop()">Save</button></div>
+  </div>
+</div>
+
+<!-- ADD QUOTE -->
+<div class="modal-overlay" id="quote-modal">
+  <div class="modal">
+    <div class="modal-header"><h3>New Quote / Prospect</h3><button class="modal-close" onclick="closeModal('quote-modal')">×</button></div>
+    <div class="modal-body">
+      <div class="form-row"><div class="form-group"><label>Prospect Name *</label><input id="qf-name" type="text"></div><div class="form-group"><label>Phone</label><input id="qf-phone" type="tel"></div></div>
+      <div class="form-row"><div class="form-group"><label>Email</label><input id="qf-email" type="email"></div><div class="form-group"><label>Line of Business</label><select id="qf-lob"><option>Personal Auto</option><option>Home/Property</option><option>Commercial</option><option>Life/Health</option><option>Bundle (Auto+Home)</option><option>Other</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label>Estimated Premium ($)</label><input id="qf-premium" type="number"></div><div class="form-group"><label>Source</label><select id="qf-source"><option>Referral</option><option>Walk-in</option><option>Online</option><option>Social Media</option><option>Cold Call</option><option>Other</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label>Follow-Up Date</label><input id="qf-due" type="date"></div><div class="form-group"><label>Priority</label><select id="qf-priority"><option>High</option><option>Medium</option><option>Low</option></select></div></div>
+      <div class="form-row single"><div class="form-group"><label>Notes</label><textarea id="qf-notes"></textarea></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('quote-modal')">Cancel</button><button class="btn btn-primary" onclick="saveQuote()">Save Quote</button></div>
+  </div>
+</div>
+
+<!-- ADD/EDIT DRIVER -->
+<div class="modal-overlay" id="driver-modal">
+  <div class="modal">
+    <div class="modal-header"><h3 id="driver-modal-title">Add Driver</h3><button class="modal-close" onclick="closeDriverModal()">×</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>First Name *</label><input id="drf-first" type="text"></div>
+        <div class="form-group"><label>Last Name *</label><input id="drf-last" type="text"></div>
+      </div>
+      <div class="form-row cols3">
+        <div class="form-group"><label>Date of Birth</label><input id="drf-dob" type="date"></div>
+        <div class="form-group"><label>Gender</label><select id="drf-gender"><option value="">—</option><option>Male</option><option>Female</option><option>Non-binary</option></select></div>
+        <div class="form-group"><label>Relationship to Insured</label><select id="drf-rel"><option value="">—</option><option>Spouse</option><option>Child</option><option>Parent</option><option>Sibling</option><option>Other</option></select></div>
+      </div>
+      <div class="form-row cols3">
+        <div class="form-group"><label>DL Number</label><input id="drf-dl-num" type="text"></div>
+        <div class="form-group"><label>DL State</label><input id="drf-dl-state" type="text" maxlength="2" placeholder="TX"></div>
+        <div class="form-group"><label>Expiration Date</label><input id="drf-dl-exp" type="date"></div>
+      </div>
+      <div class="form-row cols3">
+        <div class="form-group"><label>DL Class</label><select id="drf-dl-class"><option value="">—</option><option>A</option><option>B</option><option>C</option><option>Commercial</option><option>Motorcycle</option></select></div>
+        <div class="form-group"><label>SR-22 Required</label><select id="drf-sr22"><option>No</option><option>Yes</option></select></div>
+        <div class="form-group"><label>Years Licensed</label><input id="drf-yrs-lic" type="text" placeholder="e.g. 10"></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeDriverModal()">Cancel</button><button class="btn btn-primary" onclick="saveDriver()">Save Driver</button></div>
+  </div>
+</div>
+
+<!-- GOOGLE SHEETS SYNC MODAL -->
+<div class="modal-overlay" id="sync-modal">
+  <div class="modal">
+    <div class="modal-header"><h3>Google Sheets Sync</h3><button class="modal-close" onclick="closeModal('sync-modal')">×</button></div>
+    <div class="modal-body">
+      <div style="background:#e8edf8;border-radius:10px;padding:16px;margin-bottom:20px;">
+        <p style="font-size:14px;font-weight:700;color:#0c1e3a;margin-bottom:6px;">How this works</p>
+        <p style="font-size:13px;color:#444;line-height:1.6;">Paste your Google Apps Script Web App URL below. Every time you save anything, your data automatically backs up to your Google Sheet — accessible from any device.</p>
+      </div>
+      <div class="form-group" style="margin-bottom:16px;">
+        <label>Apps Script Web App URL</label>
+        <input id="sheets-url-input" type="text" placeholder="https://script.google.com/macros/s/.../exec" style="font-family:monospace;font-size:13px;">
+        <span style="font-size:12px;color:#888;margin-top:4px;display:block;">From Apps Script → Deploy → New deployment → Web app → Copy URL</span>
+      </div>
+      <div id="sync-indicator" style="font-size:13px;color:#666;min-height:20px;margin-bottom:16px;padding:8px 0;"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="connectSheets()" style="flex:1;">Save &amp; Connect</button>
+        <button class="btn btn-gold" onclick="pullFromSheets()">↓ Pull from Sheets</button>
+        <button class="btn" onclick="syncToSheets(false)">↑ Push to Sheets</button>
+      </div>
+      <div style="margin-top:18px;border-top:1px solid #eef0f4;padding-top:16px;">
+        <p style="font-size:13px;font-weight:700;color:#0c1e3a;margin-bottom:10px;">What syncs</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;color:#555;">
+          <div>✓ All client records</div><div>✓ Policies + commissions</div>
+          <div>✓ Follow-up tasks</div><div>✓ Quote pipeline</div>
+          <div>✓ Re-shop queue</div><div>✓ Vehicles &amp; properties</div>
+        </div>
+      </div>
+      <div style="margin-top:16px;border-top:1px solid #eef0f4;padding-top:14px;">
+        <button class="btn btn-danger btn-sm" onclick="disconnectSheets()">Disconnect Google Sheets</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== DATA ====================
+let data={clients:[],policies:[],tasks:[],reshop:[],quotes:[],vehicles:[],properties:[]};
+try{const s=localStorage.getItem('fortex_v2');if(s)data=JSON.parse(s);}catch(e){}
+if(!data.vehicles)data.vehicles=[];
+if(!data.properties)data.properties=[];
+if(!data.quotes)data.quotes=[];
+
+
+function save(){try{localStorage.setItem('fortex_v2',JSON.stringify(data));}catch(e){}}
+function cn(id){const c=data.clients.find(x=>x.id===id);return c?c.first+' '+c.last:'Unknown';}
+function du(ds){if(!ds)return 9999;const t=new Date();t.setHours(0,0,0,0);const d=new Date(ds);d.setHours(0,0,0,0);return Math.round((d-t)/86400000);}
+function rb(days){if(days<=30)return`<span class="badge badge-red">${days}d</span>`;if(days<=60)return`<span class="badge badge-amber">${days}d</span>`;return`<span class="badge badge-green">${days}d</span>`;}
+function fmt(n){return'$'+Number(n||0).toLocaleString();}
+function fmtc(n){return'$'+Number(n||0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function fd(d){if(!d)return'—';const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function commAmt(p){return Math.round((Number(p.premium)||0)*(Number(p.commRate)||0)/100);}
+
+function nav(page,el){
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));el.classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  ({dashboard:renderDashboard,clients:renderClients,policies:()=>{renderPolicies();populateCarrierFilter();},renewals:()=>renderRenewals(30),reshop:renderReshop,quotes:renderQuotes,followups:renderPipeline,commissions:renderCommissions,reports:renderReports})[page]?.();
+}
+
+// ==================== DASHBOARD ====================
+function navTo(page){
+  const navEl=Array.from(document.querySelectorAll('.nav-item')).find(el=>el.getAttribute('onclick')&&el.getAttribute('onclick').includes("'"+page+"'"));
+  if(navEl)nav(page,navEl);
+}
+
+function refreshCurrentPage(){
+  const active=document.querySelector('.page.active');if(!active)return;
+  const id=active.id.replace('page-','');
+  ({dashboard:renderDashboard,clients:renderClients,policies:()=>{renderPolicies();populateCarrierFilter();},renewals:()=>renderRenewals(currentRenewalDays),reshop:renderReshop,quotes:renderQuotes,followups:renderPipeline,commissions:renderCommissions,reports:renderReports})[id]?.();
+}
+
+let currentRenewalDays=30;
+
+function renderDashboard(){
+  document.getElementById('dash-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const urgent=data.policies.filter(p=>du(p.renewal)>=0&&du(p.renewal)<=30);
+  const soon=data.policies.filter(p=>du(p.renewal)>30&&du(p.renewal)<=60);
+  const openTasks=data.tasks.filter(t=>t.status!=='Done');
+  const totalComm=data.policies.reduce((s,p)=>s+commAmt(p),0);
+  const monthlyComm=Math.round(totalComm/12);
+  document.getElementById('dash-metrics').innerHTML=`
+    <div class="metric-card metric-urgent" style="cursor:pointer;" onclick="navTo('renewals')" title="Click to view all renewals"><div class="metric-label">Urgent Renewals</div><div class="metric-value">${urgent.length}</div><div class="metric-sub">Expiring in ≤30 days →</div></div>
+    <div class="metric-card metric-warn" style="cursor:pointer;" onclick="navTo('renewals')" title="Click to view renewals"><div class="metric-label">Renewals 31–60 Days</div><div class="metric-value">${soon.length}</div><div class="metric-sub">Start quoting now →</div></div>
+    <div class="metric-card" style="cursor:pointer;" onclick="navTo('clients')" title="Click to view clients"><div class="metric-label">Total Clients</div><div class="metric-value">${data.clients.length}</div><div class="metric-sub">${data.policies.length} active policies →</div></div>
+    <div class="metric-card metric-gold" style="cursor:pointer;" onclick="navTo('commissions')" title="Click to view commissions"><div class="metric-label">Monthly Commission Est.</div><div class="metric-value" style="font-size:22px;">${fmtc(monthlyComm)}</div><div class="metric-sub">${fmtc(totalComm)}/yr total book →</div></div>`;
+  const ul=document.getElementById('dash-urgent-list');
+  ul.innerHTML=urgent.length===0?'<p class="empty-state">No urgent renewals — clear!</p>':urgent.map(p=>`<div class="dash-row" style="cursor:pointer;" onclick="openProfile('${p.clientId}')" title="Open client profile"><span><strong>${cn(p.clientId)}</strong> &nbsp;<span class="badge badge-navy" style="font-size:11px;">${p.type}</span></span><div style="display:flex;gap:8px;align-items:center;">${rb(du(p.renewal))}<span style="font-size:12px;color:#888;">${fd(p.renewal)}</span></div></div>`).join('');
+  const tl=document.getElementById('dash-tasks-list');
+  tl.innerHTML=!openTasks.length?'<p class="empty-state">No open tasks!</p>':openTasks.sort((a,b)=>du(a.due)-du(b.due)).slice(0,6).map(t=>`<div class="dash-row" style="cursor:pointer;" onclick="navTo('followups')" title="Open Follow-Up Pipeline"><span><strong>${t.title}</strong>${t.clientId?` <span style="font-size:12px;color:#888;">— ${cn(t.clientId)}</span>`:''}</span><span class="badge ${t.priority==='High'?'badge-red':t.priority==='Medium'?'badge-amber':'badge-gray'}">${t.priority}</span></div>`).join('');
+  const sl=document.getElementById('dash-soon-list');
+  sl.innerHTML=!soon.length?'<p class="empty-state">No renewals in this range</p>':soon.map(p=>`<div class="dash-row" style="cursor:pointer;" onclick="openProfile('${p.clientId}')" title="Open client profile"><span><strong>${cn(p.clientId)}</strong> — ${p.type}</span><div style="display:flex;gap:8px;align-items:center;">${rb(du(p.renewal))}<span style="font-size:13px;font-weight:600;color:#2a7a4a;">${fmtc(commAmt(p))}</span></div></div>`).join('');
+  const cl=document.getElementById('dash-comm-list');
+  const top=[...data.policies].sort((a,b)=>commAmt(b)-commAmt(a)).slice(0,5);
+  cl.innerHTML=top.map(p=>`<div class="dash-row" style="cursor:pointer;" onclick="openProfile('${p.clientId}')" title="Open client profile"><span><strong>${cn(p.clientId)}</strong> — ${p.carrier}</span><span style="font-weight:700;color:#2a7a4a;">${fmtc(commAmt(p))}/yr</span></div>`).join('');
+}
+
+// ==================== GMAIL DIGEST ====================
+function buildDigestText(){
+  const today=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const urgent=data.policies.filter(p=>du(p.renewal)>=0&&du(p.renewal)<=30).sort((a,b)=>du(a.renewal)-du(b.renewal));
+  const soon=data.policies.filter(p=>du(p.renewal)>30&&du(p.renewal)<=60).sort((a,b)=>du(a.renewal)-du(b.renewal));
+  const openTasks=data.tasks.filter(t=>t.status!=='Done').sort((a,b)=>du(a.due)-du(b.due));
+  const reshopPending=data.reshop.filter(r=>r.status==='Pending');
+  const totalComm=data.policies.reduce((s,p)=>s+commAmt(p),0);
+  let txt=`FORTEX INSURANCE GROUP — DAILY DIGEST\n${today}\n`;
+  txt+=`${'─'.repeat(52)}\n\n`;
+  txt+=`📊 BOOK SUMMARY\n`;
+  txt+=`  Clients: ${data.clients.length}   Policies: ${data.policies.length}   Est. Monthly Commission: ${fmtc(Math.round(totalComm/12))}\n\n`;
+  txt+=`🔴 URGENT RENEWALS (≤30 days) — ${urgent.length} policy${urgent.length!==1?'ies':''}\n`;
+  if(!urgent.length){txt+=`  All clear!\n`;}
+  else{urgent.forEach(p=>{txt+=`  • ${cn(p.clientId)} — ${p.type} | ${p.carrier} | Renews ${fd(p.renewal)} (${du(p.renewal)} days) | ${fmt(p.premium)}/yr\n`;});}
+  txt+=`\n🟡 RENEWALS 31–60 DAYS — ${soon.length} coming up\n`;
+  if(!soon.length){txt+=`  None in this window.\n`;}
+  else{soon.forEach(p=>{txt+=`  • ${cn(p.clientId)} — ${p.type} | ${p.carrier} | Renews ${fd(p.renewal)} (${du(p.renewal)} days)\n`;});}
+  txt+=`\n📋 OPEN TASKS — ${openTasks.length} remaining\n`;
+  if(!openTasks.length){txt+=`  Inbox zero!\n`;}
+  else{openTasks.slice(0,8).forEach(t=>{txt+=`  • [${t.priority}] ${t.title} — Due ${fd(t.due)}\n`;});}
+  txt+=`\n🔄 RE-SHOP QUEUE — ${reshopPending.length} pending\n`;
+  if(!reshopPending.length){txt+=`  Queue is clear.\n`;}
+  else{reshopPending.forEach(r=>{txt+=`  • ${cn(r.clientId)} — ${r.type} | ${r.carrier} | ${r.reason}\n`;});}
+  txt+=`\n${'─'.repeat(52)}\nFortex Insurance Group Dashboard\nGenerated automatically`;
+  return txt;
+}
+
+function openDigestModal(){
+  document.getElementById('digest-preview').textContent=buildDigestText();
+  document.getElementById('digest-status').style.display='none';
+  document.getElementById('digest-status').className='digest-status';
+  document.getElementById('digest-email').value='';
+  openModal('digest-modal');
+}
+
+function copyDigest(){
+  const text=document.getElementById('digest-preview').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const s=document.getElementById('digest-status');
+    s.textContent='✓ Copied to clipboard! Paste it into any email app.';
+    s.className='digest-status success';
+  }).catch(()=>alert('Could not copy — please select the text and copy manually.'));
+}
+
+async function sendDigest(){
+  const email=document.getElementById('digest-email').value.trim();
+  if(!email){alert('Please enter your email address.');return;}
+  const btn=document.getElementById('send-digest-btn');
+  const status=document.getElementById('digest-status');
+  btn.disabled=true;btn.textContent='Sending...';
+  status.textContent='Connecting to Gmail...';status.className='digest-status loading';
+  const digestText=buildDigestText();
+  const today=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        mcp_servers:[{type:'url',url:'https://gmail.mcp.claude.com/mcp',name:'gmail'}],
+        messages:[{role:'user',content:`Send an email via Gmail with the following details:
+To: ${email}
+Subject: Fortex Insurance Group — Daily Digest ${today}
+Body (plain text, send exactly as written):
+
+${digestText}
+
+Please send this email now and confirm once sent.`}]
+      })
+    });
+    const result=await resp.json();
+    if(result.error){throw new Error(result.error.message||'API error');}
+    status.textContent='✓ Daily digest sent to '+email+'! Check your inbox.';
+    status.className='digest-status success';
+    btn.textContent='✉ Sent!';
+  }catch(err){
+    status.textContent='Gmail send requires Claude.ai — please use "Copy to Clipboard" and paste into your email app, or open this dashboard inside Claude.ai.';
+    status.className='digest-status error';
+    btn.disabled=false;btn.textContent='✉ Send via Gmail';
+  }
+}
+
+// ==================== CLIENTS ====================
+function renderClients(){
+  const q=(document.getElementById('client-search')||{}).value||'';
+  const tag=(document.getElementById('client-filter-tag')||{}).value||'';
+  const filtered=data.clients.filter(c=>{const s=(c.first+c.last+(c.phoneCell||'')+(c.phoneHome||'')+(c.email1||'')+(c.email2||'')+(c.addr1||'')+(c.zip||'')+(c.city||'')).toLowerCase();return s.includes(q.toLowerCase())&&(!tag||c.tag===tag);});
+  const tbody=document.getElementById('clients-tbody');
+  if(!filtered.length){tbody.innerHTML='<tr><td colspan="7" class="empty-state">No clients found</td></tr>';return;}
+  tbody.innerHTML=filtered.map(c=>{
+    const pols=data.policies.filter(p=>p.clientId===c.id).length;
+    return`<tr class="row-link" onclick="openProfile('${c.id}')">
+      <td><strong>${c.first} ${c.last}</strong>${c.tag?` <span class="badge badge-navy" style="font-size:11px;margin-left:6px;">${c.tag}</span>`:''}</td>
+      <td>${c.phoneCell||c.phoneHome||'—'}</td>
+      <td style="color:#444;">${c.email1||'—'}</td>
+      <td>${c.city||'—'}</td>
+      <td><span class="badge badge-blue">${pols} polic${pols===1?'y':'ies'}</span></td>
+      <td style="color:#888;font-size:13px;">${fd(c.added)}</td>
+      <td><button class="btn btn-sm" onclick="event.stopPropagation();openProfile('${c.id}')">Open →</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ==================== PROFILE ====================
+let activeClientId=null;
+let editingPolicyId=null;
+let editingVehicleId=null;
+let editingPropertyId=null;
+function openProfile(clientId){
+  activeClientId=clientId;
+  const c=data.clients.find(x=>x.id===clientId);if(!c)return;
+  document.getElementById('prof-avatar').textContent=((c.first[0]||'')+(c.last[0]||'')).toUpperCase();
+  document.getElementById('prof-name').textContent=c.first+' '+(c.middle?c.middle+' ':'')+c.last+(c.suffix?' '+c.suffix:'');
+  document.getElementById('prof-sub').textContent='Client since '+fd(c.added)+(c.tag?' · '+c.tag:'');
+  loadDetails(c);loadPoliciesTab(clientId);loadVehiclesTab(clientId);loadPropertiesTab(clientId);loadNotes(c);loadDriversTab(clientId);
+  document.querySelectorAll('.profile-tab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  document.querySelectorAll('.profile-tab-content').forEach(t=>t.classList.remove('active'));
+  document.getElementById('ptab-details').classList.add('active');
+  cancelProfileEdit();
+  document.getElementById('profile-overlay').classList.add('open');
+  document.getElementById('profile-panel').classList.add('open');
+}
+
+function loadDetails(c){
+  const map={
+    'df-first':c.first,'df-middle':c.middle,'df-last':c.last,'df-suffix':c.suffix,
+    'df-dob':c.dob?fd(c.dob):'','df-gender':c.gender,'df-marital':c.marital,
+    'df-occupation':c.occupation,'df-ssn':c.ssn?'···-'+c.ssn:'',
+    'df-phone-cell':c.phoneCell,'df-phone-home':c.phoneHome,'df-phone-work':c.phoneWork,
+    'df-fax':c.fax,'df-email1':c.email1,'df-email2':c.email2,
+    'df-pref-contact':c.prefContact,'df-best-time':c.bestTime,'df-dnc':c.dnc||'No',
+    'df-addr1':c.addr1,'df-addr2':c.addr2,'df-city':c.city,'df-state':c.state,
+    'df-zip':c.zip,'df-county':c.county,
+    'df-mail-addr1':c.mailAddr1||'Same as above','df-mail-addr2':c.mailAddr2,
+    'df-mail-city':c.mailCity,'df-mail-state':c.mailState,'df-mail-zip':c.mailZip,'df-mail-county':c.mailCounty,
+    'df-biz-name':c.bizName,'df-biz-type':c.bizType,'df-fein':c.fein,
+    'df-lead-source':c.leadSource,'df-agent':c.agent,'df-tag':c.tag,
+    'df-dl-num':c.dlNum,'df-dl-state':c.dlState,'df-dl-exp':c.dlExp?fd(c.dlExp):'',
+    'df-dl-class':c.dlClass,'df-sr22':c.sr22||'No','df-yrs-lic':c.yrsLic
+  };
+  function setDisplayField(id,val){
+    const el=document.getElementById(id);if(!el)return;
+    const display=(val&&String(val).trim())?String(val):'—';
+    const empty=!val||!String(val).trim();
+    if(el.tagName==='DIV'){
+      el.textContent=display;
+      empty?el.classList.add('empty'):el.classList.remove('empty');
+    }else{
+      // Restore from input/select back to display div (fixes stuck-in-edit-mode bug)
+      el.outerHTML=`<div class="val${empty?' empty':''}" id="${id}">${display}</div>`;
+    }
+  }
+  for(const[id,val]of Object.entries(map))setDisplayField(id,val);
+  // Co-applicant section
+  const coaSection=document.getElementById('coa-detail-section');
+  if(coaSection){
+    const coa=c.coApp;
+    if(coa&&(coa.first||coa.last)){
+      coaSection.style.display='';
+      setDisplayField('df-coa-first',coa.first);
+      setDisplayField('df-coa-last',coa.last);
+      setDisplayField('df-coa-rel',coa.relationship);
+      setDisplayField('df-coa-dob',coa.dob?fd(coa.dob):'');
+      setDisplayField('df-coa-gender',coa.gender);
+      setDisplayField('df-coa-phone',coa.phoneCell);
+      setDisplayField('df-coa-email',coa.email);
+      setDisplayField('df-coa-dl-num',coa.dlNum);
+      setDisplayField('df-coa-dl-state',coa.dlState);
+      setDisplayField('df-coa-dl-exp',coa.dlExp?fd(coa.dlExp):'');
+      setDisplayField('df-coa-sr22',coa.sr22||'No');
+    }else{
+      coaSection.style.display='none';
+    }
+  }
+}
+
+function loadPoliciesTab(clientId){
+  const pols=data.policies.filter(p=>p.clientId===clientId);
+  const c=document.getElementById('prof-policies-list');
+  if(!pols.length){c.innerHTML='<p style="color:#999;font-size:14px;text-align:center;padding:32px;">No policies on file.</p>';return;}
+  c.innerHTML=pols.map(p=>`<div class="policy-mini-card">
+    <div class="policy-mini-top">
+      <div class="policy-mini-left"><h4>${p.type} — ${p.carrier} ${policyStatusBadge(p)}</h4><p>${p.number} · Eff. ${fd(p.effective)}${p.notes?' · '+p.notes:''}</p></div>
+      <div class="policy-mini-right"><div class="premium">${fmt(p.premium)}/yr</div><div class="commission">Commission: ${fmtc(commAmt(p))}/yr · NB: ${p.commRate||0}% / Ren: ${p.commRateRenewal||p.commRate||0}%</div><div class="renewal">Renews ${fd(p.renewal)} ${rb(du(p.renewal))}</div></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #e8ebf0;">
+      <button class="btn btn-sm btn-gold" onclick="editPolicy('${p.id}')">Edit</button>
+      <button class="btn btn-sm btn-danger" onclick="deletePolicy('${p.id}')">Delete</button>
+    </div>
+  </div>`).join('');
+}
+
+function loadVehiclesTab(clientId){
+  const vehs=data.vehicles.filter(v=>v.clientId===clientId);
+  const c=document.getElementById('prof-vehicles-list');
+  if(!vehs.length){c.innerHTML='<p style="color:#999;font-size:14px;text-align:center;padding:32px;">No vehicles on file. Add one above.</p>';return;}
+  c.innerHTML=vehs.map(v=>`<div class="vehicle-card">
+    <h4>${v.year} ${v.make} ${v.model} <span class="badge badge-navy" style="font-size:11px;">${v.body}</span></h4>
+    <div class="vrow">
+      ${v.vin?`<div class="vfield"><span>VIN</span><span style="font-family:monospace;">${v.vin}</span></div>`:''}
+      <div class="vfield"><span>Use</span><span>${v.use}</span></div>
+      <div class="vfield"><span>Mileage</span><span>${v.miles?Number(v.miles).toLocaleString()+' mi/yr':'—'}</span></div>
+      <div class="vfield"><span>Ownership</span><span>${v.ownership}</span></div>
+      ${v.lien?`<div class="vfield"><span>Lienholder</span><span>${v.lien}</span></div>`:''}
+      ${v.garageZip?`<div class="vfield"><span>Garage ZIP</span><span>${v.garageZip}</span></div>`:''}
+      ${v.policy?`<div class="vfield"><span>Policy</span><span>${v.policy}</span></div>`:''}
+    </div>
+    ${v.notes?`<p style="font-size:12px;color:#888;margin-top:8px;">${v.notes}</p>`:''}
+    <div style="margin-top:8px;display:flex;gap:6px;">
+      <button class="btn btn-sm btn-gold" onclick="editVehicle('${v.id}')">Edit</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteVehicle('${v.id}')">Remove</button>
+    </div>
+  </div>`).join('');
+}
+
+function loadPropertiesTab(clientId){
+  const props=data.properties.filter(p=>p.clientId===clientId);
+  const c=document.getElementById('prof-properties-list');
+  if(!props.length){c.innerHTML='<p style="color:#999;font-size:14px;text-align:center;padding:32px;">No properties on file. Add one above.</p>';return;}
+  c.innerHTML=props.map(p=>`<div class="vehicle-card">
+    <h4>${p.addr}, ${p.city}, ${p.state} ${p.zip} <span class="badge badge-blue" style="font-size:11px;">${p.type}</span></h4>
+    <div class="vrow">
+      <div class="vfield"><span>Year Built</span><span>${p.yearBuilt||'—'}</span></div>
+      <div class="vfield"><span>Sq Ft</span><span>${p.sqft?Number(p.sqft).toLocaleString():'—'}</span></div>
+      <div class="vfield"><span>Construction</span><span>${p.construction}</span></div>
+      <div class="vfield"><span>Roof</span><span>${p.roof}${p.roofYear?' ('+p.roofYear+')':''}</span></div>
+      <div class="vfield"><span>Occupancy</span><span>${p.occupancy}</span></div>
+      ${p.value?`<div class="vfield"><span>Replacement Value</span><span>${fmt(p.value)}</span></div>`:''}
+      ${p.mortgage?`<div class="vfield"><span>Mortgage Co.</span><span>${p.mortgage}</span></div>`:''}
+      ${p.policy?`<div class="vfield"><span>Policy</span><span>${p.policy}</span></div>`:''}
+    </div>
+    ${p.notes?`<p style="font-size:12px;color:#888;margin-top:8px;">${p.notes}</p>`:''}
+    <div style="margin-top:8px;display:flex;gap:6px;">
+      <button class="btn btn-sm btn-gold" onclick="editProperty('${p.id}')">Edit</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteProperty('${p.id}')">Remove</button>
+    </div>
+  </div>`).join('');
+}
+
+function loadNotes(c){
+  const list=document.getElementById('prof-notes-list');
+  if(!c.notes||!c.notes.length){list.innerHTML='<p style="color:#999;font-size:14px;text-align:center;padding:20px;">No notes yet.</p>';return;}
+  list.innerHTML=[...c.notes].reverse().map((n,i)=>{const origIdx=c.notes.length-1-i;return`<div class="note-item" id="note-item-${origIdx}"><div class="note-date" style="display:flex;justify-content:space-between;align-items:center;"><span>${fd(n.date)}</span><div style="display:flex;gap:6px;"><button class="btn btn-sm" onclick="editNote(${origIdx})" style="padding:3px 8px;font-size:11px;">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteNote(${origIdx})" style="padding:3px 8px;font-size:11px;">Delete</button></div></div><div class="note-text" id="note-text-${origIdx}">${n.text}</div></div>`;}).join('');
+}
+
+function addNote(){
+  const text=document.getElementById('new-note-text').value.trim();if(!text||!activeClientId)return;
+  const c=data.clients.find(x=>x.id===activeClientId);if(!c)return;
+  if(!c.notes)c.notes=[];
+  c.notes.push({date:new Date().toISOString().split('T')[0],text});
+  document.getElementById('new-note-text').value='';
+  save();loadNotes(c);
+}
+
+function switchProfileTab(tab,el){
+  document.querySelectorAll('.profile-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.profile-tab-content').forEach(t=>t.classList.remove('active'));
+  if(el)el.classList.add('active');
+  document.getElementById('ptab-'+tab).classList.add('active');
+}
+function closeProfile(){document.getElementById('profile-overlay').classList.remove('open');document.getElementById('profile-panel').classList.remove('open');activeClientId=null;}
+
+function toggleProfileEdit(){
+  const c=data.clients.find(x=>x.id===activeClientId);if(!c)return;
+  ['prof-edit-btn','prof-edit-btn2'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  ['prof-save-btn','prof-cancel-btn','prof-save-btn2','prof-cancel-btn2'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='';});
+  const fm={'df-first':{k:'first',t:'text'},'df-middle':{k:'middle',t:'text'},'df-last':{k:'last',t:'text'},'df-suffix':{k:'suffix',t:'text'},'df-dob':{k:'dob',t:'date'},'df-gender':{k:'gender',t:'sel',o:['','Male','Female','Non-binary','Prefer not to say']},'df-marital':{k:'marital',t:'sel',o:['','Single','Married','Divorced','Widowed','Separated']},'df-occupation':{k:'occupation',t:'text'},'df-ssn':{k:'ssn',t:'text'},'df-phone-cell':{k:'phoneCell',t:'text'},'df-phone-home':{k:'phoneHome',t:'text'},'df-phone-work':{k:'phoneWork',t:'text'},'df-fax':{k:'fax',t:'text'},'df-email1':{k:'email1',t:'text'},'df-email2':{k:'email2',t:'text'},'df-pref-contact':{k:'prefContact',t:'sel',o:['','Cell Phone','Home Phone','Email','Text']},'df-best-time':{k:'bestTime',t:'text'},'df-dnc':{k:'dnc',t:'sel',o:['No','Yes']},'df-addr1':{k:'addr1',t:'text'},'df-addr2':{k:'addr2',t:'text'},'df-city':{k:'city',t:'text'},'df-state':{k:'state',t:'text'},'df-zip':{k:'zip',t:'text'},'df-county':{k:'county',t:'text'},'df-mail-addr1':{k:'mailAddr1',t:'text'},'df-mail-addr2':{k:'mailAddr2',t:'text'},'df-mail-city':{k:'mailCity',t:'text'},'df-mail-state':{k:'mailState',t:'text'},'df-mail-zip':{k:'mailZip',t:'text'},'df-mail-county':{k:'mailCounty',t:'text'},'df-biz-name':{k:'bizName',t:'text'},'df-biz-type':{k:'bizType',t:'text'},'df-fein':{k:'fein',t:'text'},'df-lead-source':{k:'leadSource',t:'sel',o:['','Referral','Walk-in','Online','Social Media','EZLynx Import','Other']},'df-agent':{k:'agent',t:'text'},'df-tag':{k:'tag',t:'sel',o:['','Personal Lines','Commercial','VIP','Prospect','Inactive','Do Not Renew']},'df-dl-num':{k:'dlNum',t:'text'},'df-dl-state':{k:'dlState',t:'text'},'df-dl-exp':{k:'dlExp',t:'date'},'df-dl-class':{k:'dlClass',t:'text'},'df-sr22':{k:'sr22',t:'sel',o:['No','Yes']},'df-yrs-lic':{k:'yrsLic',t:'text'}};
+  for(const[id,{k,t,o}]of Object.entries(fm)){const el=document.getElementById(id);if(!el||el.tagName!=='DIV')continue;const val=c[k]||'';if(t==='sel'){el.outerHTML=`<select id="${id}">${(o||[]).map(op=>`<option${op===val?' selected':''}>${op}</option>`).join('')}</select>`;}else if(t==='date'){el.outerHTML=`<input id="${id}" type="date" value="${val}">`;}else{el.outerHTML=`<input id="${id}" type="text" value="${val}">`;};}
+  // Show "Add Co-Applicant" button if no co-applicant exists
+  const coaAdd=document.getElementById('coa-add-section');
+  const coaDet=document.getElementById('coa-detail-section');
+  if(coaAdd&&coaDet){if(!c.coApp||(!(c.coApp.first)&&!(c.coApp.last))){coaAdd.style.display='';coaDet.style.display='none';}else{coaAdd.style.display='none';}}
+}
+
+function saveProfileEdits(){
+  const c=data.clients.find(x=>x.id===activeClientId);if(!c)return;
+  const km={'df-first':'first','df-middle':'middle','df-last':'last','df-suffix':'suffix','df-dob':'dob','df-gender':'gender','df-marital':'marital','df-occupation':'occupation','df-ssn':'ssn','df-phone-cell':'phoneCell','df-phone-home':'phoneHome','df-phone-work':'phoneWork','df-fax':'fax','df-email1':'email1','df-email2':'email2','df-pref-contact':'prefContact','df-best-time':'bestTime','df-dnc':'dnc','df-addr1':'addr1','df-addr2':'addr2','df-city':'city','df-state':'state','df-zip':'zip','df-county':'county','df-mail-addr1':'mailAddr1','df-mail-addr2':'mailAddr2','df-mail-city':'mailCity','df-mail-state':'mailState','df-mail-zip':'mailZip','df-mail-county':'mailCounty','df-biz-name':'bizName','df-biz-type':'bizType','df-fein':'fein','df-lead-source':'leadSource','df-agent':'agent','df-tag':'tag','df-dl-num':'dlNum','df-dl-state':'dlState','df-dl-exp':'dlExp','df-dl-class':'dlClass','df-sr22':'sr22','df-yrs-lic':'yrsLic'};
+  for(const[id,k]of Object.entries(km)){const el=document.getElementById(id);if(el&&(el.tagName==='INPUT'||el.tagName==='SELECT'))c[k]=el.value||'';}
+  const coaAdd=document.getElementById('coa-add-section');if(coaAdd)coaAdd.style.display='none';
+  save();cancelProfileEdit();
+  document.getElementById('prof-name').textContent=c.first+' '+(c.middle?c.middle+' ':'')+c.last;
+  document.getElementById('prof-sub').textContent='Client since '+fd(c.added)+(c.tag?' · '+c.tag:'');
+  loadDetails(c);renderClients();
+}
+
+function cancelProfileEdit(){
+  ['prof-edit-btn','prof-edit-btn2'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='';});
+  ['prof-save-btn','prof-cancel-btn','prof-save-btn2','prof-cancel-btn2'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  const coaAdd=document.getElementById('coa-add-section');if(coaAdd)coaAdd.style.display='none';
+  const c=data.clients.find(x=>x.id===activeClientId);if(c)loadDetails(c);
+}
+
+function openPolicyModalForClient(){populateClientSelects();const sel=document.getElementById('pf-client');if(sel&&activeClientId)sel.value=activeClientId;openModal('policy-modal');}
+
+// ==================== POLICIES ====================
+function policyStatusBadge(p){
+  const stored=p.status||'';
+  if(stored==='Cancelled')return'<span class="badge badge-red">Cancelled</span>';
+  if(stored==='Non-Renewed')return'<span class="badge badge-red">Non-Renewed</span>';
+  if(stored==='Lapsed')return'<span class="badge badge-red">Lapsed</span>';
+  if(stored==='Pending Cancellation')return'<span class="badge badge-amber">Pend. Cancel</span>';
+  // Active (or legacy records with no stored status): show renewal urgency
+  const days=du(p.renewal);
+  if(days<0)return'<span class="badge badge-gray">Expired</span>';
+  if(days<=30)return'<span class="badge badge-red">Urgent ↻</span>';
+  if(days<=60)return'<span class="badge badge-amber">Soon ↻</span>';
+  return'<span class="badge badge-green">Active</span>';
+}
+function renderPolicies(){
+  const q=(document.getElementById('policy-search')||{}).value||'';
+  const type=(document.getElementById('policy-filter-type')||{}).value||'';
+  const statusF=(document.getElementById('policy-filter-status')||{}).value||'';
+  const carrier=(document.getElementById('policy-filter-carrier')||{}).value||'';
+  const filtered=data.policies.filter(p=>{const s=(cn(p.clientId)+p.number+p.carrier).toLowerCase();return s.includes(q.toLowerCase())&&(!type||p.type===type)&&(!carrier||p.carrier===carrier)&&(!statusF||(p.status||'Active')===statusF);});
+  const tbody=document.getElementById('policies-tbody');
+  if(!filtered.length){tbody.innerHTML='<tr><td colspan="10" class="empty-state">No policies found</td></tr>';return;}
+  tbody.innerHTML=filtered.map(p=>`<tr class="row-link" onclick="editPolicy('${p.id}')"><td><strong>${cn(p.clientId)}</strong></td><td><span class="badge badge-navy">${p.type}</span></td><td>${p.carrier}</td><td style="font-size:12px;color:#666;">${p.number}</td><td>${fmt(p.premium)}</td><td style="font-weight:600;color:#555;">${p.commRate||0}%<br><span style="font-size:11px;color:#888;font-weight:400;">Ren: ${p.commRateRenewal||p.commRate||0}%</span></td><td style="font-weight:700;color:#2a7a4a;">${fmtc(commAmt(p))}</td><td style="font-weight:600;">${fd(p.renewal)}</td><td>${policyStatusBadge(p)}</td><td onclick="event.stopPropagation()"><button class="btn btn-sm btn-danger" onclick="deletePolicy('${p.id}')">×</button></td></tr>`).join('');
+}
+function populateCarrierFilter(){const sel=document.getElementById('policy-filter-carrier');if(!sel)return;sel.innerHTML='<option value="">All Carriers</option>'+[...new Set(data.policies.map(p=>p.carrier))].sort().map(c=>`<option>${c}</option>`).join('');}
+
+// ==================== RENEWALS ====================
+function switchRenewalTab(days,el){currentRenewalDays=days;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderRenewals(days);}
+function renderRenewals(days){
+  const filtered=data.policies.filter(p=>{const d=du(p.renewal);return days===999?d>=0:d>=0&&d<=days;}).sort((a,b)=>du(a.renewal)-du(b.renewal));
+  const tbody=document.getElementById('renewals-tbody');
+  if(!filtered.length){tbody.innerHTML='<tr><td colspan="8" class="empty-state">No renewals in this window</td></tr>';return;}
+  tbody.innerHTML=filtered.map(p=>{const d=du(p.renewal);const rc=d<=30?'renewal-row-urgent':d<=60?'renewal-row-soon':'renewal-row-ok';return`<tr class="${rc} row-link" onclick="openProfile('${p.clientId}')"><td><strong>${cn(p.clientId)}</strong></td><td>${p.type}</td><td>${p.carrier}</td><td>${fd(p.renewal)}</td><td>${rb(d)}</td><td>${fmt(p.premium)}</td><td style="font-weight:700;color:#2a7a4a;">${fmtc(commAmt(p))}</td><td onclick="event.stopPropagation()"><button class="btn btn-sm" onclick="addTaskForRenewal('${p.id}')">+ Task</button></td></tr>`;}).join('');
+}
+function addTaskForRenewal(polId){const pol=data.policies.find(p=>p.id===polId);if(!pol)return;data.tasks.push({id:'t'+Date.now(),title:'Renew '+pol.type+' for '+cn(pol.clientId),clientId:pol.clientId,cat:'Renewal',due:pol.renewal,priority:'High',notes:pol.carrier+' '+pol.number,status:'To Do'});save();alert('Follow-up task added!');}
+
+// ==================== RESHOP ====================
+function renderReshop(){
+  const tbody=document.getElementById('reshop-tbody');
+  if(!data.reshop.length){tbody.innerHTML='<tr><td colspan="8" class="empty-state">Queue is clear</td></tr>';return;}
+  tbody.innerHTML=data.reshop.map(r=>`<tr class="row-link" onclick="openProfile('${r.clientId}')"><td><strong>${cn(r.clientId)}</strong></td><td>${r.type}</td><td>${r.carrier}</td><td>${fmt(r.premium)}</td><td><span class="badge badge-amber">${r.reason}</span></td><td style="font-size:13px;">${fd(r.due)}</td><td><span class="badge ${r.status==='Done'?'badge-green':'badge-amber'}">${r.status}</span></td><td onclick="event.stopPropagation()" style="display:flex;gap:6px;"><button class="btn btn-sm btn-gold" onclick="editReshop('${r.id}')">Edit</button>${r.status!=='Done'?`<button class="btn btn-sm" onclick="markReshopDone('${r.id}')">Done</button>`:''}<button class="btn btn-sm btn-danger" onclick="deleteReshop('${r.id}')">×</button></td></tr>`).join('');
+}
+function markReshopDone(id){const r=data.reshop.find(x=>x.id===id);if(r){r.status='Done';save();renderReshop();}}
+function deleteReshop(id){data.reshop=data.reshop.filter(x=>x.id!==id);save();renderReshop();}
+
+// ==================== QUOTE PIPELINE ====================
+function renderQuotes(){
+  const stages=['New Lead','Quoted','Pending Docs','Closed Won','Closed Lost'];
+  const totalQPrem=data.quotes.filter(q=>!['Closed Lost'].includes(q.status)).reduce((s,q)=>s+Number(q.premium||0),0);
+  const openCount=data.quotes.filter(q=>!['Closed Won','Closed Lost'].includes(q.status)).length;
+  document.getElementById('quote-stats').innerHTML=`<div class="mini-stat"><strong>${data.quotes.length}</strong>Total Quotes</div><div class="mini-stat"><strong>${openCount}</strong>Open Pipeline</div><div class="mini-stat"><strong>${fmt(totalQPrem)}</strong>Pipeline Premium</div><div class="mini-stat"><strong>${data.quotes.filter(q=>q.status==='Closed Won').length}</strong>Closed Won</div>`;
+  document.getElementById('quote-board').innerHTML=stages.map(stage=>{
+    const quotes=data.quotes.filter(q=>q.status===stage);
+    const cards=!quotes.length?'<p style="font-size:12px;color:#999;text-align:center;padding:12px;">Empty</p>':quotes.map(q=>`<div class="quote-card"><h4>${q.name}</h4><p>${q.lob}${q.premium?` · ${fmt(q.premium)}`:''}</p><div class="quote-meta"><span class="badge ${q.priority==='High'?'badge-red':q.priority==='Medium'?'badge-amber':'badge-gray'}">${q.priority}</span><span style="font-size:11px;color:#888;">${fd(q.due)}</span><button class="btn btn-sm btn-gold" onclick="editQuote('${q.id}')">Edit</button>${stage!=='New Lead'?`<button class="btn btn-sm" onclick="reverseQuote('${q.id}')" title="Move back">←</button>`:''}${stage!=='Closed Won'&&stage!=='Closed Lost'?`<button class="btn btn-sm" onclick="advanceQuote('${q.id}')" title="Move forward">→</button>`:''}${stage!=='Closed Won'?`<button class="btn btn-sm btn-danger" onclick="deleteQuote('${q.id}')">×</button>`:''}</div></div>`).join('');
+    return`<div class="quote-col"><div class="quote-col-header"><span style="font-size:11px;">${stage}</span><span class="badge badge-gray">${quotes.length}</span></div>${cards}</div>`;
+  }).join('');
+}
+function advanceQuote(id){const q=data.quotes.find(x=>x.id===id);if(!q)return;const stages=['New Lead','Quoted','Pending Docs','Closed Won','Closed Lost'];const i=stages.indexOf(q.status);if(i<stages.length-2)q.status=stages[i+1];save();renderQuotes();}
+function reverseQuote(id){const q=data.quotes.find(x=>x.id===id);if(!q)return;const stages=['New Lead','Quoted','Pending Docs','Closed Won','Closed Lost'];const i=stages.indexOf(q.status);if(i>0)q.status=stages[i-1];save();renderQuotes();}
+function deleteQuote(id){data.quotes=data.quotes.filter(x=>x.id!==id);save();renderQuotes();}
+
+// ==================== PIPELINE ====================
+function renderPipeline(){
+  const cols=['To Do','In Progress','Done'];
+  document.getElementById('pipeline-board').innerHTML=cols.map(status=>{
+    const tasks=data.tasks.filter(t=>t.status===status);
+    const cards=!tasks.length?'<p style="font-size:13px;color:#999;text-align:center;padding:16px;">Empty</p>':tasks.map(t=>`<div class="task-card"><h4>${t.title}</h4><p>${t.clientId?`<span style="cursor:pointer;color:#0c1e3a;text-decoration:underline;" onclick="openProfile('${t.clientId}')">${cn(t.clientId)}</span> · `:''} ${t.cat}</p><div class="task-meta"><span class="badge ${t.priority==='High'?'badge-red':t.priority==='Medium'?'badge-amber':'badge-gray'}">${t.priority}</span><span style="font-size:12px;color:#888;">${fd(t.due)}</span><button class="btn btn-sm btn-gold" onclick="editTask('${t.id}')">Edit</button>${status!=='To Do'?`<button class="btn btn-sm" onclick="reverseTask('${t.id}')" title="Move back">← ${status==='Done'?'Reopen':'To Do'}</button>`:''} ${status!=='Done'?`<button class="btn btn-sm" onclick="advanceTask('${t.id}')">→ ${status==='To Do'?'Start':'Done'}</button>`:''}<button class="btn btn-sm btn-danger" onclick="deleteTask('${t.id}')">×</button></div></div>`).join('');
+    return`<div class="pipeline-col"><div class="pipeline-col-header"><span>${status}</span><span class="badge badge-gray">${tasks.length}</span></div>${cards}</div>`;
+  }).join('');
+}
+function advanceTask(id){const t=data.tasks.find(x=>x.id===id);if(!t)return;if(t.status==='To Do')t.status='In Progress';else if(t.status==='In Progress')t.status='Done';save();renderPipeline();}
+function reverseTask(id){const t=data.tasks.find(x=>x.id===id);if(!t)return;if(t.status==='Done')t.status='In Progress';else if(t.status==='In Progress')t.status='To Do';save();renderPipeline();}
+function deleteTask(id){data.tasks=data.tasks.filter(x=>x.id!==id);save();renderPipeline();}
+
+// ==================== COMMISSIONS ====================
+function renderCommissions(){
+  const totalAnn=data.policies.reduce((s,p)=>s+commAmt(p),0);
+  const totalMon=Math.round(totalAnn/12);
+  const urgentComm=data.policies.filter(p=>du(p.renewal)>=0&&du(p.renewal)<=30).reduce((s,p)=>s+commAmt(p),0);
+  document.getElementById('comm-metrics').innerHTML=`
+    <div class="metric-card metric-gold"><div class="metric-label">Annual Commission</div><div class="metric-value" style="font-size:24px;">${fmtc(totalAnn)}</div><div class="metric-sub">Across all policies</div></div>
+    <div class="metric-card metric-gold"><div class="metric-label">Monthly Est.</div><div class="metric-value" style="font-size:24px;">${fmtc(totalMon)}</div><div class="metric-sub">Average monthly</div></div>
+    <div class="metric-card metric-urgent"><div class="metric-label">At-Risk Commission</div><div class="metric-value" style="font-size:24px;">${fmtc(urgentComm)}</div><div class="metric-sub">Renewing in ≤30 days</div></div>
+    <div class="metric-card"><div class="metric-label">Avg Comm Rate</div><div class="metric-value" style="font-size:24px;">${data.policies.length?(data.policies.reduce((s,p)=>s+Number(p.commRate||0),0)/data.policies.length).toFixed(1):0}%</div><div class="metric-sub">Across book</div></div>`;
+  const byCarrier={};data.policies.forEach(p=>{if(!byCarrier[p.carrier])byCarrier[p.carrier]={prem:0,comm:0,count:0};byCarrier[p.carrier].prem+=Number(p.premium||0);byCarrier[p.carrier].comm+=commAmt(p);byCarrier[p.carrier].count++;});
+  document.getElementById('comm-by-carrier').innerHTML=Object.entries(byCarrier).sort((a,b)=>b[1].comm-a[1].comm).map(([carrier,v])=>`<div class="dash-row"><span><strong>${carrier}</strong> <span style="font-size:12px;color:#888;">(${v.count} polic${v.count!==1?'ies':'y'})</span></span><span style="font-weight:700;color:#2a7a4a;">${fmtc(v.comm)}/yr</span></div>`).join('');
+  const byLOB={};data.policies.forEach(p=>{if(!byLOB[p.type])byLOB[p.type]={comm:0,count:0};byLOB[p.type].comm+=commAmt(p);byLOB[p.type].count++;});
+  document.getElementById('comm-by-lob').innerHTML=Object.entries(byLOB).sort((a,b)=>b[1].comm-a[1].comm).map(([lob,v])=>`<div class="dash-row"><span><strong>${lob}</strong> <span style="font-size:12px;color:#888;">(${v.count})</span></span><span style="font-weight:700;color:#2a7a4a;">${fmtc(v.comm)}/yr</span></div>`).join('');
+  const tbody=document.getElementById('comm-detail-tbody');
+  const sorted=[...data.policies].sort((a,b)=>commAmt(b)-commAmt(a));
+  let total=0;sorted.forEach(p=>total+=commAmt(p));
+  tbody.innerHTML=sorted.map(p=>`<tr class="row-link" onclick="openProfile('${p.clientId}')"><td>${cn(p.clientId)}</td><td>${p.type}</td><td>${p.carrier}</td><td>${fmt(p.premium)}</td><td>${p.commRate||0}%</td><td style="color:#888;">${p.commRateRenewal||p.commRate||0}%</td><td style="font-weight:700;color:#2a7a4a;">${fmtc(commAmt(p))}</td><td style="color:#666;">${fmtc(Math.round(commAmt(p)/12))}</td></tr>`).join('')+`<tr><td colspan="6" style="font-weight:700;">TOTAL</td><td style="font-weight:700;color:#2a7a4a;">${fmtc(total)}/yr</td><td style="color:#666;">${fmtc(Math.round(total/12))}/mo</td></tr>`;
+}
+
+// ==================== REPORTS ====================
+function renderReports(){
+  const totalP=data.policies.reduce((s,p)=>s+Number(p.premium),0);
+  const totalC=data.policies.reduce((s,p)=>s+commAmt(p),0);
+  const byType={};data.policies.forEach(p=>{byType[p.type]=(byType[p.type]||0)+1;});
+  document.getElementById('report-stats').innerHTML=`<div class="mini-stat"><strong>${data.clients.length}</strong>Clients</div><div class="mini-stat"><strong>${data.policies.length}</strong>Policies</div><div class="mini-stat"><strong>${fmt(totalP)}</strong>Premium</div><div class="mini-stat"><strong>${fmtc(totalC)}</strong>Annual Commission</div>${Object.entries(byType).map(([k,v])=>`<div class="mini-stat"><strong>${v}</strong>${k}</div>`).join('')}`;
+}
+
+// ==================== CSV EXPORT ====================
+function exportCSV(type){
+  let rows=[],fn='';
+  if(type==='clients'){fn='fortex_clients.csv';rows=[['First','Last','Cell Phone','Email','Address','City','State','ZIP','DOB','Gender','Marital','Occupation','Lead Source','Tag']];data.clients.forEach(c=>rows.push([c.first,c.last,c.phoneCell,c.email1,c.addr1,c.city,c.state,c.zip,c.dob,c.gender,c.marital,c.occupation,c.leadSource,c.tag]));}
+  else if(type==='policies'){fn='fortex_policies.csv';rows=[['Client','Type','Carrier','Policy #','Premium','Comm %','Commission','Effective','Renewal']];data.policies.forEach(p=>rows.push([cn(p.clientId),p.type,p.carrier,p.number,p.premium,p.commRate||0,commAmt(p),p.effective,p.renewal]));}
+  else if(type==='renewals'){fn='fortex_renewals.csv';rows=[['Client','Type','Carrier','Policy #','Premium','Commission','Renewal Date','Days Left']];data.policies.filter(p=>du(p.renewal)>=0&&du(p.renewal)<=90).sort((a,b)=>du(a.renewal)-du(b.renewal)).forEach(p=>rows.push([cn(p.clientId),p.type,p.carrier,p.number,p.premium,commAmt(p),p.renewal,du(p.renewal)]));}
+  else if(type==='commissions'){fn='fortex_commissions.csv';rows=[['Client','Type','Carrier','Policy #','Annual Premium','Comm %','Annual Commission','Monthly Est.']];data.policies.forEach(p=>rows.push([cn(p.clientId),p.type,p.carrier,p.number,p.premium,p.commRate||0,commAmt(p),Math.round(commAmt(p)/12)]));}
+  else if(type==='reshop'){fn='fortex_reshop.csv';rows=[['Client','Type','Carrier','Premium','Reason','Due','Status']];data.reshop.forEach(r=>rows.push([cn(r.clientId),r.type,r.carrier,r.premium,r.reason,r.due,r.status]));}
+  const csv=rows.map(r=>r.map(x=>`"${(x||'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=fn;a.click();
+}
+
+// ==================== CSV IMPORT ====================
+function importCSV(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=(ev)=>{
+    const lines=ev.target.result.split('\n').filter(l=>l.trim());
+    const headers=lines[0].split(',').map(h=>h.replace(/"/g,'').trim().toLowerCase());
+    let imported=0;
+    for(let i=1;i<lines.length;i++){
+      const vals=lines[i].split(',').map(vv=>vv.replace(/"/g,'').trim());
+      const row={};headers.forEach((h,idx)=>row[h]=vals[idx]||'');
+      const first=row['first name']||row['firstname']||row['first']||'';
+      const last=row['last name']||row['lastname']||row['last']||'';
+      if(!first&&!last)continue;
+      if(data.clients.find(c=>c.first.toLowerCase()===first.toLowerCase()&&c.last.toLowerCase()===last.toLowerCase()))continue;
+      data.clients.push({id:'c'+Date.now()+i,first,last,middle:'',suffix:'',dob:row['dob']||'',gender:'',marital:'',occupation:'',ssn:'',phoneCell:row['cell']||row['cell phone']||row['phone']||'',phoneHome:row['home phone']||'',phoneWork:'',fax:'',email1:row['email']||'',email2:'',prefContact:'',bestTime:'',dnc:'No',addr1:row['address']||'',addr2:'',city:row['city']||'',state:row['state']||'',zip:row['zip']||'',county:'',mailAddr1:'',mailAddr2:'',mailCity:'',mailState:'',mailZip:'',mailCounty:'',bizName:'',bizType:'',fein:'',leadSource:'EZLynx Import',agent:'',tag:'',dlNum:'',dlState:'',dlExp:'',dlClass:'',sr22:'No',yrsLic:'',notes:[{date:new Date().toISOString().split('T')[0],text:'Imported from EZLynx CSV'}],added:new Date().toISOString().split('T')[0]});
+      imported++;
+    }
+    save();renderClients();alert(`Imported ${imported} client records!`);
+  };
+  reader.readAsText(file);
+}
+
+// ==================== MODALS ====================
+function canOpenModal(id){
+  const anyOpen=document.querySelector('.modal-overlay.open');
+  if(anyOpen&&anyOpen.id!==id){
+    alert('Please save or close the open form first before opening another.');
+    return false;
+  }
+  return true;
+}
+function openModal(id){
+  if(!canOpenModal(id))return;
+  if(['policy-modal','task-modal','reshop-modal'].includes(id))populateClientSelects();
+  // Reset editing state when opening a fresh add form
+  if(id==='task-modal'&&!editingTaskId){document.querySelector('#task-modal .modal-header h3').textContent='Add Follow-Up Task';document.querySelectorAll('#task-modal input,#task-modal select,#task-modal textarea').forEach(el=>{if(el.tagName==='SELECT'&&el.options.length)el.selectedIndex=0;else el.value='';});}
+  if(id==='reshop-modal'&&!editingReshopId){document.querySelector('#reshop-modal .modal-header h3').textContent='Add to Re-Shop Queue';document.querySelectorAll('#reshop-modal input,#reshop-modal select,#reshop-modal textarea').forEach(el=>{if(el.tagName==='SELECT'&&el.options.length)el.selectedIndex=0;else el.value='';});}
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function populateClientSelects(){const opts=data.clients.map(c=>`<option value="${c.id}">${c.first} ${c.last}</option>`).join('');['pf-client','tf-client','rf-client'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=(id==='tf-client'?'<option value="">None</option>':'')+opts;});}
+
+function saveClient(){
+  const g=id=>document.getElementById(id);
+  const coaFirst=(g('coa-first')||{}).value||'';
+  const coaLast=(g('coa-last')||{}).value||'';
+  const coApp=(coaFirst.trim()||coaLast.trim())?{
+    first:coaFirst.trim(),last:coaLast.trim(),
+    relationship:(g('coa-rel')||{}).value||'',
+    dob:(g('coa-dob')||{}).value||'',
+    gender:(g('coa-gender')||{}).value||'',
+    ssn:(g('coa-ssn')||{}).value||'',
+    phoneCell:(g('coa-phone')||{}).value||'',
+    email:(g('coa-email')||{}).value||'',
+    dlNum:(g('coa-dl-num')||{}).value||'',
+    dlState:(g('coa-dl-state')||{}).value||'',
+    dlExp:(g('coa-dl-exp')||{}).value||'',
+    dlClass:(g('coa-dl-class')||{}).value||'',
+    sr22:(g('coa-sr22')||{}).value||'No'
+  }:null;
+  const c={
+    id:'c'+Date.now(),
+    first:g('cf-first').value.trim(),middle:g('cf-middle').value.trim(),last:g('cf-last').value.trim(),suffix:'',
+    dob:g('cf-dob').value,gender:g('cf-gender').value,marital:g('cf-marital').value,
+    occupation:g('cf-occupation').value.trim(),ssn:g('cf-ssn').value.trim(),
+    phoneCell:g('cf-phone-cell').value.trim(),phoneHome:g('cf-phone-home').value.trim(),
+    phoneWork:g('cf-phone-work').value.trim(),fax:'',
+    email1:g('cf-email1').value.trim(),email2:g('cf-email2').value.trim(),
+    prefContact:g('cf-pref-contact').value,bestTime:'',dnc:g('cf-dnc').value||'No',
+    addr1:g('cf-addr1').value.trim(),addr2:g('cf-addr2').value.trim(),
+    city:g('cf-city').value.trim(),state:g('cf-state').value.trim(),
+    zip:g('cf-zip').value.trim(),county:g('cf-county').value.trim(),
+    mailAddr1:'',mailAddr2:'',mailCity:'',mailState:'',mailZip:'',mailCounty:'',
+    bizName:'',bizType:'',fein:'',
+    leadSource:g('cf-lead-source').value,agent:g('cf-agent').value.trim(),tag:g('cf-tag').value,
+    dlNum:'',dlState:'',dlExp:'',dlClass:'',sr22:'No',yrsLic:'',
+    coApp:coApp,
+    notes:g('cf-notes').value.trim()?[{date:new Date().toISOString().split('T')[0],text:g('cf-notes').value.trim()}]:[],
+    added:new Date().toISOString().split('T')[0]
+  };
+  if(!c.first||!c.last){alert('First and last name required.');return;}
+  data.clients.push(c);save();closeModal('client-modal');renderClients();
+  document.querySelectorAll('#client-modal input,#client-modal select,#client-modal textarea').forEach(el=>{el.value='';});
+  // Reset co-applicant toggle
+  const cs=document.getElementById('coapp-section');const cb=document.getElementById('coapp-btn');
+  if(cs)cs.style.display='none';if(cb)cb.innerHTML='<span id="coapp-icon">➕</span> Add Co-Applicant / Spouse (Optional)';
+}
+
+function savePolicy(){
+  const vals={clientId:document.getElementById('pf-client').value,type:document.getElementById('pf-type').value,carrier:document.getElementById('pf-carrier').value.trim(),number:document.getElementById('pf-number').value.trim(),premium:document.getElementById('pf-premium').value,commRate:document.getElementById('pf-comm-rate').value||0,commRateRenewal:document.getElementById('pf-comm-rate-renewal').value||0,commType:document.getElementById('pf-comm-type').value,effective:document.getElementById('pf-effective').value,renewal:document.getElementById('pf-renewal').value,status:document.getElementById('pf-status').value||'Active',notes:document.getElementById('pf-notes').value.trim()};
+  if(!vals.clientId||!vals.carrier||!vals.renewal){alert('Client, carrier, and renewal date required.');return;}
+  if(editingPolicyId){const idx=data.policies.findIndex(x=>x.id===editingPolicyId);if(idx!==-1)data.policies[idx]={...vals,id:editingPolicyId};editingPolicyId=null;}
+  else{data.policies.push({...vals,id:'p'+Date.now()});}
+  document.querySelector('#policy-modal .modal-header h3').textContent='Add Policy';
+  save();closeModal('policy-modal');
+  if(activeClientId===vals.clientId)loadPoliciesTab(vals.clientId);
+  renderPolicies();
+}
+
+function toggleCoApplicant(){
+  const s=document.getElementById('coapp-section');
+  const b=document.getElementById('coapp-btn');
+  if(!s||!b)return;
+  const isOpen=s.style.display!=='none';
+  s.style.display=isOpen?'none':'block';
+  b.innerHTML=(isOpen?'<span>➕</span>':'<span>➖</span>')+' Co-Applicant / Spouse (Optional)';
+}
+
+function toggleCoApplicantEdit(){
+  const c=data.clients.find(x=>x.id===activeClientId);if(!c)return;
+  document.getElementById('coa-edit-btn').style.display='none';
+  document.getElementById('coa-save-btn').style.display='';
+  document.getElementById('coa-cancel-btn').style.display='';
+  const coa=c.coApp||{};
+  const flds=[
+    ['df-coa-first',{k:'first',t:'text'}],['df-coa-last',{k:'last',t:'text'}],
+    ['df-coa-rel',{k:'relationship',t:'sel',o:['','Spouse','Domestic Partner','Parent','Child','Sibling','Other']}],
+    ['df-coa-dob',{k:'dob',t:'date'}],
+    ['df-coa-gender',{k:'gender',t:'sel',o:['','Male','Female','Non-binary']}],
+    ['df-coa-phone',{k:'phoneCell',t:'text'}],['df-coa-email',{k:'email',t:'text'}],
+    ['df-coa-dl-num',{k:'dlNum',t:'text'}],['df-coa-dl-state',{k:'dlState',t:'text'}],
+    ['df-coa-dl-exp',{k:'dlExp',t:'date'}],
+    ['df-coa-dl-class',{k:'dlClass',t:'sel',o:['','A','B','C','Commercial','Motorcycle']}],
+    ['df-coa-sr22',{k:'sr22',t:'sel',o:['No','Yes']}]
+  ];
+  flds.forEach(([id,{k,t,o}])=>{
+    const el=document.getElementById(id);if(!el||el.tagName!=='DIV')return;
+    const val=coa[k]||'';
+    if(t==='sel'){el.outerHTML=`<select id="${id}">${(o||[]).map(op=>`<option${op===val?' selected':''}>${op}</option>`).join('')}</select>`;}
+    else if(t==='date'){el.outerHTML=`<input id="${id}" type="date" value="${val}">`;}
+    else{el.outerHTML=`<input id="${id}" type="text" value="${val}">`;}
+  });
+}
+
+function saveCoApplicantEdits(){
+  const c=data.clients.find(x=>x.id===activeClientId);if(!c)return;
+  if(!c.coApp)c.coApp={};
+  const km={
+    'df-coa-first':'first','df-coa-last':'last','df-coa-rel':'relationship',
+    'df-coa-dob':'dob','df-coa-gender':'gender','df-coa-phone':'phoneCell',
+    'df-coa-email':'email','df-coa-dl-num':'dlNum','df-coa-dl-state':'dlState',
+    'df-coa-dl-exp':'dlExp','df-coa-dl-class':'dlClass','df-coa-sr22':'sr22'
+  };
+  for(const[id,k]of Object.entries(km)){const el=document.getElementById(id);if(el&&(el.tagName==='INPUT'||el.tagName==='SELECT'))c.coApp[k]=el.value||'';}
+  save();cancelCoApplicantEdit();loadDetails(c);
+}
+
+function cancelCoApplicantEdit(){
+  document.getElementById('coa-edit-btn').style.display='';
+  document.getElementById('coa-save-btn').style.display='none';
+  document.getElementById('coa-cancel-btn').style.display='none';
+  const c=data.clients.find(x=>x.id===activeClientId);if(c)loadDetails(c);
+}
+
+function showCoApplicantAddInProfile(){
+  const c=data.clients.find(x=>x.id===activeClientId);if(!c)return;
+  if(!c.coApp)c.coApp={first:'',last:'',relationship:'',dob:'',gender:'',phoneCell:'',email:'',dlNum:'',dlState:'',dlExp:'',dlClass:'',sr22:'No'};
+  document.getElementById('coa-add-section').style.display='none';
+  document.getElementById('coa-detail-section').style.display='';
+  toggleCoApplicantEdit();
+}
+
+let editingTaskId=null;
+function saveTask(){
+  const vals={title:document.getElementById('tf-title').value.trim(),clientId:document.getElementById('tf-client').value,cat:document.getElementById('tf-cat').value,due:document.getElementById('tf-due').value,priority:document.getElementById('tf-priority').value,notes:document.getElementById('tf-notes').value.trim()};
+  if(!vals.title){alert('Task title required.');return;}
+  if(editingTaskId){const idx=data.tasks.findIndex(x=>x.id===editingTaskId);if(idx!==-1)data.tasks[idx]={...data.tasks[idx],...vals};editingTaskId=null;}
+  else{data.tasks.push({...vals,id:'t'+Date.now(),status:'To Do'});}
+  document.querySelector('#task-modal .modal-header h3').textContent='Add Follow-Up Task';
+  save();closeModal('task-modal');renderPipeline();
+  document.querySelectorAll('#task-modal input,#task-modal select,#task-modal textarea').forEach(el=>{el.value='';});
+}
+function editTask(id){
+  editingTaskId=id;
+  const t=data.tasks.find(x=>x.id===id);if(!t)return;
+  populateClientSelects();
+  document.getElementById('tf-title').value=t.title||'';
+  document.getElementById('tf-client').value=t.clientId||'';
+  document.getElementById('tf-cat').value=t.cat||'General';
+  document.getElementById('tf-due').value=t.due||'';
+  document.getElementById('tf-priority').value=t.priority||'Medium';
+  document.getElementById('tf-notes').value=t.notes||'';
+  if(!canOpenModal('task-modal'))return;
+  document.querySelector('#task-modal .modal-header h3').textContent='Edit Task';
+  document.getElementById('task-modal').classList.add('open');
+}
+
+let editingReshopId=null;
+function saveReshop(){
+  const vals={clientId:document.getElementById('rf-client').value,type:document.getElementById('rf-type').value,carrier:document.getElementById('rf-carrier').value.trim(),premium:document.getElementById('rf-premium').value,due:document.getElementById('rf-due').value,reason:document.getElementById('rf-reason').value,notes:document.getElementById('rf-notes').value.trim()};
+  if(!vals.clientId){alert('Client required.');return;}
+  if(editingReshopId){const idx=data.reshop.findIndex(x=>x.id===editingReshopId);if(idx!==-1)data.reshop[idx]={...data.reshop[idx],...vals};editingReshopId=null;}
+  else{data.reshop.push({...vals,id:'r'+Date.now(),status:'Pending'});}
+  document.querySelector('#reshop-modal .modal-header h3').textContent='Add to Re-Shop Queue';
+  save();closeModal('reshop-modal');renderReshop();
+  document.querySelectorAll('#reshop-modal input,#reshop-modal select,#reshop-modal textarea').forEach(el=>{el.value='';});
+}
+function editReshop(id){
+  editingReshopId=id;
+  const r=data.reshop.find(x=>x.id===id);if(!r)return;
+  populateClientSelects();
+  document.getElementById('rf-client').value=r.clientId||'';
+  document.getElementById('rf-type').value=r.type||'Personal Auto';
+  document.getElementById('rf-carrier').value=r.carrier||'';
+  document.getElementById('rf-premium').value=r.premium||'';
+  document.getElementById('rf-due').value=r.due||'';
+  document.getElementById('rf-reason').value=r.reason||'Better Rate';
+  document.getElementById('rf-notes').value=r.notes||'';
+  if(!canOpenModal('reshop-modal'))return;
+  document.querySelector('#reshop-modal .modal-header h3').textContent='Edit Re-Shop Item';
+  document.getElementById('reshop-modal').classList.add('open');
+}
+
+function saveVehicle(){
+  if(!activeClientId){alert('No client selected.');return;}
+  const vals={clientId:activeClientId,year:document.getElementById('vf-year').value.trim(),make:document.getElementById('vf-make').value.trim(),model:document.getElementById('vf-model').value.trim(),vin:document.getElementById('vf-vin').value.trim(),body:document.getElementById('vf-body').value,use:document.getElementById('vf-use').value,miles:document.getElementById('vf-miles').value,garageZip:document.getElementById('vf-garage-zip').value.trim(),ownership:document.getElementById('vf-ownership').value,lien:document.getElementById('vf-lien').value.trim(),policy:document.getElementById('vf-policy').value.trim(),notes:document.getElementById('vf-notes').value.trim()};
+  if(!vals.year||!vals.make||!vals.model){alert('Year, make, and model required.');return;}
+  if(editingVehicleId){const idx=data.vehicles.findIndex(x=>x.id===editingVehicleId);if(idx!==-1)data.vehicles[idx]={...vals,id:editingVehicleId};editingVehicleId=null;}
+  else{data.vehicles.push({...vals,id:'v'+Date.now()});}
+  document.querySelector('#vehicle-modal .modal-header h3').textContent='Add Vehicle';
+  save();closeModal('vehicle-modal');loadVehiclesTab(activeClientId);
+  document.querySelectorAll('#vehicle-modal input,#vehicle-modal select,#vehicle-modal textarea').forEach(el=>{el.value='';});
+}
+
+function saveProperty(){
+  if(!activeClientId){alert('No client selected.');return;}
+  const vals={clientId:activeClientId,addr:document.getElementById('propf-addr').value.trim(),city:document.getElementById('propf-city').value.trim(),state:document.getElementById('propf-state').value.trim(),zip:document.getElementById('propf-zip').value.trim(),type:document.getElementById('propf-type').value,yearBuilt:document.getElementById('propf-year').value.trim(),sqft:document.getElementById('propf-sqft').value,construction:document.getElementById('propf-construction').value,roof:document.getElementById('propf-roof').value,roofYear:document.getElementById('propf-roof-year').value.trim(),occupancy:document.getElementById('propf-occupancy').value,value:document.getElementById('propf-value').value,mortgage:document.getElementById('propf-mortgage').value.trim(),policy:document.getElementById('propf-policy').value.trim(),notes:document.getElementById('propf-notes').value.trim()};
+  if(!vals.addr){alert('Property address required.');return;}
+  if(editingPropertyId){const idx=data.properties.findIndex(x=>x.id===editingPropertyId);if(idx!==-1)data.properties[idx]={...vals,id:editingPropertyId};editingPropertyId=null;}
+  else{data.properties.push({...vals,id:'prop'+Date.now()});}
+  document.querySelector('#property-modal .modal-header h3').textContent='Add Property';
+  save();closeModal('property-modal');loadPropertiesTab(activeClientId);
+  document.querySelectorAll('#property-modal input,#property-modal select,#property-modal textarea').forEach(el=>{el.value='';});
+}
+
+let editingQuoteId=null;
+function saveQuote(){
+  const vals={name:document.getElementById('qf-name').value.trim(),phone:document.getElementById('qf-phone').value.trim(),email:document.getElementById('qf-email').value.trim(),lob:document.getElementById('qf-lob').value,premium:document.getElementById('qf-premium').value,source:document.getElementById('qf-source').value,due:document.getElementById('qf-due').value,priority:document.getElementById('qf-priority').value,notes:document.getElementById('qf-notes').value.trim()};
+  if(!vals.name){alert('Prospect name required.');return;}
+  if(editingQuoteId){const idx=data.quotes.findIndex(x=>x.id===editingQuoteId);if(idx!==-1)data.quotes[idx]={...data.quotes[idx],...vals};editingQuoteId=null;}
+  else{data.quotes.push({...vals,id:'q'+Date.now(),status:'New Lead'});}
+  document.querySelector('#quote-modal .modal-header h3').textContent='New Quote / Prospect';
+  save();closeModal('quote-modal');renderQuotes();
+  document.querySelectorAll('#quote-modal input,#quote-modal select,#quote-modal textarea').forEach(el=>{el.value='';});
+}
+function editQuote(id){
+  editingQuoteId=id;
+  const q=data.quotes.find(x=>x.id===id);if(!q)return;
+  document.getElementById('qf-name').value=q.name||'';
+  document.getElementById('qf-phone').value=q.phone||'';
+  document.getElementById('qf-email').value=q.email||'';
+  document.getElementById('qf-lob').value=q.lob||'Personal Auto';
+  document.getElementById('qf-premium').value=q.premium||'';
+  document.getElementById('qf-source').value=q.source||'Referral';
+  document.getElementById('qf-due').value=q.due||'';
+  document.getElementById('qf-priority').value=q.priority||'Medium';
+  document.getElementById('qf-notes').value=q.notes||'';
+  if(!canOpenModal('quote-modal'))return;
+  document.querySelector('#quote-modal .modal-header h3').textContent='Edit Quote';
+  document.getElementById('quote-modal').classList.add('open');
+}
+
+function deleteVehicle(id){if(!confirm('Remove this vehicle?'))return;data.vehicles=data.vehicles.filter(x=>x.id!==id);save();loadVehiclesTab(activeClientId);}
+function deleteProperty(id){if(!confirm('Remove this property?'))return;data.properties=data.properties.filter(x=>x.id!==id);save();loadPropertiesTab(activeClientId);}
+function deletePolicy(id){if(!confirm('Remove this policy?'))return;const pol=data.policies.find(x=>x.id===id);data.policies=data.policies.filter(p=>p.id!==id);save();renderPolicies();if(activeClientId&&pol&&activeClientId===pol.clientId)loadPoliciesTab(activeClientId);}
+function deleteClient(id){if(!confirm('Remove client and all their data?'))return;data.clients=data.clients.filter(c=>c.id!==id);data.policies=data.policies.filter(p=>p.clientId!==id);data.vehicles=data.vehicles.filter(v=>v.clientId!==id);data.properties=data.properties.filter(p=>p.clientId!==id);save();renderClients();}
+
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m){m.classList.remove('open');editingPolicyId=null;editingVehicleId=null;editingPropertyId=null;editingTaskId=null;editingReshopId=null;editingQuoteId=null;document.querySelector('#policy-modal .modal-header h3').textContent='Add Policy';document.querySelector('#vehicle-modal .modal-header h3').textContent='Add Vehicle';document.querySelector('#property-modal .modal-header h3').textContent='Add Property';document.querySelector('#task-modal .modal-header h3').textContent='Add Follow-Up Task';document.querySelector('#reshop-modal .modal-header h3').textContent='Add to Re-Shop Queue';document.querySelector('#quote-modal .modal-header h3').textContent='New Quote / Prospect';}}));
+
+// ==================== EDIT POLICY ====================
+function editPolicy(id){
+  editingPolicyId=id;
+  const p=data.policies.find(x=>x.id===id);if(!p)return;
+  populateClientSelects();
+  document.getElementById('pf-client').value=p.clientId;
+  document.getElementById('pf-type').value=p.type;
+  document.getElementById('pf-carrier').value=p.carrier;
+  document.getElementById('pf-number').value=p.number;
+  document.getElementById('pf-premium').value=p.premium;
+  document.getElementById('pf-comm-rate').value=p.commRate||0;
+  document.getElementById('pf-comm-rate-renewal').value=p.commRateRenewal||p.commRate||0;
+  document.getElementById('pf-comm-type').value=p.commType||'New Business';
+  document.getElementById('pf-effective').value=p.effective||'';
+  document.getElementById('pf-renewal').value=p.renewal||'';
+  document.getElementById('pf-status').value=p.status||'Active';
+  document.getElementById('pf-notes').value=p.notes||'';
+  if(!canOpenModal('policy-modal'))return;
+  document.querySelector('#policy-modal .modal-header h3').textContent='Edit Policy';
+  document.getElementById('policy-modal').classList.add('open');
+}
+
+// ==================== EDIT VEHICLE ====================
+function editVehicle(id){
+  editingVehicleId=id;
+  const v=data.vehicles.find(x=>x.id===id);if(!v)return;
+  document.getElementById('vf-year').value=v.year||'';
+  document.getElementById('vf-make').value=v.make||'';
+  document.getElementById('vf-model').value=v.model||'';
+  document.getElementById('vf-vin').value=v.vin||'';
+  document.getElementById('vf-body').value=v.body||'Sedan';
+  document.getElementById('vf-use').value=v.use||'Personal / Pleasure';
+  document.getElementById('vf-miles').value=v.miles||'';
+  document.getElementById('vf-garage-zip').value=v.garageZip||'';
+  document.getElementById('vf-ownership').value=v.ownership||'Owned';
+  document.getElementById('vf-lien').value=v.lien||'';
+  document.getElementById('vf-policy').value=v.policy||'';
+  document.getElementById('vf-notes').value=v.notes||'';
+  if(!canOpenModal('vehicle-modal'))return;
+  document.querySelector('#vehicle-modal .modal-header h3').textContent='Edit Vehicle';
+  document.getElementById('vehicle-modal').classList.add('open');
+}
+
+// ==================== EDIT PROPERTY ====================
+function editProperty(id){
+  editingPropertyId=id;
+  const p=data.properties.find(x=>x.id===id);if(!p)return;
+  document.getElementById('propf-addr').value=p.addr||'';
+  document.getElementById('propf-city').value=p.city||'';
+  document.getElementById('propf-state').value=p.state||'';
+  document.getElementById('propf-zip').value=p.zip||'';
+  document.getElementById('propf-type').value=p.type||'Single Family Home';
+  document.getElementById('propf-year').value=p.yearBuilt||'';
+  document.getElementById('propf-sqft').value=p.sqft||'';
+  document.getElementById('propf-construction').value=p.construction||'Frame';
+  document.getElementById('propf-roof').value=p.roof||'Shingle';
+  document.getElementById('propf-roof-year').value=p.roofYear||'';
+  document.getElementById('propf-occupancy').value=p.occupancy||'Owner Occupied';
+  document.getElementById('propf-value').value=p.value||'';
+  document.getElementById('propf-mortgage').value=p.mortgage||'';
+  document.getElementById('propf-policy').value=p.policy||'';
+  document.getElementById('propf-notes').value=p.notes||'';
+  if(!canOpenModal('property-modal'))return;
+  document.querySelector('#property-modal .modal-header h3').textContent='Edit Property';
+  document.getElementById('property-modal').classList.add('open');
+}
+
+// ==================== NOTES EDIT/DELETE ====================
+function deleteNote(origIdx){
+  if(!confirm('Delete this note?'))return;
+  const c=data.clients.find(x=>x.id===activeClientId);if(!c)return;
+  c.notes.splice(origIdx,1);
+  save();loadNotes(c);
+}
+function editNote(origIdx){
+  const c=data.clients.find(x=>x.id===activeClientId);if(!c||!c.notes||!c.notes[origIdx])return;
+  const n=c.notes[origIdx];
+  const textEl=document.getElementById('note-text-'+origIdx);if(!textEl)return;
+  textEl.outerHTML=`<textarea id="note-edit-ta-${origIdx}" style="width:100%;padding:8px 10px;border:1px solid #c4cdd8;border-radius:6px;font-size:14px;resize:vertical;min-height:60px;font-family:'Segoe UI',Arial,sans-serif;margin-top:4px;box-sizing:border-box;">${n.text}</textarea><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;"><button class="btn btn-sm" onclick="cancelNoteEdit()">Cancel</button><button class="btn btn-sm btn-primary" onclick="saveNoteEdit(${origIdx})">Save</button></div>`;
+}
+function saveNoteEdit(origIdx){
+  const c=data.clients.find(x=>x.id===activeClientId);if(!c||!c.notes||!c.notes[origIdx])return;
+  const ta=document.getElementById('note-edit-ta-'+origIdx);if(!ta)return;
+  const newText=ta.value.trim();if(!newText){alert('Note cannot be empty.');return;}
+  c.notes[origIdx].text=newText;
+  save();loadNotes(c);
+}
+function cancelNoteEdit(){
+  const c=data.clients.find(x=>x.id===activeClientId);if(c)loadNotes(c);
+}
+
+// ==================== DRIVERS TAB ====================
+let editingDriverId=null;
+let editingPrimaryDriver=false;
+
+function loadDriversTab(clientId){
+  const c=data.clients.find(x=>x.id===clientId);if(!c)return;
+  const list=document.getElementById('prof-drivers-list');if(!list)return;
+  let html=`<div class="vehicle-card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+      <div>
+        <h4>${c.first} ${c.last} <span class="badge badge-navy" style="font-size:11px;margin-left:4px;">Primary Insured</span></h4>
+        ${c.dob?`<p style="font-size:13px;color:#666;margin-top:3px;">DOB: ${fd(c.dob)}</p>`:''}
+      </div>
+      <button class="btn btn-sm btn-gold" onclick="editPrimaryDriverInfo()">Edit</button>
+    </div>
+    <div class="vrow">
+      <div class="vfield"><span>DL Number</span><span style="font-family:monospace;">${c.dlNum||'—'}</span></div>
+      <div class="vfield"><span>DL State</span><span>${c.dlState||'—'}</span></div>
+      <div class="vfield"><span>Expiration</span><span>${c.dlExp?fd(c.dlExp):'—'}</span></div>
+      <div class="vfield"><span>DL Class</span><span>${c.dlClass||'—'}</span></div>
+      <div class="vfield"><span>SR-22</span><span>${c.sr22||'No'}</span></div>
+      <div class="vfield"><span>Yrs Licensed</span><span>${c.yrsLic||'—'}</span></div>
+    </div>
+  </div>`;
+  const drivers=c.drivers||[];
+  if(drivers.length){
+    html+=drivers.map(d=>`<div class="vehicle-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div>
+          <h4>${d.first} ${d.last}${d.relationship?` <span class="badge badge-blue" style="font-size:11px;margin-left:4px;">${d.relationship}</span>`:''}</h4>
+          ${d.dob?`<p style="font-size:13px;color:#666;margin-top:3px;">DOB: ${fd(d.dob)}</p>`:''}
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm btn-gold" onclick="editDriver('${d.id}')">Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteDriver('${d.id}')">Remove</button>
+        </div>
+      </div>
+      <div class="vrow">
+        <div class="vfield"><span>DL Number</span><span style="font-family:monospace;">${d.dlNum||'—'}</span></div>
+        <div class="vfield"><span>DL State</span><span>${d.dlState||'—'}</span></div>
+        <div class="vfield"><span>Expiration</span><span>${d.dlExp?fd(d.dlExp):'—'}</span></div>
+        <div class="vfield"><span>DL Class</span><span>${d.dlClass||'—'}</span></div>
+        <div class="vfield"><span>SR-22</span><span>${d.sr22||'No'}</span></div>
+        <div class="vfield"><span>Yrs Licensed</span><span>${d.yrsLic||'—'}</span></div>
+      </div>
+    </div>`).join('');
+  }
+  list.innerHTML=html;
+}
+
+function openAddDriverModal(){
+  editingDriverId=null;editingPrimaryDriver=false;
+  document.getElementById('driver-modal-title').textContent='Add Driver';
+  document.querySelectorAll('#driver-modal input').forEach(el=>{el.value='';});
+  document.querySelectorAll('#driver-modal select').forEach(el=>{el.selectedIndex=0;});
+  document.getElementById('drf-sr22').value='No';
+  if(!canOpenModal('driver-modal'))return;
+  document.getElementById('driver-modal').classList.add('open');
+}
+
+function editPrimaryDriverInfo(){
+  const c=data.clients.find(x=>x.id===activeClientId);if(!c)return;
+  editingPrimaryDriver=true;editingDriverId=null;
+  document.getElementById('driver-modal-title').textContent='Edit Primary Driver Info';
+  document.getElementById('drf-first').value=c.first||'';
+  document.getElementById('drf-last').value=c.last||'';
+  document.getElementById('drf-dob').value=c.dob||'';
+  document.getElementById('drf-gender').value=c.gender||'';
+  document.getElementById('drf-rel').value='';
+  document.getElementById('drf-dl-num').value=c.dlNum||'';
+  document.getElementById('drf-dl-state').value=c.dlState||'';
+  document.getElementById('drf-dl-exp').value=c.dlExp||'';
+  document.getElementById('drf-dl-class').value=c.dlClass||'';
+  document.getElementById('drf-sr22').value=c.sr22||'No';
+  document.getElementById('drf-yrs-lic').value=c.yrsLic||'';
+  if(!canOpenModal('driver-modal'))return;
+  document.getElementById('driver-modal').classList.add('open');
+}
+
+function editDriver(driverId){
+  editingDriverId=driverId;editingPrimaryDriver=false;
+  const c=data.clients.find(x=>x.id===activeClientId);if(!c||!c.drivers)return;
+  const d=c.drivers.find(x=>x.id===driverId);if(!d)return;
+  document.getElementById('driver-modal-title').textContent='Edit Driver';
+  document.getElementById('drf-first').value=d.first||'';
+  document.getElementById('drf-last').value=d.last||'';
+  document.getElementById('drf-dob').value=d.dob||'';
+  document.getElementById('drf-gender').value=d.gender||'';
+  document.getElementById('drf-rel').value=d.relationship||'';
+  document.getElementById('drf-dl-num').value=d.dlNum||'';
+  document.getElementById('drf-dl-state').value=d.dlState||'';
+  document.getElementById('drf-dl-exp').value=d.dlExp||'';
+  document.getElementById('drf-dl-class').value=d.dlClass||'';
+  document.getElementById('drf-sr22').value=d.sr22||'No';
+  document.getElementById('drf-yrs-lic').value=d.yrsLic||'';
+  if(!canOpenModal('driver-modal'))return;
+  document.getElementById('driver-modal').classList.add('open');
+}
+
+function saveDriver(){
+  const c=data.clients.find(x=>x.id===activeClientId);if(!c)return;
+  if(editingPrimaryDriver){
+    c.dlNum=document.getElementById('drf-dl-num').value.trim();
+    c.dlState=document.getElementById('drf-dl-state').value.trim();
+    c.dlExp=document.getElementById('drf-dl-exp').value;
+    c.dlClass=document.getElementById('drf-dl-class').value;
+    c.sr22=document.getElementById('drf-sr22').value;
+    c.yrsLic=document.getElementById('drf-yrs-lic').value.trim();
+    editingPrimaryDriver=false;
+    save();closeDriverModal();loadDriversTab(activeClientId);return;
+  }
+  const first=document.getElementById('drf-first').value.trim();
+  const last=document.getElementById('drf-last').value.trim();
+  if(!first||!last){alert('First and last name required.');return;}
+  if(!c.drivers)c.drivers=[];
+  const d={id:editingDriverId||'d'+Date.now(),first,last,dob:document.getElementById('drf-dob').value,gender:document.getElementById('drf-gender').value,relationship:document.getElementById('drf-rel').value,dlNum:document.getElementById('drf-dl-num').value.trim(),dlState:document.getElementById('drf-dl-state').value.trim(),dlExp:document.getElementById('drf-dl-exp').value,dlClass:document.getElementById('drf-dl-class').value,sr22:document.getElementById('drf-sr22').value,yrsLic:document.getElementById('drf-yrs-lic').value.trim()};
+  if(editingDriverId){const idx=c.drivers.findIndex(x=>x.id===editingDriverId);if(idx!==-1)c.drivers[idx]=d;editingDriverId=null;}
+  else{c.drivers.push(d);}
+  save();closeDriverModal();loadDriversTab(activeClientId);
+}
+
+function deleteDriver(driverId){
+  if(!confirm('Remove this driver?'))return;
+  const c=data.clients.find(x=>x.id===activeClientId);if(!c||!c.drivers)return;
+  c.drivers=c.drivers.filter(x=>x.id!==driverId);
+  save();loadDriversTab(activeClientId);
+}
+
+function closeDriverModal(){
+  editingDriverId=null;editingPrimaryDriver=false;
+  document.getElementById('driver-modal').classList.remove('open');
+}
+
+// ==================== GOOGLE SHEETS SYNC ====================
+let sheetsUrl = '';
+try { sheetsUrl = localStorage.getItem('fortex_sheets_url') || ''; } catch(e) {}
+
+function updateSyncStatus(connected, msg) {
+  const dot = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-label');
+  if (!dot || !label) return;
+  if (connected) {
+    dot.style.background = '#2a7a4a';
+    label.textContent = msg || 'Synced to Google Sheets';
+    label.style.color = '#4a9a6a';
+  } else {
+    dot.style.background = '#5a7090';
+    label.textContent = msg || 'Not connected to Sheets';
+    label.style.color = '#5a7090';
+  }
+}
+
+async function syncToSheets(silent) {
+  if (!sheetsUrl) return;
+  if (!silent) {
+    updateSyncStatus(false, 'Syncing...');
+    document.getElementById('sync-indicator').textContent = 'Syncing...';
+    document.getElementById('sync-indicator').style.color = '#b07010';
+  }
+  try {
+    const resp = await fetch(sheetsUrl, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: { 'Content-Type': 'text/plain' }
+    });
+    const result = await resp.json();
+    if (result.success) {
+      updateSyncStatus(true, 'Synced ' + new Date().toLocaleTimeString());
+      if (!silent) {
+        document.getElementById('sync-indicator').textContent = '✓ Synced to Google Sheets!';
+        document.getElementById('sync-indicator').style.color = '#2a7a4a';
+      }
+    } else {
+      throw new Error('Sync failed');
+    }
+  } catch(err) {
+    updateSyncStatus(false, 'Sync error — check URL');
+    if (!silent) {
+      document.getElementById('sync-indicator').textContent = '✗ Could not reach Google Sheets. Check your URL.';
+      document.getElementById('sync-indicator').style.color = '#c43a3a';
+    }
+  }
+}
+
+async function loadFromSheets() {
+  if (!sheetsUrl) return false;
+  try {
+    updateSyncStatus(false, 'Loading from Sheets...');
+    const resp = await fetch(sheetsUrl + '?t=' + Date.now());
+    const remote = await resp.json();
+    if (remote && Array.isArray(remote.clients)) {
+      data = remote;
+      if (!data.vehicles)   data.vehicles   = [];
+      if (!data.properties) data.properties = [];
+      if (!data.quotes)     data.quotes     = [];
+      if (!data.reshop)     data.reshop     = [];
+      if (!data.tasks)      data.tasks      = [];
+      if (!data.policies)   data.policies   = [];
+      localStorage.setItem('fortex_v2', JSON.stringify(data));
+      updateSyncStatus(true, 'Loaded from Sheets');
+      return true;
+    }
+  } catch(e) {
+    updateSyncStatus(false, 'Could not load from Sheets');
+  }
+  return false;
+}
+
+const _origSave = save;
+save = function() {
+  _origSave();
+  refreshCurrentPage();
+  if (sheetsUrl) syncToSheets(true);
+};
+
+async function connectSheets() {
+  const url = document.getElementById('sheets-url-input').value.trim();
+  if (!url || !url.includes('script.google.com')) {
+    document.getElementById('sync-indicator').textContent = '✗ That doesn\'t look like a valid Apps Script URL. Make sure it ends in /exec';
+    document.getElementById('sync-indicator').style.color = '#c43a3a';
+    return;
+  }
+  sheetsUrl = url;
+  localStorage.setItem('fortex_sheets_url', url);
+  document.getElementById('sync-indicator').textContent = 'Connecting...';
+  document.getElementById('sync-indicator').style.color = '#b07010';
+  await syncToSheets(false);
+}
+
+function disconnectSheets() {
+  sheetsUrl = '';
+  localStorage.removeItem('fortex_sheets_url');
+  updateSyncStatus(false, 'Disconnected');
+  document.getElementById('sheets-url-input').value = '';
+  document.getElementById('sync-indicator').textContent = 'Disconnected from Google Sheets.';
+  document.getElementById('sync-indicator').style.color = '#666';
+}
+
+async function pullFromSheets() {
+  document.getElementById('sync-indicator').textContent = 'Pulling latest data from Google Sheets...';
+  document.getElementById('sync-indicator').style.color = '#b07010';
+  const ok = await loadFromSheets();
+  if (ok) {
+    renderDashboard();
+    document.getElementById('sync-indicator').textContent = '✓ Data pulled from Google Sheets!';
+    document.getElementById('sync-indicator').style.color = '#2a7a4a';
+  } else {
+    document.getElementById('sync-indicator').textContent = '✗ Could not pull data — check your connection.';
+    document.getElementById('sync-indicator').style.color = '#c43a3a';
+  }
+}
+
+// ==================== INIT ====================
+(function init() {
+  const inp = document.getElementById('sheets-url-input');
+  if (inp) inp.value = sheetsUrl;
+  loadFromSheets().then(ok => {
+    if (ok) renderDashboard();
+  });
+})();
+
+renderDashboard();
+</script>
+</body>
+</html>
