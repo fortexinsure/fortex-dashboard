@@ -1885,20 +1885,24 @@ function toggleSidebar(){
   const app=document.getElementById('app');
   const sidebar=document.querySelector('.sidebar');
   const overlay=document.getElementById('sidebar-overlay');
+  const hbtn=document.getElementById('hamburger-btn');
   const isMobile=window.innerWidth<=768;
   if(isMobile){
     sidebar.classList.toggle('open');
     overlay.classList.toggle('show');
   } else {
     app.classList.toggle('sidebar-collapsed');
-    localStorage.setItem('sidebarCollapsed', app.classList.contains('sidebar-collapsed'));
+    const collapsed=app.classList.contains('sidebar-collapsed');
+    hbtn.style.display=collapsed?'flex':'none';
+    localStorage.setItem('sidebarCollapsed',collapsed);
   }
 }
 function initSidebar(){
+  const hbtn=document.getElementById('hamburger-btn');
   if(window.innerWidth>768){
-    const pref=localStorage.getItem('sidebarCollapsed');
-    // Default: open (no class). Only collapse if user previously collapsed.
-    document.getElementById('app').classList.toggle('sidebar-collapsed', pref==='true');
+    const collapsed=localStorage.getItem('sidebarCollapsed')==='true';
+    document.getElementById('app').classList.toggle('sidebar-collapsed',collapsed);
+    hbtn.style.display=collapsed?'flex':'none';
   }
 }
 function closeSidebar(){
