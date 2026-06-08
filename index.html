@@ -9,24 +9,28 @@
 body{font-family:'Segoe UI',Arial,sans-serif;background:#eef0f4;color:#1a1a1a;min-height:100vh;font-size:15px;}
 .app{display:grid;grid-template-columns:260px 1fr;min-height:100vh;}
 /* ── Sidebar collapse ── */
-.sidebar{transition:transform 0.25s ease,width 0.25s ease;}
+.sidebar{transition:transform 0.28s ease,width 0.28s ease;}
+.sidebar-close-btn{background:none;border:none;color:#8a9bb5;font-size:20px;cursor:pointer;padding:4px 8px;border-radius:6px;line-height:1;transition:color 0.15s;}
+.sidebar-close-btn:hover{color:#f0c060;background:rgba(255,255,255,0.08);}
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:199;}
 .sidebar-overlay.show{display:block;}
-.hamburger-btn{display:none;position:fixed;top:14px;left:14px;z-index:300;background:#0c1e3a;border:none;border-radius:8px;padding:9px 11px;cursor:pointer;line-height:1;}
-.hamburger-btn span{display:block;width:20px;height:2px;background:#f0c060;margin:4px 0;transition:all 0.2s;}
+.hamburger-btn{display:none;position:fixed;top:14px;left:14px;z-index:300;background:#0c1e3a;border:none;border-radius:8px;padding:9px 11px;cursor:pointer;line-height:1;box-shadow:0 2px 8px rgba(0,0,0,0.3);}
+.hamburger-btn span{display:block;width:20px;height:2px;background:#f0c060;margin:4px 0;}
+/* Mobile */
 @media(max-width:768px){
   .app{grid-template-columns:1fr;}
   .sidebar{position:fixed;top:0;left:0;height:100vh;z-index:200;transform:translateX(-100%);width:260px !important;}
   .sidebar.open{transform:translateX(0);}
-  .hamburger-btn{display:block;}
-  .main{padding-top:0;}
+  .hamburger-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .sidebar-close-btn{display:none;}
   .page-header{padding-left:58px;}
 }
+/* Desktop */
 @media(min-width:769px){
+  .sidebar-close-btn{display:inline-flex;align-items:center;}
   .app.sidebar-collapsed{grid-template-columns:0px 1fr;}
   .app.sidebar-collapsed .sidebar{width:0;overflow:hidden;min-width:0;}
-  .hamburger-btn{display:block;top:16px;left:16px;}
-  .app:not(.sidebar-collapsed) .hamburger-btn{left:276px;}
+  .app.sidebar-collapsed .hamburger-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;}
 }
 .sidebar{background:#0c1e3a;color:#e8edf5;display:flex;flex-direction:column;min-height:100vh;}
 .sidebar-logo{padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.08);}
@@ -260,9 +264,12 @@ tr:hover td{background:#f4f6fa;}
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 <div class="app" id="app">
 <div class="sidebar">
-  <div class="sidebar-logo">
-    <h1>Fortex Insurance Group</h1>
-    <p>Agency Management Dashboard</p>
+  <div class="sidebar-logo" style="display:flex;align-items:center;justify-content:space-between;">
+    <div>
+      <h1>Fortex Insurance Group</h1>
+      <p>Agency Management Dashboard</p>
+    </div>
+    <button class="sidebar-close-btn" onclick="toggleSidebar()" title="Collapse menu">&#9776;</button>
   </div>
   <div class="nav-section">
     <div class="nav-label">Overview</div>
@@ -1884,6 +1891,14 @@ function toggleSidebar(){
     overlay.classList.toggle('show');
   } else {
     app.classList.toggle('sidebar-collapsed');
+    localStorage.setItem('sidebarCollapsed', app.classList.contains('sidebar-collapsed'));
+  }
+}
+function initSidebar(){
+  if(window.innerWidth>768){
+    const pref=localStorage.getItem('sidebarCollapsed');
+    // Default: open (no class). Only collapse if user previously collapsed.
+    document.getElementById('app').classList.toggle('sidebar-collapsed', pref==='true');
   }
 }
 function closeSidebar(){
@@ -1892,6 +1907,7 @@ function closeSidebar(){
 }
 // Auto-close sidebar on mobile after nav click
 document.addEventListener('DOMContentLoaded',function(){
+  initSidebar();
   document.querySelectorAll('.nav-item').forEach(function(item){
     item.addEventListener('click',function(){
       if(window.innerWidth<=768) closeSidebar();
