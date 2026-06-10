@@ -1008,7 +1008,7 @@ function renderClients(){
       <td>${c.city||'—'}</td>
       <td><span class="badge badge-blue">${pols} polic${pols===1?'y':'ies'}</span></td>
       <td style="color:#888;font-size:13px;">${fd(c.added)}</td>
-      <td><button class="btn btn-sm" onclick="event.stopPropagation();openProfile('${c.id}')">Open →</button></td>
+      <td><button class="btn btn-sm" onclick="event.stopPropagation();openProfile('${c.id}')">Open →</button> <button class="btn btn-sm" style="background:#e53e3e;color:#fff;border-color:#e53e3e;" onclick="event.stopPropagation();deleteClient('${c.id}','${c.first} ${c.last}')">🗑 Delete</button></td>
     </tr>`;
   }).join('');
 }
@@ -1584,7 +1584,7 @@ function editQuote(id){
 function deleteVehicle(id){if(!confirm('Remove this vehicle?'))return;data.vehicles=data.vehicles.filter(x=>x.id!==id);save();loadVehiclesTab(activeClientId);}
 function deleteProperty(id){if(!confirm('Remove this property?'))return;data.properties=data.properties.filter(x=>x.id!==id);save();loadPropertiesTab(activeClientId);}
 function deletePolicy(id){if(!confirm('Remove this policy?'))return;const pol=data.policies.find(x=>x.id===id);data.policies=data.policies.filter(p=>p.id!==id);save();renderPolicies();if(activeClientId&&pol&&activeClientId===pol.clientId)loadPoliciesTab(activeClientId);}
-function deleteClient(id){if(!confirm('Remove client and all their data?'))return;data.clients=data.clients.filter(c=>c.id!==id);data.policies=data.policies.filter(p=>p.clientId!==id);data.vehicles=data.vehicles.filter(v=>v.clientId!==id);data.properties=data.properties.filter(p=>p.clientId!==id);save();renderClients();}
+function deleteClient(id,name){const n=name||'this client';if(!confirm('Are you sure you want to delete '+n+' and all their data?\n\nThis cannot be undone.'))return;data.clients=data.clients.filter(c=>c.id!==id);data.policies=data.policies.filter(p=>p.clientId!==id);data.vehicles=data.vehicles.filter(v=>v.clientId!==id);data.properties=data.properties.filter(p=>p.clientId!==id);data.reminders=(data.reminders||[]).filter(r=>r.clientId!==id);data.tasks=(data.tasks||[]).filter(t=>t.clientId!==id);save();renderClients();}
 
 document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m){m.classList.remove('open');editingPolicyId=null;editingVehicleId=null;editingPropertyId=null;editingTaskId=null;editingReshopId=null;editingQuoteId=null;document.querySelector('#policy-modal .modal-header h3').textContent='Add Policy';document.querySelector('#vehicle-modal .modal-header h3').textContent='Add Vehicle';document.querySelector('#property-modal .modal-header h3').textContent='Add Property';document.querySelector('#task-modal .modal-header h3').textContent='Add Follow-Up Task';document.querySelector('#reshop-modal .modal-header h3').textContent='Add to Re-Shop Queue';document.querySelector('#quote-modal .modal-header h3').textContent='New Quote / Prospect';}}));
 
