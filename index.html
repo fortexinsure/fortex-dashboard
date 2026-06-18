@@ -345,7 +345,7 @@ tr:hover td{background:#f4f6fa;}
   <div class="page-body">
     <div class="toolbar">
       <input type="text" id="policy-search" placeholder="Search client or policy #..." oninput="renderPolicies()">
-      <select id="policy-filter-type" onchange="renderPolicies()"><option value="">All Types</option><option>Personal Auto</option><option>Home/Property</option><option>Commercial</option><option>Life/Health</option><option>Other</option></select>
+      <select id="policy-filter-type" onchange="renderPolicies()"><option value="">All Types</option><option>Personal Auto</option><option>Homeowners</option><option>Commercial Property</option><option>Commercial Auto</option><option>Workers Compensation</option><option>Life/Health</option><option>Other</option></select>
       <select id="policy-filter-status" onchange="renderPolicies()"><option value="">All Statuses</option><option>Active</option><option>Pending Cancellation</option><option>Cancelled</option><option>Non-Renewed</option><option>Lapsed</option></select>
       <select id="policy-filter-carrier" onchange="renderPolicies()"><option value="">All Carriers</option></select>
     </div>
@@ -716,7 +716,7 @@ tr:hover td{background:#f4f6fa;}
     <div class="modal-header"><h3>Add Policy</h3><button class="modal-close" onclick="closeModal('policy-modal')">×</button></div>
     <div class="modal-body">
       <div class="form-row single"><div class="form-group"><label>Client *</label><select id="pf-client"></select></div></div>
-      <div class="form-row"><div class="form-group"><label>Policy Type</label><select id="pf-type"><option>Personal Auto</option><option>Home/Property</option><option>Commercial</option><option>Life/Health</option><option>Other</option></select></div><div class="form-group"><label>Carrier *</label><input id="pf-carrier" type="text"></div></div>
+      <div class="form-row"><div class="form-group"><label>Policy Type</label><select id="pf-type"><option>Personal Auto</option><option>Homeowners</option><option>Commercial Property</option><option>Commercial Auto</option><option>Workers Compensation</option><option>Life/Health</option><option>Other</option></select></div><div class="form-group"><label>Carrier *</label><input id="pf-carrier" type="text"></div></div>
       <div class="form-row"><div class="form-group"><label>Policy Number</label><input id="pf-number" type="text"></div><div class="form-group"><label>Annual Premium ($) *</label><input id="pf-premium" type="number"></div></div>
       <div class="form-row"><div class="form-group"><label>New Business Comm Rate (%)</label><input id="pf-comm-rate" type="number" step="0.1" placeholder="e.g. 15"></div><div class="form-group"><label>Renewal Comm Rate (%)</label><input id="pf-comm-rate-renewal" type="number" step="0.1" placeholder="e.g. 12"></div></div>
       <div class="form-row"><div class="form-group"><label>Commission Type</label><select id="pf-comm-type"><option>New Business</option><option>Renewal</option><option>Both</option></select></div><div class="form-group"><label>Policy Status</label><select id="pf-status"><option value="Active">Active</option><option value="Pending Cancellation">Pending Cancellation</option><option value="Cancelled">Cancelled</option><option value="Non-Renewed">Non-Renewed</option><option value="Lapsed">Lapsed</option></select></div></div>
@@ -781,7 +781,7 @@ tr:hover td{background:#f4f6fa;}
     <div class="modal-header"><h3>Add to Re-Shop Queue</h3><button class="modal-close" onclick="closeModal('reshop-modal')">×</button></div>
     <div class="modal-body">
       <div class="form-row single"><div class="form-group"><label>Client *</label><select id="rf-client"></select></div></div>
-      <div class="form-row"><div class="form-group"><label>Policy Type</label><select id="rf-type"><option>Personal Auto</option><option>Home/Property</option><option>Commercial</option><option>Life/Health</option><option>Other</option></select></div><div class="form-group"><label>Current Carrier</label><input id="rf-carrier" type="text"></div></div>
+      <div class="form-row"><div class="form-group"><label>Policy Type</label><select id="rf-type"><option>Personal Auto</option><option>Homeowners</option><option>Commercial Property</option><option>Commercial Auto</option><option>Workers Compensation</option><option>Life/Health</option><option>Other</option></select></div><div class="form-group"><label>Current Carrier</label><input id="rf-carrier" type="text"></div></div>
       <div class="form-row"><div class="form-group"><label>Current Premium ($)</label><input id="rf-premium" type="number"></div><div class="form-group"><label>Due Date</label><input id="rf-due" type="date"></div></div>
       <div class="form-row single"><div class="form-group"><label>Reason for Re-Shop</label><select id="rf-reason"><option>Rate Increase</option><option>Client Request</option><option>Annual Review</option><option>Coverage Gap</option><option>Competitive Quote</option><option>Other</option></select></div></div>
       <div class="form-row single"><div class="form-group"><label>Notes</label><textarea id="rf-notes"></textarea></div></div>
