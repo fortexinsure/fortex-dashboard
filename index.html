@@ -461,6 +461,81 @@ tr:hover td{background:#f4f6fa;}
   </div>
 </div>
 
+
+
+<!-- ===== CARRIERS PAGE ===== -->
+<div id="page-carriers" class="page">
+  <div class="page-header">
+    <div class="page-header-left"><h2>⬡ Carriers</h2><p>Premium volume and policy count by carrier — ranked highest to lowest</p></div>
+  </div>
+  <div class="page-body">
+    <div class="metrics" id="carrier-metrics"></div>
+    <div class="section-card" style="margin-bottom:18px;">
+      <div class="section-card-header"><h3>📊 Premium by Carrier</h3></div>
+      <div id="carrier-bar-chart" class="carrier-bar-wrap"></div>
+    </div>
+    <div class="section-card">
+      <div class="section-card-header"><h3>Carrier Detail Table</h3></div>
+      <table>
+        <thead><tr><th>Carrier</th><th>Policies</th><th>Total Premium</th><th>Commission Est.</th><th>% of Book</th><th>Lines of Business</th></tr></thead>
+        <tbody id="carrier-detail-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== EXPENSES PAGE ===== -->
+<div id="page-expenses" class="page">
+  <div class="page-header">
+    <div class="page-header-left"><h2>◩ Business Expenses</h2><p>Track and categorize your agency operating costs</p></div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="openModal('expense-modal');setExpenseDefaults()">+ Add Expense</button>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="metrics" id="expense-metrics"></div>
+    <div class="dash-grid" style="margin-bottom:18px;">
+      <div class="section-card">
+        <div class="section-card-header"><h3>Spending by Category</h3></div>
+        <div id="expense-cat-bars"></div>
+      </div>
+      <div class="section-card">
+        <div class="section-card-header"><h3>Monthly Trend (this year)</h3></div>
+        <div id="expense-monthly" style="padding:12px 18px;"></div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-card-header">
+        <h3>All Expenses</h3>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="expense-search" placeholder="Search..." oninput="renderExpenses()" style="padding:6px 12px;border:1px solid #ccc;border-radius:6px;font-size:13px;width:200px;">
+          <select id="expense-filter-cat" onchange="renderExpenses()" style="padding:6px 10px;border:1px solid #ccc;border-radius:6px;font-size:13px;">
+            <option value="">All Categories</option>
+            <option>Office</option>
+            <option>Marketing</option>
+            <option>Technology</option>
+            <option>Licensing / E&O</option>
+            <option>E&O Insurance</option>
+            <option>Training</option>
+            <option>Meals</option>
+            <option>Travel</option>
+            <option>Subscriptions</option>
+            <option>Other</option>
+          </select>
+          <select id="expense-filter-year" onchange="renderExpenses()" style="padding:6px 10px;border:1px solid #ccc;border-radius:6px;font-size:13px;">
+            <option value="">All Years</option>
+          </select>
+          <button class="btn btn-sm" onclick="exportExpensesCSV()">Export CSV</button>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Vendor</th><th>Amount</th><th>Notes</th><th></th></tr></thead>
+        <tbody id="expenses-tbody"></tbody>
+      </table>
+      <div id="expenses-empty" class="empty-state" style="display:none;">No expenses recorded yet. Click <strong>+ Add Expense</strong> to get started.</div>
+    </div>
+  </div>
+</div>
 </div><!-- /main -->
 </div><!-- /app -->
 
@@ -645,82 +720,6 @@ tr:hover td{background:#f4f6fa;}
 </div>
 
 <!-- ADD CLIENT -->
-
-<!-- ===== CARRIERS PAGE ===== -->
-<div id="page-carriers" class="page">
-  <div class="page-header">
-    <div class="page-header-left"><h2>⬡ Carriers</h2><p>Premium volume and policy count by carrier — ranked highest to lowest</p></div>
-  </div>
-  <div class="page-body">
-    <div class="metrics" id="carrier-metrics"></div>
-    <div class="section-card" style="margin-bottom:18px;">
-      <div class="section-card-header"><h3>📊 Premium by Carrier</h3></div>
-      <div id="carrier-bar-chart" class="carrier-bar-wrap"></div>
-    </div>
-    <div class="section-card">
-      <div class="section-card-header"><h3>Carrier Detail Table</h3></div>
-      <table>
-        <thead><tr><th>Carrier</th><th>Policies</th><th>Total Premium</th><th>Commission Est.</th><th>% of Book</th><th>Lines of Business</th></tr></thead>
-        <tbody id="carrier-detail-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-
-<!-- ===== EXPENSES PAGE ===== -->
-<div id="page-expenses" class="page">
-  <div class="page-header">
-    <div class="page-header-left"><h2>◩ Business Expenses</h2><p>Track and categorize your agency operating costs</p></div>
-    <div style="display:flex;gap:10px;">
-      <button class="btn btn-primary" onclick="openModal('expense-modal');setExpenseDefaults()">+ Add Expense</button>
-    </div>
-  </div>
-  <div class="page-body">
-    <div class="metrics" id="expense-metrics"></div>
-    <div class="dash-grid" style="margin-bottom:18px;">
-      <div class="section-card">
-        <div class="section-card-header"><h3>Spending by Category</h3></div>
-        <div id="expense-cat-bars"></div>
-      </div>
-      <div class="section-card">
-        <div class="section-card-header"><h3>Monthly Trend (this year)</h3></div>
-        <div id="expense-monthly" style="padding:12px 18px;"></div>
-      </div>
-    </div>
-    <div class="section-card">
-      <div class="section-card-header">
-        <h3>All Expenses</h3>
-        <div style="display:flex;gap:8px;">
-          <input type="text" id="expense-search" placeholder="Search..." oninput="renderExpenses()" style="padding:6px 12px;border:1px solid #ccc;border-radius:6px;font-size:13px;width:200px;">
-          <select id="expense-filter-cat" onchange="renderExpenses()" style="padding:6px 10px;border:1px solid #ccc;border-radius:6px;font-size:13px;">
-            <option value="">All Categories</option>
-            <option>Office</option>
-            <option>Marketing</option>
-            <option>Technology</option>
-            <option>Licensing / E&O</option>
-            <option>E&O Insurance</option>
-            <option>Training</option>
-            <option>Meals</option>
-            <option>Travel</option>
-            <option>Subscriptions</option>
-            <option>Other</option>
-          </select>
-          <select id="expense-filter-year" onchange="renderExpenses()" style="padding:6px 10px;border:1px solid #ccc;border-radius:6px;font-size:13px;">
-            <option value="">All Years</option>
-          </select>
-          <button class="btn btn-sm" onclick="exportExpensesCSV()">Export CSV</button>
-        </div>
-      </div>
-      <table>
-        <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Vendor</th><th>Amount</th><th>Notes</th><th></th></tr></thead>
-        <tbody id="expenses-tbody"></tbody>
-      </table>
-      <div id="expenses-empty" class="empty-state" style="display:none;">No expenses recorded yet. Click <strong>+ Add Expense</strong> to get started.</div>
-    </div>
-  </div>
-</div>
-
 <div class="modal-overlay" id="client-modal">
   <div class="modal modal-xl">
     <div class="modal-header"><h3>Add New Client</h3><button class="modal-close" onclick="closeModal('client-modal')">×</button></div>
