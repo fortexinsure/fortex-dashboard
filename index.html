@@ -182,6 +182,37 @@ tr:hover td{background:#f4f6fa;}
 .vehicle-card .vfield span:first-child{font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:0.4px;}
 .vehicle-card .vfield span:last-child{font-size:13px;color:#1a1a1a;}
 
+
+/* CARRIER PREMIUM BARS */
+.carrier-bar-wrap{padding:4px 0;}
+.carrier-bar-row{display:flex;align-items:center;gap:12px;padding:10px 18px;border-bottom:1px solid #eef0f4;}
+.carrier-bar-row:last-child{border-bottom:none;}
+.carrier-bar-name{min-width:160px;font-weight:600;font-size:14px;color:#0c1e3a;}
+.carrier-bar-track{flex:1;background:#eef0f4;border-radius:6px;height:14px;overflow:hidden;}
+.carrier-bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#0c1e3a,#1e4a8a);transition:width 0.4s ease;}
+.carrier-bar-nums{text-align:right;min-width:140px;font-size:13px;color:#555;}
+.carrier-bar-nums strong{display:block;font-size:16px;font-weight:700;color:#0c1e3a;}
+
+/* EXPENSE CATEGORY COLORS */
+.exp-office{background:#e6f0fb;color:#1a4a8a;}
+.exp-marketing{background:#f0eaff;color:#5a2d9a;}
+.exp-technology{background:#e8f5ec;color:#1a6b3a;}
+.exp-licensing{background:#fef3e0;color:#8a4f10;}
+.exp-training{background:#fde8e8;color:#9b2c2c;}
+.exp-meals{background:#fff3e0;color:#7a4000;}
+.exp-travel{background:#e0f7fa;color:#006064;}
+.exp-subscriptions{background:#f3e5f5;color:#4a148c;}
+.exp-other{background:#eef0f4;color:#555;}
+.exp-eo{background:#fdf3d0;color:#7a5500;}
+
+/* EXPENSE SUMMARY BARS */
+.exp-bar-row{display:flex;align-items:center;gap:12px;padding:9px 18px;border-bottom:1px solid #eef0f4;}
+.exp-bar-row:last-child{border-bottom:none;}
+.exp-bar-name{min-width:140px;font-size:13px;font-weight:600;}
+.exp-bar-track{flex:1;background:#eef0f4;border-radius:5px;height:12px;overflow:hidden;}
+.exp-bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,#f0c060,#e8a820);}
+.exp-bar-amt{min-width:90px;text-align:right;font-size:13px;font-weight:700;color:#0c1e3a;}
+
 /* PIPELINE */
 .pipeline{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;}
 .pipeline-col{background:#eef0f4;border-radius:12px;padding:14px;}
@@ -288,6 +319,8 @@ tr:hover td{background:#f4f6fa;}
   <div class="nav-section">
     <div class="nav-label">Financials</div>
     <div class="nav-item" onclick="nav('commissions',this)"><span class="nav-icon">$</span>Commissions</div>
+    <div class="nav-item" onclick="nav('carriers',this)"><span class="nav-icon">⬡</span>Carriers</div>
+    <div class="nav-item" onclick="nav('expenses',this)"><span class="nav-icon">◩</span>Business Expenses</div>
   </div>
   <div class="nav-section">
     <div class="nav-label">Reports</div>
@@ -323,6 +356,7 @@ tr:hover td{background:#f4f6fa;}
     <div class="dash-grid" style="margin-top:18px;">
       <div class="section-card"><div class="section-card-header"><h3>🟡 Renewals 31–60 Days Out</h3></div><div id="dash-soon-list"></div></div>
       <div class="section-card"><div class="section-card-header"><h3>💰 Commission This Month</h3></div><div id="dash-comm-list"></div></div>
+      <div class="section-card"><div class="section-card-header"><h3>⬡ Premium by Carrier (Top 5)</h3><a href="#" onclick="navTo('carriers');return false;" style="font-size:12px;color:#0c1e3a;font-weight:600;">View All →</a></div><div id="dash-carrier-list"></div></div>
     </div>
   </div>
 </div>
@@ -611,6 +645,82 @@ tr:hover td{background:#f4f6fa;}
 </div>
 
 <!-- ADD CLIENT -->
+
+<!-- ===== CARRIERS PAGE ===== -->
+<div id="page-carriers" class="page">
+  <div class="page-header">
+    <div class="page-header-left"><h2>⬡ Carriers</h2><p>Premium volume and policy count by carrier — ranked highest to lowest</p></div>
+  </div>
+  <div class="page-body">
+    <div class="metrics" id="carrier-metrics"></div>
+    <div class="section-card" style="margin-bottom:18px;">
+      <div class="section-card-header"><h3>📊 Premium by Carrier</h3></div>
+      <div id="carrier-bar-chart" class="carrier-bar-wrap"></div>
+    </div>
+    <div class="section-card">
+      <div class="section-card-header"><h3>Carrier Detail Table</h3></div>
+      <table>
+        <thead><tr><th>Carrier</th><th>Policies</th><th>Total Premium</th><th>Commission Est.</th><th>% of Book</th><th>Lines of Business</th></tr></thead>
+        <tbody id="carrier-detail-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== EXPENSES PAGE ===== -->
+<div id="page-expenses" class="page">
+  <div class="page-header">
+    <div class="page-header-left"><h2>◩ Business Expenses</h2><p>Track and categorize your agency operating costs</p></div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="openModal('expense-modal');setExpenseDefaults()">+ Add Expense</button>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="metrics" id="expense-metrics"></div>
+    <div class="dash-grid" style="margin-bottom:18px;">
+      <div class="section-card">
+        <div class="section-card-header"><h3>Spending by Category</h3></div>
+        <div id="expense-cat-bars"></div>
+      </div>
+      <div class="section-card">
+        <div class="section-card-header"><h3>Monthly Trend (this year)</h3></div>
+        <div id="expense-monthly" style="padding:12px 18px;"></div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-card-header">
+        <h3>All Expenses</h3>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="expense-search" placeholder="Search..." oninput="renderExpenses()" style="padding:6px 12px;border:1px solid #ccc;border-radius:6px;font-size:13px;width:200px;">
+          <select id="expense-filter-cat" onchange="renderExpenses()" style="padding:6px 10px;border:1px solid #ccc;border-radius:6px;font-size:13px;">
+            <option value="">All Categories</option>
+            <option>Office</option>
+            <option>Marketing</option>
+            <option>Technology</option>
+            <option>Licensing / E&O</option>
+            <option>E&O Insurance</option>
+            <option>Training</option>
+            <option>Meals</option>
+            <option>Travel</option>
+            <option>Subscriptions</option>
+            <option>Other</option>
+          </select>
+          <select id="expense-filter-year" onchange="renderExpenses()" style="padding:6px 10px;border:1px solid #ccc;border-radius:6px;font-size:13px;">
+            <option value="">All Years</option>
+          </select>
+          <button class="btn btn-sm" onclick="exportExpensesCSV()">Export CSV</button>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Vendor</th><th>Amount</th><th>Notes</th><th></th></tr></thead>
+        <tbody id="expenses-tbody"></tbody>
+      </table>
+      <div id="expenses-empty" class="empty-state" style="display:none;">No expenses recorded yet. Click <strong>+ Add Expense</strong> to get started.</div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="client-modal">
   <div class="modal modal-xl">
     <div class="modal-header"><h3>Add New Client</h3><button class="modal-close" onclick="closeModal('client-modal')">×</button></div>
@@ -868,7 +978,7 @@ function nav(page,el){
   document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));el.classList.add('active');
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
-  ({dashboard:renderDashboard,clients:renderClients,policies:()=>{renderPolicies();populateCarrierFilter();},renewals:()=>renderRenewals(30),reshop:renderReshop,quotes:renderQuotes,followups:renderPipeline,commissions:renderCommissions,reports:renderReports})[page]?.();
+  ({dashboard:renderDashboard,clients:renderClients,policies:()=>{renderPolicies();populateCarrierFilter();},renewals:()=>renderRenewals(30),reshop:renderReshop,quotes:renderQuotes,followups:renderPipeline,commissions:renderCommissions,carriers:renderCarriers,expenses:renderExpenses,reports:renderReports})[page]?.();
 }
 
 // ==================== DASHBOARD ====================
@@ -880,7 +990,7 @@ function navTo(page){
 function refreshCurrentPage(){
   const active=document.querySelector('.page.active');if(!active)return;
   const id=active.id.replace('page-','');
-  ({dashboard:renderDashboard,clients:renderClients,policies:()=>{renderPolicies();populateCarrierFilter();},renewals:()=>renderRenewals(currentRenewalDays),reshop:renderReshop,quotes:renderQuotes,followups:renderPipeline,commissions:renderCommissions,reports:renderReports})[id]?.();
+  ({dashboard:renderDashboard,clients:renderClients,policies:()=>{renderPolicies();populateCarrierFilter();},renewals:()=>renderRenewals(currentRenewalDays),reshop:renderReshop,quotes:renderQuotes,followups:renderPipeline,commissions:renderCommissions,carriers:renderCarriers,expenses:renderExpenses,reports:renderReports})[id]?.();
 }
 
 let currentRenewalDays=30;
@@ -906,6 +1016,9 @@ function renderDashboard(){
   const cl=document.getElementById('dash-comm-list');
   const top=[...data.policies].sort((a,b)=>commAmt(b)-commAmt(a)).slice(0,5);
   cl.innerHTML=top.map(p=>`<div class="dash-row" style="cursor:pointer;" onclick="openProfile('${p.clientId}')" title="Open client profile"><span><strong>${cn(p.clientId)}</strong> — ${p.carrier}</span><span style="font-weight:700;color:#2a7a4a;">${fmtc(commAmt(p))}/yr</span></div>`).join('');
+  // Premium by Carrier widget on dashboard
+  const dcl=document.getElementById('dash-carrier-list');
+  if(dcl){const byC={};data.policies.forEach(p=>{if(!byC[p.carrier])byC[p.carrier]={prem:0,count:0};byC[p.carrier].prem+=Number(p.premium||0);byC[p.carrier].count++;});const sorted=Object.entries(byC).sort((a,b)=>b[1].prem-a[1].prem).slice(0,5);dcl.innerHTML=sorted.length?sorted.map(([c,v])=>`<div class="dash-row" style="cursor:pointer;" onclick="navTo('carriers')" title="View all carriers"><span><strong>${c}</strong> <span style="font-size:12px;color:#888;">(${v.count} polic${v.count!==1?'ies':'y'})</span></span><span style="font-weight:700;color:#0c1e3a;">${fmtc(v.prem)}/yr</span></div>`).join(''):'<div class="empty-state" style="padding:24px;">No policies added yet.</div>';}
 }
 
 // ==================== GMAIL DIGEST ====================
@@ -1583,7 +1696,7 @@ function editQuote(id){
 
 function deleteVehicle(id){if(!confirm('Remove this vehicle?'))return;data.vehicles=data.vehicles.filter(x=>x.id!==id);save();loadVehiclesTab(activeClientId);}
 function deleteProperty(id){if(!confirm('Remove this property?'))return;data.properties=data.properties.filter(x=>x.id!==id);save();loadPropertiesTab(activeClientId);}
-function deletePolicy(id){if(!confirm('Remove this policy?'))return;const pol=data.policies.find(x=>x.id===id);data.policies=data.policies.filter(p=>p.id!==id);save();renderPolicies();if(activeClientId&&pol&&activeClientId===pol.clientId)loadPoliciesTab(activeClientId);}
+function deletePolicy(id){if(!confirm('Remove this policy?'))return;const pol=data.policies.find(x=>x.id===id);data.policies=data.policies.filter(p=>p.id!==id);save();renderPolicies();renderDashboard();const adp=document.querySelector('.page.active');if(adp&&adp.id==='page-carriers')renderCarriers();if(adp&&adp.id==='page-commissions')renderCommissions();if(activeClientId&&pol&&activeClientId===pol.clientId)loadPoliciesTab(activeClientId);}
 function deleteClient(id,name){const n=name||'this client';if(!confirm('Are you sure you want to delete '+n+' and all their data?\n\nThis cannot be undone.'))return;data.clients=data.clients.filter(c=>c.id!==id);data.policies=data.policies.filter(p=>p.clientId!==id);data.vehicles=data.vehicles.filter(v=>v.clientId!==id);data.properties=data.properties.filter(p=>p.clientId!==id);data.reminders=(data.reminders||[]).filter(r=>r.clientId!==id);data.tasks=(data.tasks||[]).filter(t=>t.clientId!==id);save();renderClients();}
 
 document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m){m.classList.remove('open');editingPolicyId=null;editingVehicleId=null;editingPropertyId=null;editingTaskId=null;editingReshopId=null;editingQuoteId=null;document.querySelector('#policy-modal .modal-header h3').textContent='Add Policy';document.querySelector('#vehicle-modal .modal-header h3').textContent='Add Vehicle';document.querySelector('#property-modal .modal-header h3').textContent='Add Property';document.querySelector('#task-modal .modal-header h3').textContent='Add Follow-Up Task';document.querySelector('#reshop-modal .modal-header h3').textContent='Add to Re-Shop Queue';document.querySelector('#quote-modal .modal-header h3').textContent='New Quote / Prospect';}}));
@@ -1872,12 +1985,202 @@ async function init() {
     if (!data.reshop)     data.reshop     = [];
     if (!data.tasks)      data.tasks      = [];
     if (!data.policies)   data.policies   = [];
+    if (!data.expenses)   data.expenses   = [];
   }
   updateSyncStatus(true, 'Cloud connected');
   renderDashboard();
 }
 
 init();
+
+// ==================== CARRIERS ====================
+function renderCarriers(){
+  const byC={};
+  data.policies.forEach(p=>{
+    const key=p.carrier||'Unknown';
+    if(!byC[key])byC[key]={prem:0,comm:0,count:0,types:new Set()};
+    byC[key].prem+=Number(p.premium||0);
+    byC[key].comm+=commAmt(p);
+    byC[key].count++;
+    if(p.type)byC[key].types.add(p.type);
+  });
+  const sorted=Object.entries(byC).sort((a,b)=>b[1].prem-a[1].prem);
+  const totalPrem=sorted.reduce((s,[,v])=>s+v.prem,0);
+  const totalComm=sorted.reduce((s,[,v])=>s+v.comm,0);
+  const totalCount=sorted.reduce((s,[,v])=>s+v.count,0);
+
+  // Metrics
+  document.getElementById('carrier-metrics').innerHTML=`
+    <div class="metric-card"><div class="metric-label">Total Carriers</div><div class="metric-value">${sorted.length}</div><div class="metric-sub">Active in book</div></div>
+    <div class="metric-card"><div class="metric-label">Total Policies</div><div class="metric-value">${totalCount}</div><div class="metric-sub">Across all carriers</div></div>
+    <div class="metric-card metric-gold"><div class="metric-label">Total Annual Premium</div><div class="metric-value">${fmtc(totalPrem)}</div><div class="metric-sub">All carriers combined</div></div>
+    <div class="metric-card"><div class="metric-label">Total Est. Commission</div><div class="metric-value metric-value" style="color:#2a7a4a;">${fmtc(totalComm)}</div><div class="metric-sub">Annual estimate</div></div>`;
+
+  // Bar chart
+  const maxPrem=sorted.length?sorted[0][1].prem:1;
+  document.getElementById('carrier-bar-chart').innerHTML=sorted.length?sorted.map(([carrier,v])=>{
+    const pct=totalPrem>0?Math.round(v.prem/totalPrem*100):0;
+    const barW=maxPrem>0?Math.round(v.prem/maxPrem*100):0;
+    return `<div class="carrier-bar-row">
+      <div class="carrier-bar-name">${carrier}</div>
+      <div class="carrier-bar-track"><div class="carrier-bar-fill" style="width:${barW}%"></div></div>
+      <div class="carrier-bar-nums"><strong>${fmtc(v.prem)}/yr</strong>${v.count} polic${v.count!==1?'ies':'y'} · ${pct}% of book</div>
+    </div>`;
+  }).join(''):'<div class="empty-state">No policies found.</div>';
+
+  // Detail table
+  document.getElementById('carrier-detail-tbody').innerHTML=sorted.length?sorted.map(([carrier,v])=>{
+    const pct=totalPrem>0?(v.prem/totalPrem*100).toFixed(1):'0.0';
+    const lines=[...v.types].join(', ')||'—';
+    return `<tr><td><strong>${carrier}</strong></td><td>${v.count}</td><td style="font-weight:700;">${fmtc(v.prem)}</td><td style="color:#2a7a4a;font-weight:700;">${fmtc(v.comm)}</td><td>${pct}%</td><td style="font-size:12px;color:#666;">${lines}</td></tr>`;
+  }).join('')+`<tr style="background:#f8f9fb;font-weight:700;"><td>TOTAL</td><td>${totalCount}</td><td>${fmtc(totalPrem)}</td><td style="color:#2a7a4a;">${fmtc(totalComm)}</td><td>100%</td><td></td></tr>`:'<tr><td colspan="6" class="empty-state">No policies yet.</td></tr>';
+}
+
+// ==================== EXPENSES ====================
+let editingExpenseId=null;
+const EXP_CATS={
+  'Office':'exp-office','Marketing':'exp-marketing','Technology':'exp-technology',
+  'Licensing / E&O':'exp-licensing','E&O Insurance':'exp-eo','Training':'exp-training',
+  'Meals':'exp-meals','Travel':'exp-travel','Subscriptions':'exp-subscriptions','Other':'exp-other'
+};
+function catClass(cat){return EXP_CATS[cat]||'exp-other';}
+
+function setExpenseDefaults(){
+  editingExpenseId=null;
+  document.getElementById('expense-modal-title').textContent='Add Business Expense';
+  document.getElementById('ef-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('ef-amount').value='';
+  document.getElementById('ef-category').value='';
+  document.getElementById('ef-vendor').value='';
+  document.getElementById('ef-description').value='';
+  document.getElementById('ef-payment').value='';
+  document.getElementById('ef-receipt').value='';
+  document.getElementById('ef-notes').value='';
+}
+
+function renderExpenses(){
+  if(!data.expenses)data.expenses=[];
+  const q=(document.getElementById('expense-search')||{}).value||'';
+  const catF=(document.getElementById('expense-filter-cat')||{}).value||'';
+  const yearF=(document.getElementById('expense-filter-year')||{}).value||'';
+
+  // Populate year filter
+  const years=[...new Set(data.expenses.map(e=>(e.date||'').slice(0,4)).filter(Boolean))].sort().reverse();
+  const yrSel=document.getElementById('expense-filter-year');
+  if(yrSel){const cur=yrSel.value;yrSel.innerHTML='<option value="">All Years</option>'+years.map(y=>`<option${y===cur?' selected':''}>${y}</option>`).join('');}
+
+  const filtered=data.expenses.filter(e=>{
+    const s=((e.description||'')+(e.vendor||'')+(e.category||'')+(e.notes||'')).toLowerCase();
+    const yr=(e.date||'').slice(0,4);
+    return s.includes(q.toLowerCase())&&(!catF||e.category===catF)&&(!yearF||yr===yearF);
+  }).sort((a,b)=>((b.date||'')>(a.date||'')?1:-1));
+
+  const tbody=document.getElementById('expenses-tbody');
+  const empty=document.getElementById('expenses-empty');
+  tbody.innerHTML=filtered.map(e=>`<tr>
+    <td>${fd(e.date)}</td>
+    <td><span class="badge ${catClass(e.category)}">${e.category}</span></td>
+    <td style="font-weight:600;">${e.description}</td>
+    <td style="color:#666;">${e.vendor||'—'}</td>
+    <td style="font-weight:700;color:#0c1e3a;">$${Number(e.amount||0).toFixed(2)}</td>
+    <td style="font-size:12px;color:#888;">${e.notes||'—'}</td>
+    <td style="display:flex;gap:6px;">
+      <button class="btn btn-sm" onclick="editExpense('${e.id}')">Edit</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteExpense('${e.id}')">×</button>
+    </td>
+  </tr>`).join('');
+  if(empty)empty.style.display=filtered.length?'none':'block';
+
+  // --- Metrics ---
+  const now=new Date();
+  const thisMonth=data.expenses.filter(e=>{const d=new Date(e.date+'T00:00:00');return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();});
+  const thisYear=data.expenses.filter(e=>(e.date||'').startsWith(now.getFullYear()+''));
+  const totalAll=data.expenses.reduce((s,e)=>s+Number(e.amount||0),0);
+  const totalMo=thisMonth.reduce((s,e)=>s+Number(e.amount||0),0);
+  const totalYr=thisYear.reduce((s,e)=>s+Number(e.amount||0),0);
+  document.getElementById('expense-metrics').innerHTML=`
+    <div class="metric-card"><div class="metric-label">Total Expenses (All Time)</div><div class="metric-value">$${totalAll.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div><div class="metric-sub">${data.expenses.length} transactions</div></div>
+    <div class="metric-card metric-warn"><div class="metric-label">This Month</div><div class="metric-value">$${totalMo.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div><div class="metric-sub">${thisMonth.length} expenses</div></div>
+    <div class="metric-card metric-gold"><div class="metric-label">This Year (${now.getFullYear()})</div><div class="metric-value">$${totalYr.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div><div class="metric-sub">${thisYear.length} expenses</div></div>
+    <div class="metric-card"><div class="metric-label">Avg. Monthly (This Year)</div><div class="metric-value">$${(now.getMonth()>0?(totalYr/(now.getMonth()+1)):totalYr).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div><div class="metric-sub">Based on ${now.getMonth()+1} months</div></div>`;
+
+  // --- Category bars ---
+  const byCat={};
+  data.expenses.forEach(e=>{if(!byCat[e.category])byCat[e.category]=0;byCat[e.category]+=Number(e.amount||0);});
+  const catSorted=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  const maxCat=catSorted.length?catSorted[0][1]:1;
+  document.getElementById('expense-cat-bars').innerHTML=catSorted.length?catSorted.map(([cat,amt])=>`
+    <div class="exp-bar-row">
+      <div class="exp-bar-name"><span class="badge ${catClass(cat)}">${cat}</span></div>
+      <div class="exp-bar-track"><div class="exp-bar-fill" style="width:${Math.round(amt/maxCat*100)}%"></div></div>
+      <div class="exp-bar-amt">$${amt.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+    </div>`).join(''):'<div class="empty-state" style="padding:24px;">No expenses yet.</div>';
+
+  // --- Monthly trend ---
+  const yr=now.getFullYear();
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const monthly=Array(12).fill(0);
+  data.expenses.filter(e=>(e.date||'').startsWith(yr+'')).forEach(e=>{const m=new Date(e.date+'T00:00:00').getMonth();monthly[m]+=Number(e.amount||0);});
+  const maxM=Math.max(...monthly,1);
+  document.getElementById('expense-monthly').innerHTML=`<div style="font-size:11px;color:#888;margin-bottom:8px;font-weight:700;text-transform:uppercase;">Monthly Spending — ${yr}</div>`+
+    months.map((m,i)=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+      <span style="min-width:28px;font-size:12px;color:#888;">${m}</span>
+      <div style="flex:1;background:#eef0f4;border-radius:4px;height:10px;overflow:hidden;"><div style="width:${Math.round(monthly[i]/maxM*100)}%;height:100%;background:${i===now.getMonth()&&yr===now.getFullYear()?'#f0c060':'#0c1e3a'};border-radius:4px;"></div></div>
+      <span style="min-width:70px;font-size:12px;font-weight:600;text-align:right;">${monthly[i]>0?'$'+monthly[i].toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'}</span>
+    </div>`).join('');
+}
+
+function saveExpense(){
+  const vals={
+    date:document.getElementById('ef-date').value,
+    amount:document.getElementById('ef-amount').value,
+    category:document.getElementById('ef-category').value,
+    vendor:document.getElementById('ef-vendor').value.trim(),
+    description:document.getElementById('ef-description').value.trim(),
+    payment:document.getElementById('ef-payment').value,
+    receipt:document.getElementById('ef-receipt').value.trim(),
+    notes:document.getElementById('ef-notes').value.trim()
+  };
+  if(!vals.date||!vals.amount||!vals.category||!vals.description){alert('Date, amount, category and description are required.');return;}
+  if(!data.expenses)data.expenses=[];
+  if(editingExpenseId){
+    const idx=data.expenses.findIndex(x=>x.id===editingExpenseId);
+    if(idx!==-1)data.expenses[idx]={...vals,id:editingExpenseId};
+    editingExpenseId=null;
+  } else {
+    data.expenses.push({...vals,id:'ex'+Date.now()});
+  }
+  save();closeModal('expense-modal');renderExpenses();
+}
+
+function editExpense(id){
+  const e=data.expenses.find(x=>x.id===id);if(!e)return;
+  editingExpenseId=id;
+  document.getElementById('expense-modal-title').textContent='Edit Expense';
+  document.getElementById('ef-date').value=e.date||'';
+  document.getElementById('ef-amount').value=e.amount||'';
+  document.getElementById('ef-category').value=e.category||'';
+  document.getElementById('ef-vendor').value=e.vendor||'';
+  document.getElementById('ef-description').value=e.description||'';
+  document.getElementById('ef-payment').value=e.payment||'';
+  document.getElementById('ef-receipt').value=e.receipt||'';
+  document.getElementById('ef-notes').value=e.notes||'';
+  openModal('expense-modal');
+}
+
+function deleteExpense(id){
+  if(!confirm('Delete this expense?'))return;
+  data.expenses=data.expenses.filter(x=>x.id!==id);
+  save();renderExpenses();
+}
+
+function exportExpensesCSV(){
+  const rows=[['Date','Category','Description','Vendor','Amount','Payment Method','Receipt/Ref','Notes']];
+  data.expenses.sort((a,b)=>((b.date||'')>(a.date||'')?1:-1)).forEach(e=>rows.push([e.date,e.category,e.description,e.vendor,e.amount,e.payment,e.receipt,e.notes]));
+  const csv=rows.map(r=>r.map(v=>'"'+(v||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='fortex_expenses.csv';a.click();
+}
+
 
 function toggleSidebar(){
   const app=document.getElementById('app');
@@ -1917,4 +2220,63 @@ document.addEventListener('DOMContentLoaded',function(){
   });
 });
 </script>
+
+<!-- EXPENSE MODAL -->
+<div class="modal-overlay" id="expense-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="expense-modal-title">Add Business Expense</h3>
+      <button class="modal-close" onclick="closeModal('expense-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>Date *</label><input id="ef-date" type="date"></div>
+        <div class="form-group"><label>Amount ($) *</label><input id="ef-amount" type="number" step="0.01" min="0" placeholder="0.00"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Category *</label>
+          <select id="ef-category">
+            <option value="">Select category…</option>
+            <option>Office</option>
+            <option>Marketing</option>
+            <option>Technology</option>
+            <option>Licensing / E&O</option>
+            <option>E&O Insurance</option>
+            <option>Training</option>
+            <option>Meals</option>
+            <option>Travel</option>
+            <option>Subscriptions</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Vendor / Payee</label><input id="ef-vendor" type="text" placeholder="e.g. Geico, Google, Office Depot"></div>
+      </div>
+      <div class="form-row single">
+        <div class="form-group"><label>Description *</label><input id="ef-description" type="text" placeholder="Brief description of the expense"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Payment Method</label>
+          <select id="ef-payment">
+            <option value="">—</option>
+            <option>Business Credit Card</option>
+            <option>Business Debit Card</option>
+            <option>Check</option>
+            <option>ACH / Wire</option>
+            <option>Cash</option>
+            <option>Personal (Reimburse)</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Receipt / Ref #</label><input id="ef-receipt" type="text" placeholder="Receipt or reference number"></div>
+      </div>
+      <div class="form-row single">
+        <div class="form-group"><label>Notes</label><textarea id="ef-notes" rows="2" placeholder="Optional notes"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('expense-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveExpense()">Save Expense</button>
+    </div>
+  </div>
+</div>
+
 </body>
