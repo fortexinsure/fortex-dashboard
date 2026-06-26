@@ -341,7 +341,7 @@ tr:hover td{background:#f4f6fa;}
   <div class="nav-section">
     <div class="nav-label">Financials</div>
     <div class="nav-item" onclick="nav('commissions',this)"><span class="nav-icon">$</span>Commissions</div>
-    <div class="nav-item" onclick="nav('carriers',this)"><span class="nav-icon">⬡</span>Carriers</div>
+    <div class="nav-item" onclick="nav('carriers',this)"><span class="nav-icon">⬡</span>Book of Business</div>
     <div class="nav-item" onclick="nav('expenses',this)"><span class="nav-icon">◩</span>Business Expenses</div>
   </div>
   <div class="nav-section">
@@ -401,7 +401,44 @@ tr:hover td{background:#f4f6fa;}
   <div class="page-body">
     <div class="toolbar">
       <input type="text" id="policy-search" placeholder="Search client or policy #..." oninput="renderPolicies()">
-      <select id="policy-filter-type" onchange="renderPolicies()"><option value="">All Types</option><option>Personal Auto</option><option>Homeowners</option><option>Commercial Property</option><option>Commercial Auto</option><option>Workers Compensation</option><option>Life/Health</option><option>Other</option></select>
+      <select id="policy-filter-type" onchange="renderPolicies()"><option value="">All Types</option><optgroup label="── Personal Lines ──" disabled></optgroup>
+<option>Personal Auto</option>
+<option>Homeowners</option>
+<option>Renters</option>
+<option>Condo (HO-6)</option>
+<option>Landlord / Dwelling Fire</option>
+<option>Flood (Personal)</option>
+<option>Earthquake (Personal)</option>
+<option>Personal Umbrella</option>
+<option>Boat / Watercraft</option>
+<option>Motorcycle</option>
+<option>Recreational Vehicle (RV)</option>
+<option>ATV / Off-Road Vehicle</option>
+<option>Mobile Home</option>
+<option>Travel Insurance</option>
+<option>Pet Insurance</option>
+<option>Life / Health</option>
+<option>Other (Personal)</option>
+<optgroup label="── Commercial Lines ──" disabled></optgroup>
+<option>Commercial Auto</option>
+<option>Commercial Property</option>
+<option>General Liability</option>
+<option>Business Owner's Policy (BOP)</option>
+<option>Workers Compensation</option>
+<option>Professional Liability (E&amp;O)</option>
+<option>Cyber Liability</option>
+<option>Directors &amp; Officers (D&amp;O)</option>
+<option>Employment Practices Liability (EPLI)</option>
+<option>Commercial Umbrella</option>
+<option>Inland Marine</option>
+<option>Surety Bond</option>
+<option>Crime / Fidelity</option>
+<option>Builder's Risk</option>
+<option>Commercial Flood</option>
+<option>Product Liability</option>
+<option>Management Liability</option>
+<option>Commercial Life / Health</option>
+<option>Other (Commercial)</option></select>
       <select id="policy-filter-status" onchange="renderPolicies()"><option value="">All Statuses</option><option>Active</option><option>Pending Cancellation</option><option>Cancelled</option><option>Non-Renewed</option><option>Lapsed</option></select>
       <select id="policy-filter-carrier" onchange="renderPolicies()"><option value="">All Carriers</option></select>
     </div>
@@ -488,9 +525,33 @@ tr:hover td{background:#f4f6fa;}
 <!-- ===== CARRIERS PAGE ===== -->
 <div id="page-carriers" class="page">
   <div class="page-header">
-    <div class="page-header-left"><h2>⬡ Carriers</h2><p>Premium volume and policy count by carrier — ranked highest to lowest</p></div>
+    <div class="page-header-left"><h2>⬡ Book of Business</h2><p>Premium volume, policy mix, and carrier breakdown across your entire book</p></div>
   </div>
   <div class="page-body">
+    <div class="section-card" style="margin-bottom:18px;" id="book-split-card">
+      <div class="section-card-header"><h3>📋 Personal vs. Commercial Lines Split</h3></div>
+      <div id="book-split-content" style="padding:18px;">
+        <div class="dash-grid" style="margin-bottom:18px;">
+          <div style="background:#f0f7ff;border:1.5px solid #b8d4f5;border-radius:10px;padding:18px;">
+            <div style="font-size:12px;font-weight:700;color:#1a4fa0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">🏠 Personal Lines</div>
+            <div id="bob-personal-metrics" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;"></div>
+            <table style="width:100%;font-size:13px;">
+              <thead><tr style="background:#e0edff;"><th style="text-align:left;padding:6px 8px;border-radius:4px;">Policy Type</th><th style="text-align:right;padding:6px 8px;">Policies</th><th style="text-align:right;padding:6px 8px;">Total Premium</th><th style="text-align:right;padding:6px 8px;">Ann. Commission</th></tr></thead>
+              <tbody id="bob-personal-tbody"></tbody>
+            </table>
+          </div>
+          <div style="background:#f2f9f4;border:1.5px solid #b2dfc0;border-radius:10px;padding:18px;">
+            <div style="font-size:12px;font-weight:700;color:#1a5c32;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">🏢 Commercial Lines</div>
+            <div id="bob-commercial-metrics" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;"></div>
+            <table style="width:100%;font-size:13px;">
+              <thead><tr style="background:#d4f0dd;"><th style="text-align:left;padding:6px 8px;border-radius:4px;">Policy Type</th><th style="text-align:right;padding:6px 8px;">Policies</th><th style="text-align:right;padding:6px 8px;">Total Premium</th><th style="text-align:right;padding:6px 8px;">Ann. Commission</th></tr></thead>
+              <tbody id="bob-commercial-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="bob-total-bar" style="padding:10px 0;"></div>
+      </div>
+    </div>
     <div class="metrics" id="carrier-metrics"></div>
     <div class="section-card" style="margin-bottom:18px;">
       <div class="section-card-header"><h3>📊 Premium by Carrier</h3></div>
@@ -948,7 +1009,44 @@ tr:hover td{background:#f4f6fa;}
     <div class="modal-body">
       <div class="form-row single"><div class="form-group"><label>Client *</label><select id="pf-client"></select></div></div>
       <div class="form-row cols3">
-        <div class="form-group"><label>Policy Type</label><select id="pf-type" onchange="onPfTypeChange()"><option>Personal Auto</option><option>Homeowners</option><option>Commercial Property</option><option>Commercial Auto</option><option>Workers Compensation</option><option>Life/Health</option><option>Other</option></select></div>
+        <div class="form-group"><label>Policy Type</label><select id="pf-type" onchange="onPfTypeChange()"><optgroup label="── Personal Lines ──" disabled></optgroup>
+<option>Personal Auto</option>
+<option>Homeowners</option>
+<option>Renters</option>
+<option>Condo (HO-6)</option>
+<option>Landlord / Dwelling Fire</option>
+<option>Flood (Personal)</option>
+<option>Earthquake (Personal)</option>
+<option>Personal Umbrella</option>
+<option>Boat / Watercraft</option>
+<option>Motorcycle</option>
+<option>Recreational Vehicle (RV)</option>
+<option>ATV / Off-Road Vehicle</option>
+<option>Mobile Home</option>
+<option>Travel Insurance</option>
+<option>Pet Insurance</option>
+<option>Life / Health</option>
+<option>Other (Personal)</option>
+<optgroup label="── Commercial Lines ──" disabled></optgroup>
+<option>Commercial Auto</option>
+<option>Commercial Property</option>
+<option>General Liability</option>
+<option>Business Owner's Policy (BOP)</option>
+<option>Workers Compensation</option>
+<option>Professional Liability (E&amp;O)</option>
+<option>Cyber Liability</option>
+<option>Directors &amp; Officers (D&amp;O)</option>
+<option>Employment Practices Liability (EPLI)</option>
+<option>Commercial Umbrella</option>
+<option>Inland Marine</option>
+<option>Surety Bond</option>
+<option>Crime / Fidelity</option>
+<option>Builder's Risk</option>
+<option>Commercial Flood</option>
+<option>Product Liability</option>
+<option>Management Liability</option>
+<option>Commercial Life / Health</option>
+<option>Other (Commercial)</option></select></div>
         <div class="form-group"><label>Policy Term</label><select id="pf-term" onchange="onPfTermChange()"><option value="6">6 Months</option><option value="12" selected>12 Months (Annual)</option></select></div>
         <div class="form-group"><label>Carrier *</label><input id="pf-carrier" type="text"></div>
       </div>
@@ -1030,7 +1128,44 @@ tr:hover td{background:#f4f6fa;}
     <div class="modal-header"><h3>Add to Re-Shop Queue</h3><button class="modal-close" onclick="closeModal('reshop-modal')">×</button></div>
     <div class="modal-body">
       <div class="form-row single"><div class="form-group"><label>Client *</label><select id="rf-client"></select></div></div>
-      <div class="form-row"><div class="form-group"><label>Policy Type</label><select id="rf-type"><option>Personal Auto</option><option>Homeowners</option><option>Commercial Property</option><option>Commercial Auto</option><option>Workers Compensation</option><option>Life/Health</option><option>Other</option></select></div><div class="form-group"><label>Current Carrier</label><input id="rf-carrier" type="text"></div></div>
+      <div class="form-row"><div class="form-group"><label>Policy Type</label><select id="rf-type"><optgroup label="── Personal Lines ──" disabled></optgroup>
+<option>Personal Auto</option>
+<option>Homeowners</option>
+<option>Renters</option>
+<option>Condo (HO-6)</option>
+<option>Landlord / Dwelling Fire</option>
+<option>Flood (Personal)</option>
+<option>Earthquake (Personal)</option>
+<option>Personal Umbrella</option>
+<option>Boat / Watercraft</option>
+<option>Motorcycle</option>
+<option>Recreational Vehicle (RV)</option>
+<option>ATV / Off-Road Vehicle</option>
+<option>Mobile Home</option>
+<option>Travel Insurance</option>
+<option>Pet Insurance</option>
+<option>Life / Health</option>
+<option>Other (Personal)</option>
+<optgroup label="── Commercial Lines ──" disabled></optgroup>
+<option>Commercial Auto</option>
+<option>Commercial Property</option>
+<option>General Liability</option>
+<option>Business Owner's Policy (BOP)</option>
+<option>Workers Compensation</option>
+<option>Professional Liability (E&amp;O)</option>
+<option>Cyber Liability</option>
+<option>Directors &amp; Officers (D&amp;O)</option>
+<option>Employment Practices Liability (EPLI)</option>
+<option>Commercial Umbrella</option>
+<option>Inland Marine</option>
+<option>Surety Bond</option>
+<option>Crime / Fidelity</option>
+<option>Builder's Risk</option>
+<option>Commercial Flood</option>
+<option>Product Liability</option>
+<option>Management Liability</option>
+<option>Commercial Life / Health</option>
+<option>Other (Commercial)</option></select></div><div class="form-group"><label>Current Carrier</label><input id="rf-carrier" type="text"></div></div>
       <div class="form-row"><div class="form-group"><label>Current Premium ($)</label><input id="rf-premium" type="number"></div><div class="form-group"><label>Due Date</label><input id="rf-due" type="date"></div></div>
       <div class="form-row single"><div class="form-group"><label>Reason for Re-Shop</label><select id="rf-reason"><option>Rate Increase</option><option>Client Request</option><option>Annual Review</option><option>Coverage Gap</option><option>Competitive Quote</option><option>Other</option></select></div></div>
       <div class="form-row single"><div class="form-group"><label>Notes</label><textarea id="rf-notes"></textarea></div></div>
@@ -1045,7 +1180,45 @@ tr:hover td{background:#f4f6fa;}
     <div class="modal-header"><h3>New Quote / Prospect</h3><button class="modal-close" onclick="closeModal('quote-modal')">×</button></div>
     <div class="modal-body">
       <div class="form-row"><div class="form-group"><label>Prospect Name *</label><input id="qf-name" type="text"></div><div class="form-group"><label>Phone</label><input id="qf-phone" type="tel"></div></div>
-      <div class="form-row"><div class="form-group"><label>Email</label><input id="qf-email" type="email"></div><div class="form-group"><label>Line of Business</label><select id="qf-lob"><option>Personal Auto</option><option>Homeowners</option><option>Commercial Property</option><option>Commercial Auto</option><option>Workers Compensation</option><option>Life/Health</option><option>Bundle (Auto+Home)</option><option>Other</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label>Email</label><input id="qf-email" type="email"></div><div class="form-group"><label>Line of Business</label><select id="qf-lob"><optgroup label="── Personal Lines ──" disabled></optgroup>
+<option>Personal Auto</option>
+<option>Homeowners</option>
+<option>Renters</option>
+<option>Condo (HO-6)</option>
+<option>Landlord / Dwelling Fire</option>
+<option>Flood (Personal)</option>
+<option>Earthquake (Personal)</option>
+<option>Personal Umbrella</option>
+<option>Boat / Watercraft</option>
+<option>Motorcycle</option>
+<option>Recreational Vehicle (RV)</option>
+<option>ATV / Off-Road Vehicle</option>
+<option>Mobile Home</option>
+<option>Travel Insurance</option>
+<option>Pet Insurance</option>
+<option>Life / Health</option>
+<option>Other (Personal)</option>
+<optgroup label="── Commercial Lines ──" disabled></optgroup>
+<option>Commercial Auto</option>
+<option>Commercial Property</option>
+<option>General Liability</option>
+<option>Business Owner's Policy (BOP)</option>
+<option>Workers Compensation</option>
+<option>Professional Liability (E&amp;O)</option>
+<option>Cyber Liability</option>
+<option>Directors &amp; Officers (D&amp;O)</option>
+<option>Employment Practices Liability (EPLI)</option>
+<option>Commercial Umbrella</option>
+<option>Inland Marine</option>
+<option>Surety Bond</option>
+<option>Crime / Fidelity</option>
+<option>Builder's Risk</option>
+<option>Commercial Flood</option>
+<option>Product Liability</option>
+<option>Management Liability</option>
+<option>Commercial Life / Health</option>
+<option>Other (Commercial)</option>
+<option>Bundle (Auto+Home)</option></select></div></div>
       <div class="form-row"><div class="form-group"><label>Estimated Premium ($)</label><input id="qf-premium" type="number"></div><div class="form-group"><label>Source</label><select id="qf-source"><option>Referral</option><option>Walk-in</option><option>Online</option><option>Social Media</option><option>Cold Call</option><option>Other</option></select></div></div>
       <div class="form-row"><div class="form-group"><label>Follow-Up Date</label><input id="qf-due" type="date"></div><div class="form-group"><label>Priority</label><select id="qf-priority"><option>High</option><option>Medium</option><option>Low</option></select></div></div>
       <div class="form-row single"><div class="form-group"><label>Notes</label><textarea id="qf-notes"></textarea></div></div>
@@ -1114,8 +1287,8 @@ function fd(d){if(!d)return'—';const dt=new Date(d+'T00:00:00');return dt.toLo
 function onPfTypeChange(){
   const type=document.getElementById('pf-type').value;
   const term=document.getElementById('pf-term');
-  if(['Personal Auto'].includes(type)) term.value='6';
-  else if(['Homeowners','Commercial Property','Workers Compensation','Life/Health'].includes(type)) term.value='12';
+  const sixMo=['Personal Auto','Motorcycle','ATV / Off-Road Vehicle'];
+  term.value=sixMo.includes(type)?'6':'12';
   onPfTermChange();
 }
 function onPfTermChange(){
@@ -2380,7 +2553,106 @@ async function init() {
 init();
 
 // ==================== CARRIERS ====================
+// ── Book of Business: personal vs commercial classification ──────────────────
+const PERSONAL_TYPES=new Set([
+  'Personal Auto','Homeowners','Renters','Condo (HO-6)','Landlord / Dwelling Fire',
+  'Flood (Personal)','Earthquake (Personal)','Personal Umbrella','Boat / Watercraft',
+  'Motorcycle','Recreational Vehicle (RV)','ATV / Off-Road Vehicle','Mobile Home',
+  'Travel Insurance','Pet Insurance','Life / Health','Life/Health',
+  'Other (Personal)','Other'
+]);
+const COMMERCIAL_TYPES=new Set([
+  'Commercial Auto','Commercial Property','General Liability',
+  "Business Owner's Policy (BOP)",'Workers Compensation',
+  'Professional Liability (E&O)','Cyber Liability',
+  'Directors & Officers (D&O)','Employment Practices Liability (EPLI)',
+  'Commercial Umbrella','Inland Marine','Surety Bond','Crime / Fidelity',
+  "Builder's Risk",'Commercial Flood','Product Liability',
+  'Management Liability','Commercial Life / Health','Other (Commercial)',
+  // legacy exact names
+  'Commercial Property','Workers Compensation'
+]);
+function isPersonal(p){
+  if(!p.type) return true;
+  if(PERSONAL_TYPES.has(p.type)) return true;
+  if(COMMERCIAL_TYPES.has(p.type)) return false;
+  // fallback: if type contains 'commercial' or known commercial keywords → commercial
+  const t=p.type.toLowerCase();
+  return !(t.includes('commercial')||t.includes('workers comp')||t.includes('general liability')||t.includes('e&o')||t.includes('cyber')||t.includes("d&o")||t.includes('epli')||t.includes('inland')||t.includes('surety')||t.includes('crime')||t.includes("builder's risk")||t.includes('bop'));
+}
+function lineType(p){return isPersonal(p)?'Personal':'Commercial';}
+
+function renderBookOfBusiness(){
+  const personal=data.policies.filter(p=>isPersonal(p));
+  const commercial=data.policies.filter(p=>!isPersonal(p));
+
+  function buildSection(policies, mId, tbId){
+    const byType={};
+    policies.forEach(p=>{
+      const t=p.type||'Unknown';
+      if(!byType[t])byType[t]={count:0,prem:0,comm:0};
+      byType[t].count++;
+      byType[t].prem+=Number(p.premium||0);
+      byType[t].comm+=commAmtAnnual(p);
+    });
+    const totalP=policies.reduce((s,p)=>s+Number(p.premium||0),0);
+    const totalC=policies.reduce((s,p)=>s+commAmtAnnual(p),0);
+    const totalN=policies.length;
+
+    document.getElementById(mId).innerHTML=`
+      <div style="text-align:center;background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px 16px;min-width:90px;">
+        <div style="font-size:22px;font-weight:800;color:#0c1e3a;">${totalN}</div>
+        <div style="font-size:11px;color:#888;font-weight:600;">Policies</div>
+      </div>
+      <div style="text-align:center;background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px 16px;min-width:120px;">
+        <div style="font-size:18px;font-weight:800;color:#0c1e3a;">${fmtc(totalP)}</div>
+        <div style="font-size:11px;color:#888;font-weight:600;">Total Premium</div>
+      </div>
+      <div style="text-align:center;background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px 16px;min-width:120px;">
+        <div style="font-size:18px;font-weight:800;color:#2a7a4a;">${fmtc(totalC)}</div>
+        <div style="font-size:11px;color:#888;font-weight:600;">Ann. Commission</div>
+      </div>`;
+
+    const sorted=Object.entries(byType).sort((a,b)=>b[1].prem-a[1].prem);
+    document.getElementById(tbId).innerHTML=sorted.length
+      ? sorted.map(([type,v])=>`<tr>
+          <td style="padding:6px 8px;">${type}</td>
+          <td style="text-align:right;padding:6px 8px;">${v.count}</td>
+          <td style="text-align:right;padding:6px 8px;font-weight:600;">${fmtc(v.prem)}</td>
+          <td style="text-align:right;padding:6px 8px;font-weight:600;color:#2a7a4a;">${fmtc(v.comm)}</td>
+        </tr>`).join('')
+        + `<tr style="background:#f0f4ff;font-weight:700;border-top:2px solid #ccc;">
+            <td style="padding:6px 8px;">TOTAL</td>
+            <td style="text-align:right;padding:6px 8px;">${totalN}</td>
+            <td style="text-align:right;padding:6px 8px;">${fmtc(totalP)}</td>
+            <td style="text-align:right;padding:6px 8px;color:#2a7a4a;">${fmtc(totalC)}</td>
+           </tr>`
+      : '<tr><td colspan="4" style="padding:12px;color:#999;text-align:center;">No policies</td></tr>';
+  }
+
+  buildSection(personal,  'bob-personal-metrics',  'bob-personal-tbody');
+  buildSection(commercial, 'bob-commercial-metrics', 'bob-commercial-tbody');
+
+  // Visual split bar
+  const totalAll=data.policies.reduce((s,p)=>s+Number(p.premium||0),0);
+  const pPrem=personal.reduce((s,p)=>s+Number(p.premium||0),0);
+  const cPrem=commercial.reduce((s,p)=>s+Number(p.premium||0),0);
+  const pPct=totalAll>0?Math.round(pPrem/totalAll*100):0;
+  const cPct=100-pPct;
+  document.getElementById('bob-total-bar').innerHTML=totalAll>0?`
+    <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">Premium Mix</div>
+    <div style="display:flex;border-radius:8px;overflow:hidden;height:28px;font-size:12px;font-weight:700;">
+      ${pPct>0?`<div style="width:${pPct}%;background:#3b82f6;display:flex;align-items:center;justify-content:center;color:#fff;">Personal ${pPct}%</div>`:''}
+      ${cPct>0?`<div style="width:${cPct}%;background:#16a34a;display:flex;align-items:center;justify-content:center;color:#fff;">Commercial ${cPct}%</div>`:''}
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#888;margin-top:6px;">
+      <span>Personal: ${fmtc(pPrem)} premium</span>
+      <span>Commercial: ${fmtc(cPrem)} premium</span>
+    </div>`:'<div style="color:#999;text-align:center;padding:10px;">No policies yet.</div>';
+}
+
 function renderCarriers(){
+  renderBookOfBusiness();
   const byC={};
   data.policies.forEach(p=>{
     const key=p.carrier||'Unknown';
