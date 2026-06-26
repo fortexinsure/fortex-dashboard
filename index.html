@@ -259,6 +259,11 @@ tr:hover td{background:#f4f6fa;}
 .coapp-toggle{width:100%;text-align:left;background:#f4f7fb;border:1px dashed #b0bdd0;border-radius:8px;padding:10px 16px;color:#0c1e3a;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all 0.15s;font-family:'Segoe UI',Arial,sans-serif;margin-top:2px;}
 .coapp-toggle:hover{background:#e8edf8;border-color:#0c1e3a;}
 .coapp-section{margin-top:16px;padding-top:16px;border-top:2px dashed #f0c060;}
+.client-type-bar{display:flex;gap:8px;margin-bottom:20px;padding:12px 16px;background:#f0f4fa;border-radius:10px;border:1px solid #dce3f0;}
+.type-btn{flex:1;padding:10px 16px;border:2px solid #dce3f0;border-radius:8px;background:#fff;font-size:14px;font-weight:600;color:#4a5568;cursor:pointer;transition:all .2s;text-align:center;font-family:'Segoe UI',Arial,sans-serif;}
+.type-btn.active{border-color:#0c1e3a;background:#0c1e3a;color:#fff;}
+.comm-badge{display:inline-block;background:#0c1e3a;color:#f0c060;font-size:9px;font-weight:800;padding:2px 7px;border-radius:4px;margin-left:6px;letter-spacing:.8px;vertical-align:middle;}
+
 
 /* QUOTE PIPELINE */
 .quote-board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;}
@@ -612,9 +617,14 @@ tr:hover td{background:#f4f6fa;}
       </div>
       <div class="detail-section"><div class="detail-section-title">Business / Agency Info</div>
         <div class="detail-grid">
-          <div class="detail-field"><label>Business Name</label><div class="val empty" id="df-biz-name">—</div></div>
-          <div class="detail-field"><label>Business Type</label><div class="val empty" id="df-biz-type">—</div></div>
+          <div class="detail-field"><label>Business Legal Name</label><div class="val empty" id="df-biz-name">—</div></div>
+          <div class="detail-field"><label>DBA / Trade Name</label><div class="val empty" id="df-dba">—</div></div>
           <div class="detail-field"><label>FEIN / Tax ID</label><div class="val empty" id="df-fein">—</div></div>
+          <div class="detail-field"><label>Entity Type</label><div class="val empty" id="df-entity-type">—</div></div>
+          <div class="detail-field"><label>Industry</label><div class="val empty" id="df-biz-type">—</div></div>
+          <div class="detail-field"><label># of Employees</label><div class="val empty" id="df-num-employees">—</div></div>
+          <div class="detail-field"><label>Years in Business</label><div class="val empty" id="df-yrs-in-biz">—</div></div>
+          <div class="detail-field"><label>Website</label><div class="val empty" id="df-website">—</div></div>
           <div class="detail-field"><label>Lead Source</label><div class="val empty" id="df-lead-source">—</div></div>
           <div class="detail-field"><label>Agent / Producer</label><div class="val empty" id="df-agent">—</div></div>
           <div class="detail-field"><label>Client Tag</label><div class="val empty" id="df-tag">—</div></div>
@@ -722,43 +732,94 @@ tr:hover td{background:#f4f6fa;}
 <!-- ADD CLIENT -->
 <div class="modal-overlay" id="client-modal">
   <div class="modal modal-xl">
-    <div class="modal-header"><h3>Add New Client</h3><button class="modal-close" onclick="closeModal('client-modal')">×</button></div>
+    <div class="modal-header"><h3 id="client-modal-title">Add New Client</h3><button class="modal-close" onclick="closeModal('client-modal')">×</button></div>
     <div class="modal-body">
 
-      <div class="form-section"><div class="form-section-title">Personal Information</div>
-        <div class="form-row cols3">
-          <div class="form-group"><label>First Name *</label><input id="cf-first" type="text"></div>
-          <div class="form-group"><label>Middle Name</label><input id="cf-middle" type="text"></div>
-          <div class="form-group"><label>Last Name *</label><input id="cf-last" type="text"></div>
-        </div>
-        <div class="form-row cols3">
-          <div class="form-group"><label>Date of Birth</label><input id="cf-dob" type="date"></div>
-          <div class="form-group"><label>Gender</label><select id="cf-gender"><option value="">—</option><option>Male</option><option>Female</option><option>Non-binary</option><option>Prefer not to say</option></select></div>
-          <div class="form-group"><label>Marital Status</label><select id="cf-marital"><option value="">—</option><option>Single</option><option>Married</option><option>Divorced</option><option>Widowed</option><option>Separated</option></select></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label>Occupation</label><input id="cf-occupation" type="text"></div>
-          <div class="form-group"><label>SSN (Last 4 digits)</label><input id="cf-ssn" type="text" maxlength="4" placeholder="####"></div>
-        </div>
+      <!-- CLIENT TYPE TOGGLE -->
+      <div class="client-type-bar">
+        <button type="button" class="type-btn active" id="cf-type-personal" onclick="setClientType('personal')">👤 Personal Client</button>
+        <button type="button" class="type-btn" id="cf-type-commercial" onclick="setClientType('commercial')">🏢 Commercial Client</button>
       </div>
+      <input type="hidden" id="cf-client-type" value="personal">
 
-      <div class="form-section"><div class="form-section-title">Contact Information</div>
-        <div class="form-row cols3">
-          <div class="form-group"><label>Cell Phone</label><input id="cf-phone-cell" type="tel" placeholder="(xxx) xxx-xxxx"></div>
-          <div class="form-group"><label>Home Phone</label><input id="cf-phone-home" type="tel" placeholder="(xxx) xxx-xxxx"></div>
-          <div class="form-group"><label>Work Phone</label><input id="cf-phone-work" type="tel" placeholder="(xxx) xxx-xxxx"></div>
+      <!-- ===== PERSONAL FIELDS ===== -->
+      <div id="cf-personal-section">
+        <div class="form-section"><div class="form-section-title">Personal Information</div>
+          <div class="form-row cols3">
+            <div class="form-group"><label>First Name *</label><input id="cf-first" type="text"></div>
+            <div class="form-group"><label>Middle Name</label><input id="cf-middle" type="text"></div>
+            <div class="form-group"><label>Last Name *</label><input id="cf-last" type="text"></div>
+          </div>
+          <div class="form-row cols3">
+            <div class="form-group"><label>Date of Birth</label><input id="cf-dob" type="date"></div>
+            <div class="form-group"><label>Gender</label><select id="cf-gender"><option value="">—</option><option>Male</option><option>Female</option><option>Non-binary</option><option>Prefer not to say</option></select></div>
+            <div class="form-group"><label>Marital Status</label><select id="cf-marital"><option value="">—</option><option>Single</option><option>Married</option><option>Divorced</option><option>Widowed</option><option>Separated</option></select></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Occupation</label><input id="cf-occupation" type="text"></div>
+            <div class="form-group"><label>SSN (Last 4 digits)</label><input id="cf-ssn" type="text" maxlength="4" placeholder="####"></div>
+          </div>
         </div>
-        <div class="form-row cols3">
-          <div class="form-group"><label>Primary Email</label><input id="cf-email1" type="email"></div>
-          <div class="form-group"><label>Secondary Email</label><input id="cf-email2" type="email"></div>
-          <div class="form-group"><label>Preferred Contact</label><select id="cf-pref-contact"><option value="">—</option><option>Cell Phone</option><option>Home Phone</option><option>Email</option><option>Text</option></select></div>
-        </div>
-      </div>
 
-      <div class="form-section"><div class="form-section-title">Address</div>
+        <div class="form-section"><div class="form-section-title">Contact Information</div>
+          <div class="form-row cols3">
+            <div class="form-group"><label>Cell Phone</label><input id="cf-phone-cell" type="tel" placeholder="(xxx) xxx-xxxx"></div>
+            <div class="form-group"><label>Home Phone</label><input id="cf-phone-home" type="tel" placeholder="(xxx) xxx-xxxx"></div>
+            <div class="form-group"><label>Work Phone</label><input id="cf-phone-work" type="tel" placeholder="(xxx) xxx-xxxx"></div>
+          </div>
+          <div class="form-row cols3">
+            <div class="form-group"><label>Primary Email</label><input id="cf-email1" type="email"></div>
+            <div class="form-group"><label>Secondary Email</label><input id="cf-email2" type="email"></div>
+            <div class="form-group"><label>Preferred Contact</label><select id="cf-pref-contact"><option value="">—</option><option>Cell Phone</option><option>Home Phone</option><option>Email</option><option>Text</option></select></div>
+          </div>
+        </div>
+      </div><!-- /personal -->
+
+      <!-- ===== COMMERCIAL FIELDS ===== -->
+      <div id="cf-commercial-section" style="display:none;">
+        <div class="form-section">
+          <div class="form-section-title">Business Information <span class="comm-badge">COMMERCIAL</span></div>
+          <div class="form-row">
+            <div class="form-group"><label>Business Legal Name *</label><input id="cf-biz-name" type="text" placeholder="Legal entity name"></div>
+            <div class="form-group"><label>DBA / Trade Name</label><input id="cf-dba" type="text" placeholder="Doing Business As (if different)"></div>
+          </div>
+          <div class="form-row cols3">
+            <div class="form-group"><label>FEIN</label><input id="cf-fein" type="text" placeholder="XX-XXXXXXX" maxlength="10"></div>
+            <div class="form-group"><label>Business Entity Type</label><select id="cf-entity-type"><option value="">—</option><option>Sole Proprietor</option><option>LLC</option><option>S-Corp</option><option>C-Corp</option><option>Partnership</option><option>LLP</option><option>Non-Profit</option><option>Association</option><option>Government / Municipal</option><option>Other</option></select></div>
+            <div class="form-group"><label>Industry</label><input id="cf-industry" type="text" placeholder="e.g. Construction, Retail, Healthcare"></div>
+          </div>
+          <div class="form-row cols3">
+            <div class="form-group"><label>Years in Business</label><input id="cf-yrs-in-biz" type="number" min="0" placeholder="0"></div>
+            <div class="form-group"><label># of Employees</label><input id="cf-num-employees" type="number" min="1" placeholder="1"></div>
+            <div class="form-group"><label>Website</label><input id="cf-website" type="text" placeholder="https://example.com"></div>
+          </div>
+          <div class="form-row cols3">
+            <div class="form-group"><label>Main Business Phone</label><input id="cf-biz-phone" type="tel" placeholder="(xxx) xxx-xxxx"></div>
+            <div class="form-group"><label>Business Fax</label><input id="cf-biz-fax" type="tel" placeholder="(xxx) xxx-xxxx"></div>
+            <div class="form-group"><label>Business Email</label><input id="cf-biz-email" type="email"></div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Primary Contact Person</div>
+          <div class="form-row cols3">
+            <div class="form-group"><label>First Name</label><input id="cf-contact-first" type="text"></div>
+            <div class="form-group"><label>Last Name</label><input id="cf-contact-last" type="text"></div>
+            <div class="form-group"><label>Title / Position</label><input id="cf-contact-title" type="text" placeholder="e.g. Owner, CFO, Office Manager"></div>
+          </div>
+          <div class="form-row cols3">
+            <div class="form-group"><label>Direct Phone</label><input id="cf-contact-phone" type="tel" placeholder="(xxx) xxx-xxxx"></div>
+            <div class="form-group"><label>Direct Email</label><input id="cf-contact-email" type="email"></div>
+            <div class="form-group"><label>Preferred Contact Method</label><select id="cf-contact-pref"><option value="">—</option><option>Phone</option><option>Email</option><option>Text</option></select></div>
+          </div>
+        </div>
+      </div><!-- /commercial -->
+
+      <!-- ADDRESS (shown for both) -->
+      <div class="form-section"><div class="form-section-title" id="cf-addr-title">Address</div>
         <div class="form-row">
-          <div class="form-group"><label>Street Address</label><input id="cf-addr1" type="text"></div>
-          <div class="form-group"><label>Address Line 2 (Apt, Suite, etc.)</label><input id="cf-addr2" type="text"></div>
+          <div class="form-group"><label id="cf-addr1-label">Street Address</label><input id="cf-addr1" type="text"></div>
+          <div class="form-group"><label>Address Line 2 (Suite, Unit, etc.)</label><input id="cf-addr2" type="text"></div>
         </div>
         <div class="form-row cols3">
           <div class="form-group"><label>City</label><input id="cf-city" type="text"></div>
@@ -781,7 +842,7 @@ tr:hover td{background:#f4f6fa;}
       </div>
 
       <!-- CO-APPLICANT SECTION -->
-      <div class="form-section" style="margin-bottom:0;">
+      <div class="form-section" id="coapp-wrapper" style="margin-bottom:0;">
         <button type="button" class="coapp-toggle" id="coapp-btn" onclick="toggleCoApplicant()">
           <span id="coapp-icon">➕</span> Add Co-Applicant / Spouse (Optional)
         </button>
@@ -965,7 +1026,7 @@ function save(){
     updateSyncStatus(false,'Save error');
   });
 }
-function cn(id){const c=data.clients.find(x=>x.id===id);return c?c.first+' '+c.last:'Unknown';}
+function cn(id){const c=data.clients.find(x=>x.id===id);if(!c)return 'Unknown';return c.clientType==='commercial'&&c.bizName?c.bizName:c.first+' '+c.last;}
 function du(ds){if(!ds)return 9999;const t=new Date();t.setHours(0,0,0,0);const d=new Date(ds);d.setHours(0,0,0,0);return Math.round((d-t)/86400000);}
 function rb(days){if(days<=30)return`<span class="badge badge-red">${days}d</span>`;if(days<=60)return`<span class="badge badge-amber">${days}d</span>`;return`<span class="badge badge-green">${days}d</span>`;}
 function fmt(n){return'$'+Number(n||0).toLocaleString();}
@@ -1109,19 +1170,19 @@ Please send this email now and confirm once sent.`}]
 function renderClients(){
   const q=(document.getElementById('client-search')||{}).value||'';
   const tag=(document.getElementById('client-filter-tag')||{}).value||'';
-  const filtered=data.clients.filter(c=>{const s=(c.first+c.last+(c.phoneCell||'')+(c.phoneHome||'')+(c.email1||'')+(c.email2||'')+(c.addr1||'')+(c.zip||'')+(c.city||'')).toLowerCase();return s.includes(q.toLowerCase())&&(!tag||c.tag===tag);});
+  const filtered=data.clients.filter(c=>{const bizN=c.bizName||'';const contactN=c.first+c.last;const s=(bizN+contactN+(c.phoneCell||'')+(c.phoneHome||'')+(c.email1||'')+(c.email2||'')+(c.addr1||'')+(c.zip||'')+(c.city||'')).toLowerCase();return s.includes(q.toLowerCase())&&(!tag||c.tag===tag);});
   const tbody=document.getElementById('clients-tbody');
   if(!filtered.length){tbody.innerHTML='<tr><td colspan="7" class="empty-state">No clients found</td></tr>';return;}
   tbody.innerHTML=filtered.map(c=>{
     const pols=data.policies.filter(p=>p.clientId===c.id).length;
     return`<tr class="row-link" onclick="openProfile('${c.id}')">
-      <td><strong>${c.first} ${c.last}</strong>${c.tag?` <span class="badge badge-navy" style="font-size:11px;margin-left:6px;">${c.tag}</span>`:''}</td>
+      <td><strong>${c.clientType==='commercial'&&c.bizName?c.bizName:c.first+' '+c.last}</strong>${c.clientType==='commercial'?'<span class="comm-badge" style="margin-left:6px;">BIZ</span>':''}${c.tag?` <span class="badge badge-navy" style="font-size:11px;margin-left:6px;">${c.tag}</span>`:''}</td>
       <td>${c.phoneCell||c.phoneHome||'—'}</td>
       <td style="color:#444;">${c.email1||'—'}</td>
       <td>${c.city||'—'}</td>
       <td><span class="badge badge-blue">${pols} polic${pols===1?'y':'ies'}</span></td>
       <td style="color:#888;font-size:13px;">${fd(c.added)}</td>
-      <td><button class="btn btn-sm" onclick="event.stopPropagation();openProfile('${c.id}')">Open →</button> <button class="btn btn-sm" style="background:#e53e3e;color:#fff;border-color:#e53e3e;" onclick="event.stopPropagation();deleteClient('${c.id}','${c.first} ${c.last}')">🗑 Delete</button></td>
+      <td><button class="btn btn-sm" onclick="event.stopPropagation();openProfile('${c.id}')">Open →</button> <button class="btn btn-sm" style="background:#e53e3e;color:#fff;border-color:#e53e3e;" onclick="event.stopPropagation();deleteClient('${c.id}','${c.clientType==='commercial'&&c.bizName?c.bizName:c.first+' '+c.last}')">🗑 Delete</button></td>
     </tr>`;
   }).join('');
 }
@@ -1134,8 +1195,8 @@ let editingPropertyId=null;
 function openProfile(clientId){
   activeClientId=clientId;
   const c=data.clients.find(x=>x.id===clientId);if(!c)return;
-  document.getElementById('prof-avatar').textContent=((c.first[0]||'')+(c.last[0]||'')).toUpperCase();
-  document.getElementById('prof-name').textContent=c.first+' '+(c.middle?c.middle+' ':'')+c.last+(c.suffix?' '+c.suffix:'');
+  document.getElementById('prof-avatar').textContent=c.clientType==='commercial'&&c.bizName?(c.bizName[0]||'B').toUpperCase():((c.first[0]||'')+(c.last[0]||'')).toUpperCase();
+  document.getElementById('prof-name').textContent=c.clientType==='commercial'&&c.bizName?c.bizName+(c.dba?' ('+c.dba+')':''):c.first+' '+(c.middle?c.middle+' ':'')+c.last+(c.suffix?' '+c.suffix:'');
   document.getElementById('prof-sub').textContent='Client since '+fd(c.added)+(c.tag?' · '+c.tag:'');
   loadDetails(c);loadPoliciesTab(clientId);loadVehiclesTab(clientId);loadPropertiesTab(clientId);loadNotes(c);loadDriversTab(clientId);
   document.querySelectorAll('.profile-tab').forEach((t,i)=>t.classList.toggle('active',i===0));
@@ -1158,7 +1219,7 @@ function loadDetails(c){
     'df-zip':c.zip,'df-county':c.county,
     'df-mail-addr1':c.mailAddr1||'Same as above','df-mail-addr2':c.mailAddr2,
     'df-mail-city':c.mailCity,'df-mail-state':c.mailState,'df-mail-zip':c.mailZip,'df-mail-county':c.mailCounty,
-    'df-biz-name':c.bizName,'df-biz-type':c.bizType,'df-fein':c.fein,
+    'df-biz-name':c.bizName,'df-dba':c.dba,'df-biz-type':c.bizType,'df-fein':c.fein,'df-entity-type':c.entityType,'df-num-employees':c.numEmployees,'df-yrs-in-biz':c.yrsInBusiness,'df-website':c.website,
     'df-lead-source':c.leadSource,'df-agent':c.agent,'df-tag':c.tag,
     'df-dl-num':c.dlNum,'df-dl-state':c.dlState,'df-dl-exp':c.dlExp?fd(c.dlExp):'',
     'df-dl-class':c.dlClass,'df-sr22':c.sr22||'No','df-yrs-lic':c.yrsLic
@@ -1289,7 +1350,7 @@ function toggleProfileEdit(){
   const c=data.clients.find(x=>x.id===activeClientId);if(!c)return;
   ['prof-edit-btn','prof-edit-btn2'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
   ['prof-save-btn','prof-cancel-btn','prof-save-btn2','prof-cancel-btn2'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='';});
-  const fm={'df-first':{k:'first',t:'text'},'df-middle':{k:'middle',t:'text'},'df-last':{k:'last',t:'text'},'df-suffix':{k:'suffix',t:'text'},'df-dob':{k:'dob',t:'date'},'df-gender':{k:'gender',t:'sel',o:['','Male','Female','Non-binary','Prefer not to say']},'df-marital':{k:'marital',t:'sel',o:['','Single','Married','Divorced','Widowed','Separated']},'df-occupation':{k:'occupation',t:'text'},'df-ssn':{k:'ssn',t:'text'},'df-phone-cell':{k:'phoneCell',t:'text'},'df-phone-home':{k:'phoneHome',t:'text'},'df-phone-work':{k:'phoneWork',t:'text'},'df-fax':{k:'fax',t:'text'},'df-email1':{k:'email1',t:'text'},'df-email2':{k:'email2',t:'text'},'df-pref-contact':{k:'prefContact',t:'sel',o:['','Cell Phone','Home Phone','Email','Text']},'df-best-time':{k:'bestTime',t:'text'},'df-dnc':{k:'dnc',t:'sel',o:['No','Yes']},'df-addr1':{k:'addr1',t:'text'},'df-addr2':{k:'addr2',t:'text'},'df-city':{k:'city',t:'text'},'df-state':{k:'state',t:'text'},'df-zip':{k:'zip',t:'text'},'df-county':{k:'county',t:'text'},'df-mail-addr1':{k:'mailAddr1',t:'text'},'df-mail-addr2':{k:'mailAddr2',t:'text'},'df-mail-city':{k:'mailCity',t:'text'},'df-mail-state':{k:'mailState',t:'text'},'df-mail-zip':{k:'mailZip',t:'text'},'df-mail-county':{k:'mailCounty',t:'text'},'df-biz-name':{k:'bizName',t:'text'},'df-biz-type':{k:'bizType',t:'text'},'df-fein':{k:'fein',t:'text'},'df-lead-source':{k:'leadSource',t:'sel',o:['','Referral','Walk-in','Online','Social Media','EZLynx Import','Other']},'df-agent':{k:'agent',t:'text'},'df-tag':{k:'tag',t:'sel',o:['','Personal Lines','Commercial','VIP','Prospect','Inactive','Do Not Renew']},'df-dl-num':{k:'dlNum',t:'text'},'df-dl-state':{k:'dlState',t:'text'},'df-dl-exp':{k:'dlExp',t:'date'},'df-dl-class':{k:'dlClass',t:'text'},'df-sr22':{k:'sr22',t:'sel',o:['No','Yes']},'df-yrs-lic':{k:'yrsLic',t:'text'}};
+  const fm={'df-first':{k:'first',t:'text'},'df-middle':{k:'middle',t:'text'},'df-last':{k:'last',t:'text'},'df-suffix':{k:'suffix',t:'text'},'df-dob':{k:'dob',t:'date'},'df-gender':{k:'gender',t:'sel',o:['','Male','Female','Non-binary','Prefer not to say']},'df-marital':{k:'marital',t:'sel',o:['','Single','Married','Divorced','Widowed','Separated']},'df-occupation':{k:'occupation',t:'text'},'df-ssn':{k:'ssn',t:'text'},'df-phone-cell':{k:'phoneCell',t:'text'},'df-phone-home':{k:'phoneHome',t:'text'},'df-phone-work':{k:'phoneWork',t:'text'},'df-fax':{k:'fax',t:'text'},'df-email1':{k:'email1',t:'text'},'df-email2':{k:'email2',t:'text'},'df-pref-contact':{k:'prefContact',t:'sel',o:['','Cell Phone','Home Phone','Email','Text']},'df-best-time':{k:'bestTime',t:'text'},'df-dnc':{k:'dnc',t:'sel',o:['No','Yes']},'df-addr1':{k:'addr1',t:'text'},'df-addr2':{k:'addr2',t:'text'},'df-city':{k:'city',t:'text'},'df-state':{k:'state',t:'text'},'df-zip':{k:'zip',t:'text'},'df-county':{k:'county',t:'text'},'df-mail-addr1':{k:'mailAddr1',t:'text'},'df-mail-addr2':{k:'mailAddr2',t:'text'},'df-mail-city':{k:'mailCity',t:'text'},'df-mail-state':{k:'mailState',t:'text'},'df-mail-zip':{k:'mailZip',t:'text'},'df-mail-county':{k:'mailCounty',t:'text'},'df-biz-name':{k:'bizName',t:'text'},'df-dba':{k:'dba',t:'text'},'df-biz-type':{k:'bizType',t:'text'},'df-fein':{k:'fein',t:'text'},'df-entity-type':{k:'entityType',t:'text'},'df-num-employees':{k:'numEmployees',t:'text'},'df-yrs-in-biz':{k:'yrsInBusiness',t:'text'},'df-website':{k:'website',t:'text'},'df-lead-source':{k:'leadSource',t:'sel',o:['','Referral','Walk-in','Online','Social Media','EZLynx Import','Other']},'df-agent':{k:'agent',t:'text'},'df-tag':{k:'tag',t:'sel',o:['','Personal Lines','Commercial','VIP','Prospect','Inactive','Do Not Renew']},'df-dl-num':{k:'dlNum',t:'text'},'df-dl-state':{k:'dlState',t:'text'},'df-dl-exp':{k:'dlExp',t:'date'},'df-dl-class':{k:'dlClass',t:'text'},'df-sr22':{k:'sr22',t:'sel',o:['No','Yes']},'df-yrs-lic':{k:'yrsLic',t:'text'}};
   for(const[id,{k,t,o}]of Object.entries(fm)){const el=document.getElementById(id);if(!el||el.tagName!=='DIV')continue;const val=c[k]||'';if(t==='sel'){el.outerHTML=`<select id="${id}">${(o||[]).map(op=>`<option${op===val?' selected':''}>${op}</option>`).join('')}</select>`;}else if(t==='date'){el.outerHTML=`<input id="${id}" type="date" value="${val}">`;}else{el.outerHTML=`<input id="${id}" type="text" value="${val}">`;};}
   // Show "Add Co-Applicant" button if no co-applicant exists
   const coaAdd=document.getElementById('coa-add-section');
@@ -1299,11 +1360,11 @@ function toggleProfileEdit(){
 
 function saveProfileEdits(){
   const c=data.clients.find(x=>x.id===activeClientId);if(!c)return;
-  const km={'df-first':'first','df-middle':'middle','df-last':'last','df-suffix':'suffix','df-dob':'dob','df-gender':'gender','df-marital':'marital','df-occupation':'occupation','df-ssn':'ssn','df-phone-cell':'phoneCell','df-phone-home':'phoneHome','df-phone-work':'phoneWork','df-fax':'fax','df-email1':'email1','df-email2':'email2','df-pref-contact':'prefContact','df-best-time':'bestTime','df-dnc':'dnc','df-addr1':'addr1','df-addr2':'addr2','df-city':'city','df-state':'state','df-zip':'zip','df-county':'county','df-mail-addr1':'mailAddr1','df-mail-addr2':'mailAddr2','df-mail-city':'mailCity','df-mail-state':'mailState','df-mail-zip':'mailZip','df-mail-county':'mailCounty','df-biz-name':'bizName','df-biz-type':'bizType','df-fein':'fein','df-lead-source':'leadSource','df-agent':'agent','df-tag':'tag','df-dl-num':'dlNum','df-dl-state':'dlState','df-dl-exp':'dlExp','df-dl-class':'dlClass','df-sr22':'sr22','df-yrs-lic':'yrsLic'};
+  const km={'df-first':'first','df-middle':'middle','df-last':'last','df-suffix':'suffix','df-dob':'dob','df-gender':'gender','df-marital':'marital','df-occupation':'occupation','df-ssn':'ssn','df-phone-cell':'phoneCell','df-phone-home':'phoneHome','df-phone-work':'phoneWork','df-fax':'fax','df-email1':'email1','df-email2':'email2','df-pref-contact':'prefContact','df-best-time':'bestTime','df-dnc':'dnc','df-addr1':'addr1','df-addr2':'addr2','df-city':'city','df-state':'state','df-zip':'zip','df-county':'county','df-mail-addr1':'mailAddr1','df-mail-addr2':'mailAddr2','df-mail-city':'mailCity','df-mail-state':'mailState','df-mail-zip':'mailZip','df-mail-county':'mailCounty','df-biz-name':'bizName','df-dba':'dba','df-biz-type':'bizType','df-fein':'fein','df-entity-type':'entityType','df-num-employees':'numEmployees','df-yrs-in-biz':'yrsInBusiness','df-website':'website','df-lead-source':'leadSource','df-agent':'agent','df-tag':'tag','df-dl-num':'dlNum','df-dl-state':'dlState','df-dl-exp':'dlExp','df-dl-class':'dlClass','df-sr22':'sr22','df-yrs-lic':'yrsLic'};
   for(const[id,k]of Object.entries(km)){const el=document.getElementById(id);if(el&&(el.tagName==='INPUT'||el.tagName==='SELECT'))c[k]=el.value||'';}
   const coaAdd=document.getElementById('coa-add-section');if(coaAdd)coaAdd.style.display='none';
   save();cancelProfileEdit();
-  document.getElementById('prof-name').textContent=c.first+' '+(c.middle?c.middle+' ':'')+c.last;
+  document.getElementById('prof-name').textContent=c.clientType==='commercial'&&c.bizName?c.bizName+(c.dba?' ('+c.dba+')':''):c.first+' '+(c.middle?c.middle+' ':'')+c.last;
   document.getElementById('prof-sub').textContent='Client since '+fd(c.added)+(c.tag?' · '+c.tag:'');
   loadDetails(c);renderClients();
 }
@@ -1446,7 +1507,7 @@ function importCSV(e){
       const last=row['last name']||row['lastname']||row['last']||'';
       if(!first&&!last)continue;
       if(data.clients.find(c=>c.first.toLowerCase()===first.toLowerCase()&&c.last.toLowerCase()===last.toLowerCase()))continue;
-      data.clients.push({id:'c'+Date.now()+i,first,last,middle:'',suffix:'',dob:row['dob']||'',gender:'',marital:'',occupation:'',ssn:'',phoneCell:row['cell']||row['cell phone']||row['phone']||'',phoneHome:row['home phone']||'',phoneWork:'',fax:'',email1:row['email']||'',email2:'',prefContact:'',bestTime:'',dnc:'No',addr1:row['address']||'',addr2:'',city:row['city']||'',state:row['state']||'',zip:row['zip']||'',county:'',mailAddr1:'',mailAddr2:'',mailCity:'',mailState:'',mailZip:'',mailCounty:'',bizName:'',bizType:'',fein:'',leadSource:'EZLynx Import',agent:'',tag:'',dlNum:'',dlState:'',dlExp:'',dlClass:'',sr22:'No',yrsLic:'',notes:[{date:new Date().toISOString().split('T')[0],text:'Imported from EZLynx CSV'}],added:new Date().toISOString().split('T')[0]});
+      data.clients.push({id:'c'+Date.now()+i,clientType:'personal',first,last,middle:'',suffix:'',dob:row['dob']||'',gender:'',marital:'',occupation:'',ssn:'',phoneCell:row['cell']||row['cell phone']||row['phone']||'',phoneHome:row['home phone']||'',phoneWork:'',fax:'',email1:row['email']||'',email2:'',prefContact:'',bestTime:'',dnc:'No',addr1:row['address']||'',addr2:'',city:row['city']||'',state:row['state']||'',zip:row['zip']||'',county:'',mailAddr1:'',mailAddr2:'',mailCity:'',mailState:'',mailZip:'',mailCounty:'',bizName:'',bizType:'',fein:'',leadSource:'EZLynx Import',agent:'',tag:'',dlNum:'',dlState:'',dlExp:'',dlClass:'',sr22:'No',yrsLic:'',notes:[{date:new Date().toISOString().split('T')[0],text:'Imported from EZLynx CSV'}],added:new Date().toISOString().split('T')[0]});
       imported++;
     }
     save();renderClients();alert(`Imported ${imported} client records!`);
@@ -1472,13 +1533,45 @@ function openModal(id){
   document.getElementById(id).classList.add('open');
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');}
-function populateClientSelects(){const opts=data.clients.map(c=>`<option value="${c.id}">${c.first} ${c.last}</option>`).join('');['pf-client','tf-client','rf-client'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=(id==='tf-client'?'<option value="">None</option>':'')+opts;});}
+function populateClientSelects(){const opts=data.clients.map(c=>`<option value="${c.id}">${c.clientType==='commercial'&&c.bizName?c.bizName:c.first+' '+c.last}</option>`).join('');['pf-client','tf-client','rf-client'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=(id==='tf-client'?'<option value="">None</option>':'')+opts;});}
 
+function setClientType(type){
+  const g=id=>document.getElementById(id);
+  g('cf-client-type').value=type;
+  if(type==='commercial'){
+    g('cf-personal-section').style.display='none';
+    g('cf-commercial-section').style.display='';
+    g('cf-type-personal').classList.remove('active');
+    g('cf-type-commercial').classList.add('active');
+    g('client-modal-title').textContent='Add New Commercial Client';
+    g('cf-addr-title').textContent='Business Address';
+    g('cf-addr1-label').textContent='Street Address';
+    // Auto-set tag to Commercial
+    const tagSel=g('cf-tag');if(tagSel)tagSel.value='Commercial';
+    // Hide co-applicant section
+    const cs=g('coapp-section');if(cs)cs.style.display='none';
+    const coappWrap=document.getElementById('coapp-wrapper');
+    if(coappWrap)coappWrap.style.display='none';
+  } else {
+    g('cf-personal-section').style.display='';
+    g('cf-commercial-section').style.display='none';
+    g('cf-type-commercial').classList.remove('active');
+    g('cf-type-personal').classList.add('active');
+    g('client-modal-title').textContent='Add New Client';
+    g('cf-addr-title').textContent='Address';
+    g('cf-addr1-label').textContent='Street Address';
+    const coappWrap=document.getElementById('coapp-wrapper');
+    if(coappWrap)coappWrap.style.display='';
+  }
+}
 function saveClient(){
   const g=id=>document.getElementById(id);
+  const clientType=(g('cf-client-type')||{}).value||'personal';
+  const isComm=clientType==='commercial';
+
   const coaFirst=(g('coa-first')||{}).value||'';
   const coaLast=(g('coa-last')||{}).value||'';
-  const coApp=(coaFirst.trim()||coaLast.trim())?{
+  const coApp=(!isComm&&(coaFirst.trim()||coaLast.trim()))?{
     first:coaFirst.trim(),last:coaLast.trim(),
     relationship:(g('coa-rel')||{}).value||'',
     dob:(g('coa-dob')||{}).value||'',
@@ -1492,30 +1585,62 @@ function saveClient(){
     dlClass:(g('coa-dl-class')||{}).value||'',
     sr22:(g('coa-sr22')||{}).value||'No'
   }:null;
+
   const c={
     id:'c'+Date.now(),
-    first:g('cf-first').value.trim(),middle:g('cf-middle').value.trim(),last:g('cf-last').value.trim(),suffix:'',
-    dob:g('cf-dob').value,gender:g('cf-gender').value,marital:g('cf-marital').value,
-    occupation:g('cf-occupation').value.trim(),ssn:g('cf-ssn').value.trim(),
-    phoneCell:g('cf-phone-cell').value.trim(),phoneHome:g('cf-phone-home').value.trim(),
-    phoneWork:g('cf-phone-work').value.trim(),fax:'',
-    email1:g('cf-email1').value.trim(),email2:g('cf-email2').value.trim(),
-    prefContact:g('cf-pref-contact').value,bestTime:'',dnc:g('cf-dnc').value||'No',
-    addr1:g('cf-addr1').value.trim(),addr2:g('cf-addr2').value.trim(),
-    city:g('cf-city').value.trim(),state:g('cf-state').value.trim(),
-    zip:g('cf-zip').value.trim(),county:g('cf-county').value.trim(),
+    clientType:clientType,
+    // Personal fields
+    first:isComm?(g('cf-contact-first')||{}).value?.trim()||'':(g('cf-first')||{}).value?.trim()||'',
+    middle:isComm?'':(g('cf-middle')||{}).value?.trim()||'',
+    last:isComm?(g('cf-contact-last')||{}).value?.trim()||'':(g('cf-last')||{}).value?.trim()||'',
+    suffix:'',
+    dob:isComm?'':(g('cf-dob')||{}).value||'',
+    gender:isComm?'':(g('cf-gender')||{}).value||'',
+    marital:isComm?'':(g('cf-marital')||{}).value||'',
+    occupation:isComm?(g('cf-contact-title')||{}).value?.trim()||'':(g('cf-occupation')||{}).value?.trim()||'',
+    ssn:isComm?'':(g('cf-ssn')||{}).value?.trim()||'',
+    // Contact
+    phoneCell:isComm?(g('cf-biz-phone')||{}).value?.trim()||'':(g('cf-phone-cell')||{}).value?.trim()||'',
+    phoneHome:isComm?'':(g('cf-phone-home')||{}).value?.trim()||'',
+    phoneWork:isComm?(g('cf-contact-phone')||{}).value?.trim()||'':(g('cf-phone-work')||{}).value?.trim()||'',
+    fax:isComm?(g('cf-biz-fax')||{}).value?.trim()||'':'',
+    email1:isComm?(g('cf-biz-email')||{}).value?.trim()||'':(g('cf-email1')||{}).value?.trim()||'',
+    email2:isComm?(g('cf-contact-email')||{}).value?.trim()||'':(g('cf-email2')||{}).value?.trim()||'',
+    prefContact:isComm?(g('cf-contact-pref')||{}).value||'':(g('cf-pref-contact')||{}).value||'',
+    bestTime:'',dnc:(g('cf-dnc')||{}).value||'No',
+    // Address
+    addr1:(g('cf-addr1')||{}).value?.trim()||'',addr2:(g('cf-addr2')||{}).value?.trim()||'',
+    city:(g('cf-city')||{}).value?.trim()||'',state:(g('cf-state')||{}).value?.trim()||'',
+    zip:(g('cf-zip')||{}).value?.trim()||'',county:(g('cf-county')||{}).value?.trim()||'',
     mailAddr1:'',mailAddr2:'',mailCity:'',mailState:'',mailZip:'',mailCounty:'',
-    bizName:'',bizType:'',fein:'',
-    leadSource:g('cf-lead-source').value,agent:g('cf-agent').value.trim(),tag:g('cf-tag').value,
+    // Business
+    bizName:isComm?(g('cf-biz-name')||{}).value?.trim()||'':'',
+    dba:isComm?(g('cf-dba')||{}).value?.trim()||'':'',
+    bizType:isComm?(g('cf-industry')||{}).value?.trim()||'':'',
+    fein:isComm?(g('cf-fein')||{}).value?.trim()||'':'',
+    entityType:isComm?(g('cf-entity-type')||{}).value||'':'',
+    numEmployees:isComm?(g('cf-num-employees')||{}).value||'':'',
+    yrsInBusiness:isComm?(g('cf-yrs-in-biz')||{}).value||'':'',
+    website:isComm?(g('cf-website')||{}).value?.trim()||'':'',
+    // Agency
+    leadSource:(g('cf-lead-source')||{}).value||'',agent:(g('cf-agent')||{}).value?.trim()||'',
+    tag:(g('cf-tag')||{}).value||(isComm?'Commercial':''),
     dlNum:'',dlState:'',dlExp:'',dlClass:'',sr22:'No',yrsLic:'',
     coApp:coApp,
-    notes:g('cf-notes').value.trim()?[{date:new Date().toISOString().split('T')[0],text:g('cf-notes').value.trim()}]:[],
+    notes:(g('cf-notes')||{}).value?.trim()?[{date:new Date().toISOString().split('T')[0],text:g('cf-notes').value.trim()}]:[],
     added:new Date().toISOString().split('T')[0]
   };
-  if(!c.first||!c.last){alert('First and last name required.');return;}
-  data.clients.push(c);save();closeModal('client-modal');renderClients();
+
+  if(isComm){
+    if(!c.bizName){alert('Business Legal Name is required.');return;}
+  } else {
+    if(!c.first||!c.last){alert('First and last name required.');return;}
+  }
+
+  data.clients.push(c);save();closeModal('client-modal');renderClients();populateClientSelects();
   document.querySelectorAll('#client-modal input,#client-modal select,#client-modal textarea').forEach(el=>{el.value='';});
-  // Reset co-applicant toggle
+  // Reset to personal mode
+  setClientType('personal');
   const cs=document.getElementById('coapp-section');const cb=document.getElementById('coapp-btn');
   if(cs)cs.style.display='none';if(cb)cb.innerHTML='<span id="coapp-icon">➕</span> Add Co-Applicant / Spouse (Optional)';
 }
