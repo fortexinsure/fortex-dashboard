@@ -273,6 +273,19 @@ tr:hover td{background:#f4f6fa;}
 .quote-card h4{font-size:13px;font-weight:700;color:#0c1e3a;margin-bottom:3px;}
 .quote-card p{font-size:12px;color:#666;}
 .quote-meta{display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap;}
+
+.modal-tabs{display:flex;gap:0;border-bottom:2px solid #e8ecf3;margin-bottom:18px;overflow-x:auto;}
+.modal-tab-btn{padding:9px 15px;font-size:13px;font-weight:600;color:#666;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:'Segoe UI',Arial,sans-serif;}
+.modal-tab-btn.active{color:#0c1e3a;border-bottom-color:#f0c060;}
+.modal-tab-btn:hover:not(.active){color:#0c1e3a;background:#f8f9fb;}
+.cf-tab-panel{display:none;}
+.cf-tab-panel.active{display:block;}
+.inline-item-card{background:#f4f7fb;border:1px solid #d0d9ec;border-radius:9px;padding:14px 16px 12px;margin-bottom:12px;position:relative;}
+.inline-item-card .remove-inline{position:absolute;top:8px;right:10px;background:none;border:none;color:#c43a3a;font-size:20px;cursor:pointer;line-height:1;padding:0;}
+.inline-item-card .item-title{font-weight:700;font-size:13px;color:#0c1e3a;margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px;}
+.add-inline-btn{width:100%;padding:10px;border:2px dashed #b0bdd0;background:#f8f9fb;border-radius:8px;color:#0c1e3a;font-size:13px;font-weight:700;cursor:pointer;text-align:center;font-family:'Segoe UI',Arial,sans-serif;margin-top:4px;}
+.add-inline-btn:hover{border-color:#0c1e3a;background:#f0f4fa;}
+.tab-empty-msg{text-align:center;color:#999;font-size:13px;padding:32px 16px;}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
@@ -744,35 +757,79 @@ tr:hover td{background:#f4f6fa;}
 
       <!-- ===== PERSONAL FIELDS ===== -->
       <div id="cf-personal-section">
-        <div class="form-section"><div class="form-section-title">Personal Information</div>
-          <div class="form-row cols3">
-            <div class="form-group"><label>First Name *</label><input id="cf-first" type="text"></div>
-            <div class="form-group"><label>Middle Name</label><input id="cf-middle" type="text"></div>
-            <div class="form-group"><label>Last Name *</label><input id="cf-last" type="text"></div>
-          </div>
-          <div class="form-row cols3">
-            <div class="form-group"><label>Date of Birth</label><input id="cf-dob" type="date"></div>
-            <div class="form-group"><label>Gender</label><select id="cf-gender"><option value="">—</option><option>Male</option><option>Female</option><option>Non-binary</option><option>Prefer not to say</option></select></div>
-            <div class="form-group"><label>Marital Status</label><select id="cf-marital"><option value="">—</option><option>Single</option><option>Married</option><option>Divorced</option><option>Widowed</option><option>Separated</option></select></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label>Occupation</label><input id="cf-occupation" type="text"></div>
-            <div class="form-group"><label>SSN (Last 4 digits)</label><input id="cf-ssn" type="text" maxlength="4" placeholder="####"></div>
-          </div>
+        <!-- Inner tabs for personal clients -->
+        <div class="modal-tabs" id="cf-inner-tabs">
+          <button type="button" class="modal-tab-btn active" onclick="switchCfTab('basic',this)">📋 Basic Info</button>
+          <button type="button" class="modal-tab-btn" onclick="switchCfTab('dl',this)">🪪 Driver's License</button>
+          <button type="button" class="modal-tab-btn" onclick="switchCfTab('vehicles',this)">🚗 Vehicles</button>
+          <button type="button" class="modal-tab-btn" onclick="switchCfTab('properties',this)">🏠 Properties</button>
         </div>
 
-        <div class="form-section"><div class="form-section-title">Contact Information</div>
-          <div class="form-row cols3">
-            <div class="form-group"><label>Cell Phone</label><input id="cf-phone-cell" type="tel" placeholder="(xxx) xxx-xxxx"></div>
-            <div class="form-group"><label>Home Phone</label><input id="cf-phone-home" type="tel" placeholder="(xxx) xxx-xxxx"></div>
-            <div class="form-group"><label>Work Phone</label><input id="cf-phone-work" type="tel" placeholder="(xxx) xxx-xxxx"></div>
+        <!-- TAB: Basic Info -->
+        <div class="cf-tab-panel active" id="cftab-basic">
+          <div class="form-section"><div class="form-section-title">Personal Information</div>
+            <div class="form-row cols3">
+              <div class="form-group"><label>First Name *</label><input id="cf-first" type="text"></div>
+              <div class="form-group"><label>Middle Name</label><input id="cf-middle" type="text"></div>
+              <div class="form-group"><label>Last Name *</label><input id="cf-last" type="text"></div>
+            </div>
+            <div class="form-row cols3">
+              <div class="form-group"><label>Date of Birth</label><input id="cf-dob" type="date"></div>
+              <div class="form-group"><label>Gender</label><select id="cf-gender"><option value="">—</option><option>Male</option><option>Female</option><option>Non-binary</option><option>Prefer not to say</option></select></div>
+              <div class="form-group"><label>Marital Status</label><select id="cf-marital"><option value="">—</option><option>Single</option><option>Married</option><option>Divorced</option><option>Widowed</option><option>Separated</option></select></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Occupation</label><input id="cf-occupation" type="text"></div>
+              <div class="form-group"><label>SSN (Last 4 digits)</label><input id="cf-ssn" type="text" maxlength="4" placeholder="####"></div>
+            </div>
           </div>
-          <div class="form-row cols3">
-            <div class="form-group"><label>Primary Email</label><input id="cf-email1" type="email"></div>
-            <div class="form-group"><label>Secondary Email</label><input id="cf-email2" type="email"></div>
-            <div class="form-group"><label>Preferred Contact</label><select id="cf-pref-contact"><option value="">—</option><option>Cell Phone</option><option>Home Phone</option><option>Email</option><option>Text</option></select></div>
+
+          <div class="form-section"><div class="form-section-title">Contact Information</div>
+            <div class="form-row cols3">
+              <div class="form-group"><label>Cell Phone</label><input id="cf-phone-cell" type="tel" placeholder="(xxx) xxx-xxxx"></div>
+              <div class="form-group"><label>Home Phone</label><input id="cf-phone-home" type="tel" placeholder="(xxx) xxx-xxxx"></div>
+              <div class="form-group"><label>Work Phone</label><input id="cf-phone-work" type="tel" placeholder="(xxx) xxx-xxxx"></div>
+            </div>
+            <div class="form-row cols3">
+              <div class="form-group"><label>Primary Email</label><input id="cf-email1" type="email"></div>
+              <div class="form-group"><label>Secondary Email</label><input id="cf-email2" type="email"></div>
+              <div class="form-group"><label>Preferred Contact</label><select id="cf-pref-contact"><option value="">—</option><option>Cell Phone</option><option>Home Phone</option><option>Email</option><option>Text</option></select></div>
+            </div>
           </div>
-        </div>
+        </div><!-- /cftab-basic -->
+
+        <!-- TAB: Driver's License -->
+        <div class="cf-tab-panel" id="cftab-dl">
+          <div class="form-section"><div class="form-section-title">Driver's License — Primary Insured</div>
+            <div class="form-row cols3">
+              <div class="form-group"><label>DL Number</label><input id="cf-dl-num" type="text" placeholder="A12345678"></div>
+              <div class="form-group"><label>State Issued</label><input id="cf-dl-state" type="text" maxlength="2" placeholder="TX"></div>
+              <div class="form-group"><label>Expiration Date</label><input id="cf-dl-exp" type="date"></div>
+            </div>
+            <div class="form-row cols3">
+              <div class="form-group"><label>DL Class</label><select id="cf-dl-class"><option value="">—</option><option>A</option><option>B</option><option>C</option><option>Commercial</option><option>Motorcycle</option><option>Other</option></select></div>
+              <div class="form-group"><label>Years Licensed</label><input id="cf-yrs-lic" type="number" min="0" placeholder="5"></div>
+              <div class="form-group"><label>SR-22 Required</label><select id="cf-sr22"><option>No</option><option>Yes</option></select></div>
+            </div>
+          </div>
+        </div><!-- /cftab-dl -->
+
+        <!-- TAB: Vehicles -->
+        <div class="cf-tab-panel" id="cftab-vehicles">
+          <div style="margin-bottom:14px;">
+            <div id="cf-vehicles-list"><p class="tab-empty-msg">No vehicles added yet. Click below to add one.</p></div>
+            <button type="button" class="add-inline-btn" onclick="addCfVehicle()">+ Add Vehicle</button>
+          </div>
+        </div><!-- /cftab-vehicles -->
+
+        <!-- TAB: Properties -->
+        <div class="cf-tab-panel" id="cftab-properties">
+          <div style="margin-bottom:14px;">
+            <div id="cf-properties-list"><p class="tab-empty-msg">No properties added yet. Click below to add one.</p></div>
+            <button type="button" class="add-inline-btn" onclick="addCfProperty()">+ Add Property</button>
+          </div>
+        </div><!-- /cftab-properties -->
+
       </div><!-- /personal -->
 
       <!-- ===== COMMERCIAL FIELDS ===== -->
@@ -1535,6 +1592,90 @@ function openModal(id){
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function populateClientSelects(){const opts=data.clients.map(c=>`<option value="${c.id}">${c.clientType==='commercial'&&c.bizName?c.bizName:c.first+' '+c.last}</option>`).join('');['pf-client','tf-client','rf-client'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=(id==='tf-client'?'<option value="">None</option>':'')+opts;});}
 
+function switchCfTab(tab,el){
+  document.querySelectorAll('#cf-inner-tabs .modal-tab-btn').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.cf-tab-panel').forEach(p=>p.classList.remove('active'));
+  if(el)el.classList.add('active');
+  const panel=document.getElementById('cftab-'+tab);
+  if(panel)panel.classList.add('active');
+}
+let _cfvCount=0;
+function addCfVehicle(){
+  _cfvCount++;
+  const list=document.getElementById('cf-vehicles-list');
+  // Remove empty msg
+  const msg=list.querySelector('.tab-empty-msg');if(msg)msg.remove();
+  const id='cfvc_'+Date.now();
+  const div=document.createElement('div');
+  div.className='inline-item-card';div.id=id;
+  div.innerHTML=`<button type="button" class="remove-inline" onclick="removeCfInline('${id}','cf-vehicles-list')">×</button>
+    <div class="item-title">Vehicle ${_cfvCount}</div>
+    <div class="form-row cols3">
+      <div class="form-group"><label>Year *</label><input class="cfv-year" type="text" placeholder="2022"></div>
+      <div class="form-group"><label>Make *</label><input class="cfv-make" type="text" placeholder="Toyota"></div>
+      <div class="form-group"><label>Model *</label><input class="cfv-model" type="text" placeholder="Camry"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>VIN</label><input class="cfv-vin" type="text" placeholder="17-character VIN" style="font-family:monospace;"></div>
+      <div class="form-group"><label>Body Type</label><select class="cfv-body"><option>Sedan</option><option>SUV / Crossover</option><option>Truck</option><option>Van / Minivan</option><option>Coupe</option><option>Convertible</option><option>Motorcycle</option><option>Commercial</option><option>Other</option></select></div>
+    </div>
+    <div class="form-row cols3">
+      <div class="form-group"><label>Use Type</label><select class="cfv-use"><option>Personal / Pleasure</option><option>Commute</option><option>Business</option><option>Farm / Ranch</option><option>Commercial</option></select></div>
+      <div class="form-group"><label>Annual Mileage</label><input class="cfv-miles" type="number" placeholder="12000"></div>
+      <div class="form-group"><label>Garaging ZIP</label><input class="cfv-gzip" type="text" placeholder="75009"></div>
+    </div>
+    <div class="form-row cols3">
+      <div class="form-group"><label>Ownership</label><select class="cfv-ownership"><option>Owned</option><option>Financed / Leased</option><option>Company Owned</option></select></div>
+      <div class="form-group"><label>Lienholder / Bank</label><input class="cfv-lien" type="text" placeholder="e.g. Chase Auto"></div>
+      <div class="form-group"><label>Linked Policy #</label><input class="cfv-policy" type="text" placeholder="Optional"></div>
+    </div>
+    <div class="form-row single"><div class="form-group"><label>Notes</label><textarea class="cfv-notes" style="min-height:44px;"></textarea></div></div>`;
+  list.appendChild(div);
+}
+let _cfpCount=0;
+function addCfProperty(){
+  _cfpCount++;
+  const list=document.getElementById('cf-properties-list');
+  const msg=list.querySelector('.tab-empty-msg');if(msg)msg.remove();
+  const id='cfpc_'+Date.now();
+  const div=document.createElement('div');
+  div.className='inline-item-card';div.id=id;
+  div.innerHTML=`<button type="button" class="remove-inline" onclick="removeCfInline('${id}','cf-properties-list')">×</button>
+    <div class="item-title">Property ${_cfpCount}</div>
+    <div class="form-row single"><div class="form-group"><label>Street Address *</label><input class="cfp-addr" type="text" placeholder="123 Main St"></div></div>
+    <div class="form-row cols3">
+      <div class="form-group"><label>City</label><input class="cfp-city" type="text"></div>
+      <div class="form-group"><label>State</label><input class="cfp-state" type="text" maxlength="2" placeholder="TX"></div>
+      <div class="form-group"><label>ZIP</label><input class="cfp-zip" type="text" placeholder="75009"></div>
+    </div>
+    <div class="form-row cols3">
+      <div class="form-group"><label>Property Type</label><select class="cfp-type"><option>Single Family Home</option><option>Condo / Townhome</option><option>Mobile Home</option><option>Rental Property</option><option>Commercial Building</option><option>Vacant Land</option><option>Other</option></select></div>
+      <div class="form-group"><label>Year Built</label><input class="cfp-year" type="text" placeholder="1998"></div>
+      <div class="form-group"><label>Square Footage</label><input class="cfp-sqft" type="number" placeholder="2000"></div>
+    </div>
+    <div class="form-row cols3">
+      <div class="form-group"><label>Construction</label><select class="cfp-construction"><option>Frame</option><option>Masonry / Brick</option><option>Log</option><option>Metal</option><option>Other</option></select></div>
+      <div class="form-group"><label>Roof Type</label><select class="cfp-roof"><option>Shingle</option><option>Metal</option><option>Tile</option><option>Flat</option><option>Other</option></select></div>
+      <div class="form-group"><label>Roof Year</label><input class="cfp-roof-year" type="text" placeholder="2018"></div>
+    </div>
+    <div class="form-row cols3">
+      <div class="form-group"><label>Occupancy</label><select class="cfp-occupancy"><option>Owner Occupied</option><option>Tenant Occupied</option><option>Vacant</option><option>Secondary / Seasonal</option></select></div>
+      <div class="form-group"><label>Est. Replacement Value ($)</label><input class="cfp-value" type="number" placeholder="350000"></div>
+      <div class="form-group"><label>Mortgage Company</label><input class="cfp-mortgage" type="text" placeholder="e.g. Wells Fargo"></div>
+    </div>
+    <div class="form-row single"><div class="form-group"><label>Linked Policy #</label><input class="cfp-policy" type="text" placeholder="Optional"></div></div>
+    <div class="form-row single"><div class="form-group"><label>Notes</label><textarea class="cfp-notes" style="min-height:44px;"></textarea></div></div>`;
+  list.appendChild(div);
+}
+function removeCfInline(id,listId){
+  const el=document.getElementById(id);
+  if(el)el.remove();
+  const list=document.getElementById(listId);
+  if(list&&!list.querySelector('.inline-item-card')){
+    list.innerHTML='<p class="tab-empty-msg">No '+(listId.includes('vehicle')?'vehicles':'properties')+' added yet. Click below to add one.</p>';
+    if(listId.includes('vehicle'))_cfvCount=0;else _cfpCount=0;
+  }
+}
 function setClientType(type){
   const g=id=>document.getElementById(id);
   g('cf-client-type').value=type;
@@ -1625,7 +1766,7 @@ function saveClient(){
     // Agency
     leadSource:(g('cf-lead-source')||{}).value||'',agent:(g('cf-agent')||{}).value?.trim()||'',
     tag:(g('cf-tag')||{}).value||(isComm?'Commercial':''),
-    dlNum:'',dlState:'',dlExp:'',dlClass:'',sr22:'No',yrsLic:'',
+    dlNum:isComm?'':(g('cf-dl-num')||{}).value?.trim()||'',dlState:isComm?'':(g('cf-dl-state')||{}).value?.trim()||'',dlExp:isComm?'':(g('cf-dl-exp')||{}).value||'',dlClass:isComm?'':(g('cf-dl-class')||{}).value||'',sr22:isComm?'No':(g('cf-sr22')||{}).value||'No',yrsLic:isComm?'':(g('cf-yrs-lic')||{}).value?.trim()||'',
     coApp:coApp,
     notes:(g('cf-notes')||{}).value?.trim()?[{date:new Date().toISOString().split('T')[0],text:g('cf-notes').value.trim()}]:[],
     added:new Date().toISOString().split('T')[0]
@@ -1637,10 +1778,64 @@ function saveClient(){
     if(!c.first||!c.last){alert('First and last name required.');return;}
   }
 
-  data.clients.push(c);save();closeModal('client-modal');renderClients();populateClientSelects();
+  data.clients.push(c);
+  // Save inline vehicles
+  const vList=document.getElementById('cf-vehicles-list');
+  if(vList&&!isComm){
+    vList.querySelectorAll('.inline-item-card').forEach(card=>{
+      const y=(card.querySelector('.cfv-year')||{}).value?.trim();
+      const mk=(card.querySelector('.cfv-make')||{}).value?.trim();
+      const mo=(card.querySelector('.cfv-model')||{}).value?.trim();
+      if(y||mk||mo){
+        data.vehicles.push({id:'v'+Date.now()+Math.random().toString(36).slice(2,6),clientId:c.id,
+          year:y||'',make:mk||'',model:mo||'',
+          vin:(card.querySelector('.cfv-vin')||{}).value?.trim()||'',
+          body:(card.querySelector('.cfv-body')||{}).value||'',
+          use:(card.querySelector('.cfv-use')||{}).value||'',
+          miles:(card.querySelector('.cfv-miles')||{}).value||'',
+          garageZip:(card.querySelector('.cfv-gzip')||{}).value?.trim()||'',
+          ownership:(card.querySelector('.cfv-ownership')||{}).value||'',
+          lien:(card.querySelector('.cfv-lien')||{}).value?.trim()||'',
+          policy:(card.querySelector('.cfv-policy')||{}).value?.trim()||'',
+          notes:(card.querySelector('.cfv-notes')||{}).value?.trim()||''
+        });
+      }
+    });
+  }
+  // Save inline properties
+  const pList=document.getElementById('cf-properties-list');
+  if(pList&&!isComm){
+    pList.querySelectorAll('.inline-item-card').forEach(card=>{
+      const addr=(card.querySelector('.cfp-addr')||{}).value?.trim();
+      if(addr){
+        data.properties.push({id:'p'+Date.now()+Math.random().toString(36).slice(2,6),clientId:c.id,
+          address:addr,
+          city:(card.querySelector('.cfp-city')||{}).value?.trim()||'',
+          state:(card.querySelector('.cfp-state')||{}).value?.trim()||'',
+          zip:(card.querySelector('.cfp-zip')||{}).value?.trim()||'',
+          type:(card.querySelector('.cfp-type')||{}).value||'',
+          yearBuilt:(card.querySelector('.cfp-year')||{}).value?.trim()||'',
+          sqft:(card.querySelector('.cfp-sqft')||{}).value||'',
+          construction:(card.querySelector('.cfp-construction')||{}).value||'',
+          roofType:(card.querySelector('.cfp-roof')||{}).value||'',
+          roofYear:(card.querySelector('.cfp-roof-year')||{}).value?.trim()||'',
+          occupancy:(card.querySelector('.cfp-occupancy')||{}).value||'',
+          value:(card.querySelector('.cfp-value')||{}).value||'',
+          mortgage:(card.querySelector('.cfp-mortgage')||{}).value?.trim()||'',
+          policy:(card.querySelector('.cfp-policy')||{}).value?.trim()||'',
+          notes:(card.querySelector('.cfp-notes')||{}).value?.trim()||''
+        });
+      }
+    });
+  }
+  save();closeModal('client-modal');renderClients();populateClientSelects();
   document.querySelectorAll('#client-modal input,#client-modal select,#client-modal textarea').forEach(el=>{el.value='';});
-  // Reset to personal mode
+  // Reset inline lists
+  if(vList)vList.innerHTML='<p class="tab-empty-msg">No vehicles added yet. Click below to add one.</p>';
+  if(pList)pList.innerHTML='<p class="tab-empty-msg">No properties added yet. Click below to add one.</p>';
+  // Reset to personal mode and first tab
   setClientType('personal');
+  switchCfTab('basic',document.querySelector('#cf-inner-tabs .modal-tab-btn'));
   const cs=document.getElementById('coapp-section');const cb=document.getElementById('coapp-btn');
   if(cs)cs.style.display='none';if(cb)cb.innerHTML='<span id="coapp-icon">➕</span> Add Co-Applicant / Spouse (Optional)';
 }
