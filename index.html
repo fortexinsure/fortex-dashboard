@@ -286,6 +286,10 @@ tr:hover td{background:#f4f6fa;}
 .add-inline-btn{width:100%;padding:10px;border:2px dashed #b0bdd0;background:#f8f9fb;border-radius:8px;color:#0c1e3a;font-size:13px;font-weight:700;cursor:pointer;text-align:center;font-family:'Segoe UI',Arial,sans-serif;margin-top:4px;}
 .add-inline-btn:hover{border-color:#0c1e3a;background:#f0f4fa;}
 .tab-empty-msg{text-align:center;color:#999;font-size:13px;padding:32px 16px;}
+.pf-comm-hint{font-size:11px;color:#2a7a4a;font-weight:600;margin-top:4px;min-height:15px;}
+.term-badge{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:5px;vertical-align:middle;}
+.term-6mo{background:#fff3cd;color:#856404;}
+.term-12mo{background:#d1ecf1;color:#0c5460;}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
@@ -943,11 +947,29 @@ tr:hover td{background:#f4f6fa;}
     <div class="modal-header"><h3>Add Policy</h3><button class="modal-close" onclick="closeModal('policy-modal')">×</button></div>
     <div class="modal-body">
       <div class="form-row single"><div class="form-group"><label>Client *</label><select id="pf-client"></select></div></div>
-      <div class="form-row"><div class="form-group"><label>Policy Type</label><select id="pf-type"><option>Personal Auto</option><option>Homeowners</option><option>Commercial Property</option><option>Commercial Auto</option><option>Workers Compensation</option><option>Life/Health</option><option>Other</option></select></div><div class="form-group"><label>Carrier *</label><input id="pf-carrier" type="text"></div></div>
-      <div class="form-row"><div class="form-group"><label>Policy Number</label><input id="pf-number" type="text"></div><div class="form-group"><label>Annual Premium ($) *</label><input id="pf-premium" type="number"></div></div>
-      <div class="form-row"><div class="form-group"><label>New Business Comm Rate (%)</label><input id="pf-comm-rate" type="number" step="0.1" placeholder="e.g. 15"></div><div class="form-group"><label>Renewal Comm Rate (%)</label><input id="pf-comm-rate-renewal" type="number" step="0.1" placeholder="e.g. 12"></div></div>
-      <div class="form-row"><div class="form-group"><label>Commission Type</label><select id="pf-comm-type"><option>New Business</option><option>Renewal</option><option>Both</option></select></div><div class="form-group"><label>Policy Status</label><select id="pf-status"><option value="Active">Active</option><option value="Pending Cancellation">Pending Cancellation</option><option value="Cancelled">Cancelled</option><option value="Non-Renewed">Non-Renewed</option><option value="Lapsed">Lapsed</option></select></div></div>
-      <div class="form-row"><div class="form-group"><label>Effective Date</label><input id="pf-effective" type="date"></div><div class="form-group"><label>Renewal Date *</label><input id="pf-renewal" type="date"></div></div>
+      <div class="form-row cols3">
+        <div class="form-group"><label>Policy Type</label><select id="pf-type" onchange="onPfTypeChange()"><option>Personal Auto</option><option>Homeowners</option><option>Commercial Property</option><option>Commercial Auto</option><option>Workers Compensation</option><option>Life/Health</option><option>Other</option></select></div>
+        <div class="form-group"><label>Policy Term</label><select id="pf-term" onchange="onPfTermChange()"><option value="6">6 Months</option><option value="12" selected>12 Months (Annual)</option></select></div>
+        <div class="form-group"><label>Carrier *</label><input id="pf-carrier" type="text"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Policy Number</label><input id="pf-number" type="text"></div>
+        <div class="form-group">
+          <label id="pf-premium-label">Annual Premium ($) *</label>
+          <input id="pf-premium" type="number" oninput="updateCommPreview()">
+          <div class="pf-comm-hint" id="pf-comm-hint"></div>
+        </div>
+      </div>
+      <div class="form-row cols3">
+        <div class="form-group"><label>New Business Comm Rate (%)</label><input id="pf-comm-rate" type="number" step="0.1" placeholder="e.g. 15" oninput="updateCommPreview()"></div>
+        <div class="form-group"><label>Renewal Comm Rate (%)</label><input id="pf-comm-rate-renewal" type="number" step="0.1" placeholder="e.g. 12"></div>
+        <div class="form-group"><label>Commission Type</label><select id="pf-comm-type"><option>New Business</option><option>Renewal</option><option>Both</option></select></div>
+      </div>
+      <div class="form-row cols3">
+        <div class="form-group"><label>Policy Status</label><select id="pf-status"><option value="Active">Active</option><option value="Pending Cancellation">Pending Cancellation</option><option value="Cancelled">Cancelled</option><option value="Non-Renewed">Non-Renewed</option><option value="Lapsed">Lapsed</option></select></div>
+        <div class="form-group"><label>Effective Date</label><input id="pf-effective" type="date" onchange="autoSetRenewal()"></div>
+        <div class="form-group"><label>Renewal Date *</label><input id="pf-renewal" type="date"></div>
+      </div>
       <div class="form-row single"><div class="form-group"><label>Notes</label><textarea id="pf-notes"></textarea></div></div>
     </div>
     <div class="modal-footer"><button class="btn" onclick="closeModal('policy-modal')">Cancel</button><button class="btn btn-primary" onclick="savePolicy()">Save Policy</button></div>
@@ -1089,6 +1111,48 @@ function rb(days){if(days<=30)return`<span class="badge badge-red">${days}d</spa
 function fmt(n){return'$'+Number(n||0).toLocaleString();}
 function fmtc(n){return'$'+Number(n||0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
 function fd(d){if(!d)return'—';const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function onPfTypeChange(){
+  const type=document.getElementById('pf-type').value;
+  const term=document.getElementById('pf-term');
+  if(['Personal Auto'].includes(type)) term.value='6';
+  else if(['Homeowners','Commercial Property','Workers Compensation','Life/Health'].includes(type)) term.value='12';
+  onPfTermChange();
+}
+function onPfTermChange(){
+  const term=document.getElementById('pf-term').value;
+  const lbl=document.getElementById('pf-premium-label');
+  if(lbl)lbl.textContent=term==='6'?'6-Month Premium ($) *':'Annual Premium ($) *';
+  autoSetRenewal();
+  updateCommPreview();
+}
+function autoSetRenewal(){
+  const eff=document.getElementById('pf-effective').value;
+  const term=Number(document.getElementById('pf-term').value)||12;
+  if(!eff)return;
+  const d=new Date(eff+'T12:00:00');
+  d.setMonth(d.getMonth()+term);
+  document.getElementById('pf-renewal').value=d.toISOString().split('T')[0];
+}
+function updateCommPreview(){
+  const prem=Number((document.getElementById('pf-premium')||{}).value)||0;
+  const rate=Number((document.getElementById('pf-comm-rate')||{}).value)||0;
+  const term=Number((document.getElementById('pf-term')||{}).value)||12;
+  const hint=document.getElementById('pf-comm-hint');
+  if(!hint)return;
+  if(prem&&rate){
+    const termComm=Math.round(prem*rate/100);
+    const annComm=Math.round(termComm*(12/term));
+    hint.textContent=term===6
+      ?`≈ $${termComm.toLocaleString()} commission/term · $${annComm.toLocaleString()} annualized/yr`
+      :`≈ $${termComm.toLocaleString()} commission/year`;
+  } else {
+    hint.textContent='';
+  }
+}
+function commAmtAnnual(p){const term=Number(p.term)||12;return Math.round(commAmt(p)*(12/term));}
+function commAmtMonthly(p){return Math.round(commAmtAnnual(p)/12);}
+function termLabel(p){return (Number(p.term)||12)===6?'<span class="term-badge term-6mo">6-mo</span>':'<span class="term-badge term-12mo">12-mo</span>';}
+function premiumDisplay(p){const t=Number(p.term)||12;return fmt(p.premium)+(t===6?'<span style="font-size:11px;color:#888;">/6mo</span>':'<span style="font-size:11px;color:#888;">/yr</span>');}
 function commAmt(p){return Math.round((Number(p.premium)||0)*(Number(p.commRate)||0)/100);}
 
 function nav(page,el){
@@ -1118,7 +1182,7 @@ function renderDashboard(){
   const urgent=data.policies.filter(p=>du(p.renewal)>=0&&du(p.renewal)<=30);
   const soon=data.policies.filter(p=>du(p.renewal)>30&&du(p.renewal)<=60);
   const openTasks=data.tasks.filter(t=>t.status!=='Done');
-  const totalComm=data.policies.reduce((s,p)=>s+commAmt(p),0);
+  const totalComm=data.policies.reduce((s,p)=>s+commAmtAnnual(p),0);
   const monthlyComm=Math.round(totalComm/12);
   document.getElementById('dash-metrics').innerHTML=`
     <div class="metric-card metric-urgent" style="cursor:pointer;" onclick="navTo('renewals')" title="Click to view all renewals"><div class="metric-label">Urgent Renewals</div><div class="metric-value">${urgent.length}</div><div class="metric-sub">Expiring in ≤30 days →</div></div>
@@ -1130,10 +1194,10 @@ function renderDashboard(){
   const tl=document.getElementById('dash-tasks-list');
   tl.innerHTML=!openTasks.length?'<p class="empty-state">No open tasks!</p>':openTasks.sort((a,b)=>du(a.due)-du(b.due)).slice(0,6).map(t=>`<div class="dash-row" style="cursor:pointer;" onclick="navTo('followups')" title="Open Follow-Up Pipeline"><span><strong>${t.title}</strong>${t.clientId?` <span style="font-size:12px;color:#888;">— ${cn(t.clientId)}</span>`:''}</span><span class="badge ${t.priority==='High'?'badge-red':t.priority==='Medium'?'badge-amber':'badge-gray'}">${t.priority}</span></div>`).join('');
   const sl=document.getElementById('dash-soon-list');
-  sl.innerHTML=!soon.length?'<p class="empty-state">No renewals in this range</p>':soon.map(p=>`<div class="dash-row" style="cursor:pointer;" onclick="openProfile('${p.clientId}')" title="Open client profile"><span><strong>${cn(p.clientId)}</strong> — ${p.type}</span><div style="display:flex;gap:8px;align-items:center;">${rb(du(p.renewal))}<span style="font-size:13px;font-weight:600;color:#2a7a4a;">${fmtc(commAmt(p))}</span></div></div>`).join('');
+  sl.innerHTML=!soon.length?'<p class="empty-state">No renewals in this range</p>':soon.map(p=>`<div class="dash-row" style="cursor:pointer;" onclick="openProfile('${p.clientId}')" title="Open client profile"><span><strong>${cn(p.clientId)}</strong> — ${p.type}</span><div style="display:flex;gap:8px;align-items:center;">${rb(du(p.renewal))}<span style="font-size:13px;font-weight:600;color:#2a7a4a;">${fmtc(commAmtAnnual(p))}/yr</span></div></div>`).join('');
   const cl=document.getElementById('dash-comm-list');
-  const top=[...data.policies].sort((a,b)=>commAmt(b)-commAmt(a)).slice(0,5);
-  cl.innerHTML=top.map(p=>`<div class="dash-row" style="cursor:pointer;" onclick="openProfile('${p.clientId}')" title="Open client profile"><span><strong>${cn(p.clientId)}</strong> — ${p.carrier}</span><span style="font-weight:700;color:#2a7a4a;">${fmtc(commAmt(p))}/yr</span></div>`).join('');
+  const top=[...data.policies].sort((a,b)=>commAmtAnnual(b)-commAmtAnnual(a)).slice(0,5);
+  cl.innerHTML=top.map(p=>`<div class="dash-row" style="cursor:pointer;" onclick="openProfile('${p.clientId}')" title="Open client profile"><span><strong>${cn(p.clientId)}</strong> — ${p.carrier}</span><span style="font-weight:700;color:#2a7a4a;">${fmtc(commAmtAnnual(p))}/yr</span></div>`).join('');
   // Premium by Carrier widget on dashboard
   const dcl=document.getElementById('dash-carrier-list');
   if(dcl){const byC={};data.policies.forEach(p=>{if(!byC[p.carrier])byC[p.carrier]={prem:0,count:0};byC[p.carrier].prem+=Number(p.premium||0);byC[p.carrier].count++;});const sorted=Object.entries(byC).sort((a,b)=>b[1].prem-a[1].prem).slice(0,5);dcl.innerHTML=sorted.length?sorted.map(([c,v])=>`<div class="dash-row" style="cursor:pointer;" onclick="navTo('carriers')" title="View all carriers"><span><strong>${c}</strong> <span style="font-size:12px;color:#888;">(${v.count} polic${v.count!==1?'ies':'y'})</span></span><span style="font-weight:700;color:#0c1e3a;">${fmtc(v.prem)}/yr</span></div>`).join(''):'<div class="empty-state" style="padding:24px;">No policies added yet.</div>';}
@@ -1146,7 +1210,7 @@ function buildDigestText(){
   const soon=data.policies.filter(p=>du(p.renewal)>30&&du(p.renewal)<=60).sort((a,b)=>du(a.renewal)-du(b.renewal));
   const openTasks=data.tasks.filter(t=>t.status!=='Done').sort((a,b)=>du(a.due)-du(b.due));
   const reshopPending=data.reshop.filter(r=>r.status==='Pending');
-  const totalComm=data.policies.reduce((s,p)=>s+commAmt(p),0);
+  const totalComm=data.policies.reduce((s,p)=>s+commAmtAnnual(p),0);
   let txt=`FORTEX INSURANCE GROUP — DAILY DIGEST\n${today}\n`;
   txt+=`${'─'.repeat(52)}\n\n`;
   txt+=`📊 BOOK SUMMARY\n`;
@@ -1324,7 +1388,7 @@ function loadPoliciesTab(clientId){
   c.innerHTML=pols.map(p=>`<div class="policy-mini-card">
     <div class="policy-mini-top">
       <div class="policy-mini-left"><h4>${p.type} — ${p.carrier} ${policyStatusBadge(p)}</h4><p>${p.number} · Eff. ${fd(p.effective)}${p.notes?' · '+p.notes:''}</p></div>
-      <div class="policy-mini-right"><div class="premium">${fmt(p.premium)}/yr</div><div class="commission">Commission: ${fmtc(commAmt(p))}/yr · NB: ${p.commRate||0}% / Ren: ${p.commRateRenewal||p.commRate||0}%</div><div class="renewal">Renews ${fd(p.renewal)} ${rb(du(p.renewal))}</div></div>
+      <div class="policy-mini-right"><div class="premium">${premiumDisplay(p)}</div><div class="commission">Commission: ${fmtc(commAmtAnnual(p))}/yr${(Number(p.term)||12)===6?' ('+fmtc(commAmt(p))+'/term)':''} · NB: ${p.commRate||0}% / Ren: ${p.commRateRenewal||p.commRate||0}%</div><div class="renewal">Renews ${fd(p.renewal)} ${rb(du(p.renewal))}</div></div>
     </div>
     <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #e8ebf0;">
       <button class="btn btn-sm btn-gold" onclick="editPolicy('${p.id}')">Edit</button>
@@ -1457,7 +1521,7 @@ function renderPolicies(){
   const filtered=data.policies.filter(p=>{const s=(cn(p.clientId)+p.number+p.carrier).toLowerCase();return s.includes(q.toLowerCase())&&(!type||p.type===type)&&(!carrier||p.carrier===carrier)&&(!statusF||(p.status||'Active')===statusF);});
   const tbody=document.getElementById('policies-tbody');
   if(!filtered.length){tbody.innerHTML='<tr><td colspan="10" class="empty-state">No policies found</td></tr>';return;}
-  tbody.innerHTML=filtered.map(p=>`<tr class="row-link" onclick="editPolicy('${p.id}')"><td><strong>${cn(p.clientId)}</strong></td><td><span class="badge badge-navy">${p.type}</span></td><td>${p.carrier}</td><td style="font-size:12px;color:#666;">${p.number}</td><td>${fmt(p.premium)}</td><td style="font-weight:600;color:#555;">${p.commRate||0}%<br><span style="font-size:11px;color:#888;font-weight:400;">Ren: ${p.commRateRenewal||p.commRate||0}%</span></td><td style="font-weight:700;color:#2a7a4a;">${fmtc(commAmt(p))}</td><td style="font-weight:600;">${fd(p.renewal)}</td><td>${policyStatusBadge(p)}</td><td onclick="event.stopPropagation()"><button class="btn btn-sm btn-danger" onclick="deletePolicy('${p.id}')">×</button></td></tr>`).join('');
+  tbody.innerHTML=filtered.map(p=>`<tr class="row-link" onclick="editPolicy('${p.id}')"><td><strong>${cn(p.clientId)}</strong></td><td><span class="badge badge-navy">${p.type}</span>${termLabel(p)}</td><td>${p.carrier}</td><td style="font-size:12px;color:#666;">${p.number}</td><td>${premiumDisplay(p)}</td><td style="font-weight:600;color:#555;">${p.commRate||0}%<br><span style="font-size:11px;color:#888;font-weight:400;">Ren: ${p.commRateRenewal||p.commRate||0}%</span></td><td style="font-weight:700;color:#2a7a4a;">${fmtc(commAmtAnnual(p))}/yr${(Number(p.term)||12)===6?`<br><span style="font-size:11px;color:#888;font-weight:400;">${fmtc(commAmt(p))}/term</span>`:''}</td><td style="font-weight:600;">${fd(p.renewal)}</td><td>${policyStatusBadge(p)}</td><td onclick="event.stopPropagation()"><button class="btn btn-sm btn-danger" onclick="deletePolicy('${p.id}')">×</button></td></tr>`).join('');
 }
 function populateCarrierFilter(){const sel=document.getElementById('policy-filter-carrier');if(!sel)return;sel.innerHTML='<option value="">All Carriers</option>'+[...new Set(data.policies.map(p=>p.carrier))].sort().map(c=>`<option>${c}</option>`).join('');}
 
@@ -1467,7 +1531,7 @@ function renderRenewals(days){
   const filtered=data.policies.filter(p=>{const d=du(p.renewal);return days===999?d>=0:d>=0&&d<=days;}).sort((a,b)=>du(a.renewal)-du(b.renewal));
   const tbody=document.getElementById('renewals-tbody');
   if(!filtered.length){tbody.innerHTML='<tr><td colspan="8" class="empty-state">No renewals in this window</td></tr>';return;}
-  tbody.innerHTML=filtered.map(p=>{const d=du(p.renewal);const rc=d<=30?'renewal-row-urgent':d<=60?'renewal-row-soon':'renewal-row-ok';return`<tr class="${rc} row-link" onclick="openProfile('${p.clientId}')"><td><strong>${cn(p.clientId)}</strong></td><td>${p.type}</td><td>${p.carrier}</td><td>${fd(p.renewal)}</td><td>${rb(d)}</td><td>${fmt(p.premium)}</td><td style="font-weight:700;color:#2a7a4a;">${fmtc(commAmt(p))}</td><td onclick="event.stopPropagation()"><button class="btn btn-sm" onclick="addTaskForRenewal('${p.id}')">+ Task</button></td></tr>`;}).join('');
+  tbody.innerHTML=filtered.map(p=>{const d=du(p.renewal);const rc=d<=30?'renewal-row-urgent':d<=60?'renewal-row-soon':'renewal-row-ok';return`<tr class="${rc} row-link" onclick="openProfile('${p.clientId}')"><td><strong>${cn(p.clientId)}</strong></td><td>${p.type}${termLabel(p)}</td><td>${p.carrier}</td><td>${fd(p.renewal)}</td><td>${rb(d)}</td><td>${premiumDisplay(p)}</td><td style="font-weight:700;color:#2a7a4a;">${fmtc(commAmtAnnual(p))}/yr${(Number(p.term)||12)===6?`<br><span style="font-size:11px;font-weight:400;color:#888;">${fmtc(commAmt(p))}/term</span>`:''}</td><td onclick="event.stopPropagation()"><button class="btn btn-sm" onclick="addTaskForRenewal('${p.id}')">+ Task</button></td></tr>`;}).join('');
 }
 function addTaskForRenewal(polId){const pol=data.policies.find(p=>p.id===polId);if(!pol)return;data.tasks.push({id:'t'+Date.now(),title:'Renew '+pol.type+' for '+cn(pol.clientId),clientId:pol.clientId,cat:'Renewal',due:pol.renewal,priority:'High',notes:pol.carrier+' '+pol.number,status:'To Do'});save();alert('Follow-up task added!');}
 
@@ -1511,28 +1575,28 @@ function deleteTask(id){data.tasks=data.tasks.filter(x=>x.id!==id);save();render
 
 // ==================== COMMISSIONS ====================
 function renderCommissions(){
-  const totalAnn=data.policies.reduce((s,p)=>s+commAmt(p),0);
+  const totalAnn=data.policies.reduce((s,p)=>s+commAmtAnnual(p),0);
   const totalMon=Math.round(totalAnn/12);
-  const urgentComm=data.policies.filter(p=>du(p.renewal)>=0&&du(p.renewal)<=30).reduce((s,p)=>s+commAmt(p),0);
+  const urgentComm=data.policies.filter(p=>du(p.renewal)>=0&&du(p.renewal)<=30).reduce((s,p)=>s+commAmtAnnual(p),0);
   document.getElementById('comm-metrics').innerHTML=`
-    <div class="metric-card metric-gold"><div class="metric-label">Annual Commission</div><div class="metric-value" style="font-size:24px;">${fmtc(totalAnn)}</div><div class="metric-sub">Across all policies</div></div>
+    <div class="metric-card metric-gold"><div class="metric-label">Annual Commission</div><div class="metric-value" style="font-size:24px;">${fmtc(totalAnn)}</div><div class="metric-sub">Across all policies (annualized)</div></div>
     <div class="metric-card metric-gold"><div class="metric-label">Monthly Est.</div><div class="metric-value" style="font-size:24px;">${fmtc(totalMon)}</div><div class="metric-sub">Average monthly</div></div>
     <div class="metric-card metric-urgent"><div class="metric-label">At-Risk Commission</div><div class="metric-value" style="font-size:24px;">${fmtc(urgentComm)}</div><div class="metric-sub">Renewing in ≤30 days</div></div>
     <div class="metric-card"><div class="metric-label">Avg Comm Rate</div><div class="metric-value" style="font-size:24px;">${data.policies.length?(data.policies.reduce((s,p)=>s+Number(p.commRate||0),0)/data.policies.length).toFixed(1):0}%</div><div class="metric-sub">Across book</div></div>`;
-  const byCarrier={};data.policies.forEach(p=>{if(!byCarrier[p.carrier])byCarrier[p.carrier]={prem:0,comm:0,count:0};byCarrier[p.carrier].prem+=Number(p.premium||0);byCarrier[p.carrier].comm+=commAmt(p);byCarrier[p.carrier].count++;});
+  const byCarrier={};data.policies.forEach(p=>{if(!byCarrier[p.carrier])byCarrier[p.carrier]={prem:0,comm:0,count:0};byCarrier[p.carrier].prem+=commAmtAnnual(p);byCarrier[p.carrier].comm+=commAmtAnnual(p);byCarrier[p.carrier].count++;});
   document.getElementById('comm-by-carrier').innerHTML=Object.entries(byCarrier).sort((a,b)=>b[1].comm-a[1].comm).map(([carrier,v])=>`<div class="dash-row"><span><strong>${carrier}</strong> <span style="font-size:12px;color:#888;">(${v.count} polic${v.count!==1?'ies':'y'})</span></span><span style="font-weight:700;color:#2a7a4a;">${fmtc(v.comm)}/yr</span></div>`).join('');
-  const byLOB={};data.policies.forEach(p=>{if(!byLOB[p.type])byLOB[p.type]={comm:0,count:0};byLOB[p.type].comm+=commAmt(p);byLOB[p.type].count++;});
+  const byLOB={};data.policies.forEach(p=>{if(!byLOB[p.type])byLOB[p.type]={comm:0,count:0};byLOB[p.type].comm+=commAmtAnnual(p);byLOB[p.type].count++;});
   document.getElementById('comm-by-lob').innerHTML=Object.entries(byLOB).sort((a,b)=>b[1].comm-a[1].comm).map(([lob,v])=>`<div class="dash-row"><span><strong>${lob}</strong> <span style="font-size:12px;color:#888;">(${v.count})</span></span><span style="font-weight:700;color:#2a7a4a;">${fmtc(v.comm)}/yr</span></div>`).join('');
   const tbody=document.getElementById('comm-detail-tbody');
-  const sorted=[...data.policies].sort((a,b)=>commAmt(b)-commAmt(a));
-  let total=0;sorted.forEach(p=>total+=commAmt(p));
-  tbody.innerHTML=sorted.map(p=>`<tr class="row-link" onclick="openProfile('${p.clientId}')"><td>${cn(p.clientId)}</td><td>${p.type}</td><td>${p.carrier}</td><td>${fmt(p.premium)}</td><td>${p.commRate||0}%</td><td style="color:#888;">${p.commRateRenewal||p.commRate||0}%</td><td style="font-weight:700;color:#2a7a4a;">${fmtc(commAmt(p))}</td><td style="color:#666;">${fmtc(Math.round(commAmt(p)/12))}</td></tr>`).join('')+`<tr><td colspan="6" style="font-weight:700;">TOTAL</td><td style="font-weight:700;color:#2a7a4a;">${fmtc(total)}/yr</td><td style="color:#666;">${fmtc(Math.round(total/12))}/mo</td></tr>`;
+  const sorted=[...data.policies].sort((a,b)=>commAmtAnnual(b)-commAmtAnnual(a));
+  let total=0;sorted.forEach(p=>total+=commAmtAnnual(p));
+  tbody.innerHTML=sorted.map(p=>`<tr class="row-link" onclick="openProfile('${p.clientId}')"><td>${cn(p.clientId)}</td><td>${p.type}${termLabel(p)}</td><td>${p.carrier}</td><td>${premiumDisplay(p)}</td><td>${p.commRate||0}%</td><td style="color:#888;">${p.commRateRenewal||p.commRate||0}%</td><td style="font-weight:700;color:#2a7a4a;">${fmtc(commAmtAnnual(p))}/yr${(Number(p.term)||12)===6?'<br><span style="font-size:11px;font-weight:400;color:#888;">('+fmtc(commAmt(p))+'/term)</span>':''}</td><td style="color:#666;">${fmtc(commAmtMonthly(p))}/mo</td></tr>`).join('')+`<tr><td colspan="6" style="font-weight:700;">TOTAL</td><td style="font-weight:700;color:#2a7a4a;">${fmtc(total)}/yr</td><td style="color:#666;">${fmtc(Math.round(total/12))}/mo</td></tr>`;
 }
 
 // ==================== REPORTS ====================
 function renderReports(){
   const totalP=data.policies.reduce((s,p)=>s+Number(p.premium),0);
-  const totalC=data.policies.reduce((s,p)=>s+commAmt(p),0);
+  const totalC=data.policies.reduce((s,p)=>s+commAmtAnnual(p),0);
   const byType={};data.policies.forEach(p=>{byType[p.type]=(byType[p.type]||0)+1;});
   document.getElementById('report-stats').innerHTML=`<div class="mini-stat"><strong>${data.clients.length}</strong>Clients</div><div class="mini-stat"><strong>${data.policies.length}</strong>Policies</div><div class="mini-stat"><strong>${fmt(totalP)}</strong>Premium</div><div class="mini-stat"><strong>${fmtc(totalC)}</strong>Annual Commission</div>${Object.entries(byType).map(([k,v])=>`<div class="mini-stat"><strong>${v}</strong>${k}</div>`).join('')}`;
 }
@@ -1541,9 +1605,9 @@ function renderReports(){
 function exportCSV(type){
   let rows=[],fn='';
   if(type==='clients'){fn='fortex_clients.csv';rows=[['First','Last','Cell Phone','Email','Address','City','State','ZIP','DOB','Gender','Marital','Occupation','Lead Source','Tag']];data.clients.forEach(c=>rows.push([c.first,c.last,c.phoneCell,c.email1,c.addr1,c.city,c.state,c.zip,c.dob,c.gender,c.marital,c.occupation,c.leadSource,c.tag]));}
-  else if(type==='policies'){fn='fortex_policies.csv';rows=[['Client','Type','Carrier','Policy #','Premium','Comm %','Commission','Effective','Renewal']];data.policies.forEach(p=>rows.push([cn(p.clientId),p.type,p.carrier,p.number,p.premium,p.commRate||0,commAmt(p),p.effective,p.renewal]));}
-  else if(type==='renewals'){fn='fortex_renewals.csv';rows=[['Client','Type','Carrier','Policy #','Premium','Commission','Renewal Date','Days Left']];data.policies.filter(p=>du(p.renewal)>=0&&du(p.renewal)<=90).sort((a,b)=>du(a.renewal)-du(b.renewal)).forEach(p=>rows.push([cn(p.clientId),p.type,p.carrier,p.number,p.premium,commAmt(p),p.renewal,du(p.renewal)]));}
-  else if(type==='commissions'){fn='fortex_commissions.csv';rows=[['Client','Type','Carrier','Policy #','Annual Premium','Comm %','Annual Commission','Monthly Est.']];data.policies.forEach(p=>rows.push([cn(p.clientId),p.type,p.carrier,p.number,p.premium,p.commRate||0,commAmt(p),Math.round(commAmt(p)/12)]));}
+  else if(type==='policies'){fn='fortex_policies.csv';rows=[['Client','Type','Carrier','Policy #','Premium','Term (mo)','Comm %','Annual Commission','Effective','Renewal']];data.policies.forEach(p=>rows.push([cn(p.clientId),p.type,p.carrier,p.number,p.premium,Number(p.term)||12,p.commRate||0,commAmtAnnual(p),p.effective,p.renewal]));}
+  else if(type==='renewals'){fn='fortex_renewals.csv';rows=[['Client','Type','Carrier','Policy #','Premium','Term (mo)','Annual Commission','Renewal Date','Days Left']];data.policies.filter(p=>du(p.renewal)>=0&&du(p.renewal)<=90).sort((a,b)=>du(a.renewal)-du(b.renewal)).forEach(p=>rows.push([cn(p.clientId),p.type,p.carrier,p.number,p.premium,Number(p.term)||12,commAmtAnnual(p),p.renewal,du(p.renewal)]));}
+  else if(type==='commissions'){fn='fortex_commissions.csv';rows=[['Client','Type','Carrier','Policy #','Premium','Term (mo)','Comm %','Annual Commission','Monthly Est.']];data.policies.forEach(p=>rows.push([cn(p.clientId),p.type,p.carrier,p.number,p.premium,Number(p.term)||12,p.commRate||0,commAmtAnnual(p),commAmtMonthly(p)]));}
   else if(type==='reshop'){fn='fortex_reshop.csv';rows=[['Client','Type','Carrier','Premium','Reason','Due','Status']];data.reshop.forEach(r=>rows.push([cn(r.clientId),r.type,r.carrier,r.premium,r.reason,r.due,r.status]));}
   const csv=rows.map(r=>r.map(x=>`"${(x||'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=fn;a.click();
@@ -1841,7 +1905,7 @@ function saveClient(){
 }
 
 function savePolicy(){
-  const vals={clientId:document.getElementById('pf-client').value,type:document.getElementById('pf-type').value,carrier:document.getElementById('pf-carrier').value.trim(),number:document.getElementById('pf-number').value.trim(),premium:document.getElementById('pf-premium').value,commRate:document.getElementById('pf-comm-rate').value||0,commRateRenewal:document.getElementById('pf-comm-rate-renewal').value||0,commType:document.getElementById('pf-comm-type').value,effective:document.getElementById('pf-effective').value,renewal:document.getElementById('pf-renewal').value,status:document.getElementById('pf-status').value||'Active',notes:document.getElementById('pf-notes').value.trim()};
+  const vals={clientId:document.getElementById('pf-client').value,type:document.getElementById('pf-type').value,term:document.getElementById('pf-term').value||'12',carrier:document.getElementById('pf-carrier').value.trim(),number:document.getElementById('pf-number').value.trim(),premium:document.getElementById('pf-premium').value,commRate:document.getElementById('pf-comm-rate').value||0,commRateRenewal:document.getElementById('pf-comm-rate-renewal').value||0,commType:document.getElementById('pf-comm-type').value,effective:document.getElementById('pf-effective').value,renewal:document.getElementById('pf-renewal').value,status:document.getElementById('pf-status').value||'Active',notes:document.getElementById('pf-notes').value.trim()};
   if(!vals.clientId||!vals.carrier||!vals.renewal){alert('Client, carrier, and renewal date required.');return;}
   if(editingPolicyId){const idx=data.policies.findIndex(x=>x.id===editingPolicyId);if(idx!==-1)data.policies[idx]={...vals,id:editingPolicyId};editingPolicyId=null;}
   else{data.policies.push({...vals,id:'p'+Date.now()});}
@@ -2028,6 +2092,7 @@ function editPolicy(id){
   populateClientSelects();
   document.getElementById('pf-client').value=p.clientId;
   document.getElementById('pf-type').value=p.type;
+  document.getElementById('pf-term').value=p.term||'12';
   document.getElementById('pf-carrier').value=p.carrier;
   document.getElementById('pf-number').value=p.number;
   document.getElementById('pf-premium').value=p.premium;
@@ -2038,6 +2103,7 @@ function editPolicy(id){
   document.getElementById('pf-renewal').value=p.renewal||'';
   document.getElementById('pf-status').value=p.status||'Active';
   document.getElementById('pf-notes').value=p.notes||'';
+  onPfTermChange();updateCommPreview();
   if(!canOpenModal('policy-modal'))return;
   document.querySelector('#policy-modal .modal-header h3').textContent='Edit Policy';
   document.getElementById('policy-modal').classList.add('open');
@@ -2320,7 +2386,7 @@ function renderCarriers(){
     const key=p.carrier||'Unknown';
     if(!byC[key])byC[key]={prem:0,comm:0,count:0,types:new Set()};
     byC[key].prem+=Number(p.premium||0);
-    byC[key].comm+=commAmt(p);
+    byC[key].comm+=commAmtAnnual(p);
     byC[key].count++;
     if(p.type)byC[key].types.add(p.type);
   });
