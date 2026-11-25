@@ -44,7 +44,8 @@ Paul Tadrous, owner of Fortex Insurance Group LLC (DBA Fortex Insure, fortexinsu
 ## Carrier picker (Nov 25, 2026)
 - Table `public.carriers` (name, name_key unique = lowercase alphanumeric, default_channel, note). RLS same as fortex_data, anon revoked.
 - Policy form and Carrier Rates form use a custom dropdown `initCombo()` (no native datalist). Picking a carrier sets Written Through to `carrierDefaultChannel()` then runs `applyCarrierRate()`. "+ Add" saves a new carrier with its usual channel via `ensureCarrier()`; savePolicy also calls ensureCarrier.
-- Progressive defaults to Progressive Direct (new Progressive business goes direct).
+- Carriers can have one row per channel: unique (name_key, default_channel), `is_primary` marks the default. Dropdown shows each pair (e.g. Progressive via Progressive Direct, Progressive via Smart Choice); picking a pair sets that channel. Saving a policy with a known carrier through a new channel adds a non-primary row.
+- Progressive defaults to Progressive Direct (new Progressive business goes direct); older renewing Progressive policies are via Smart Choice.
 
 ## Still open (later phases)
 - Single JSON blob storage (fixed by the Phase 2 data model).
