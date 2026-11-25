@@ -1648,17 +1648,28 @@ function allCarrierNames(){
   carriersList.forEach(c=>add(c.name));carrierRates.forEach(r=>add(r.carrier));(data.policies||[]).forEach(p=>add(p.carrier));
   return [...m.values()].sort((a,b)=>a.localeCompare(b));
 }
+function allCarrierOptions(){
+  // One row per carrier and channel it is written through (e.g. Progressive via Progressive Direct and via Smart Choice)
+  const seen=new Set(),out=[];
+  const add=(name,channel,primary)=>{name=String(name||'').trim();if(!name)return;const k=nameKey(name)+'|'+(channel||'');if(seen.has(k))return;seen.add(k);out.push({name,channel:channel||'',primary});};
+  carriersList.forEach(c=>add(c.name,c.default_channel,c.is_primary!==false));
+  allCarrierNames().forEach(n=>{if(!out.some(o=>nameKey(o.name)===nameKey(n)))add(n,carrierDefaultChannel(n),true);});
+  return out.sort((a,b)=>a.name.localeCompare(b.name)||(b.primary-a.primary)||a.channel.localeCompare(b.channel));
+}
 function carrierDefaultChannel(name){
   const k=nameKey(name);if(!k)return '';
-  const c=carriersList.find(x=>nameKey(x.name)===k);if(c&&c.default_channel)return c.default_channel;
+  const rows=carriersList.filter(x=>nameKey(x.name)===k&&x.default_channel);
+  const c=rows.find(x=>x.is_primary!==false)||rows[0];if(c)return c.default_channel;
   const counts={};(data.policies||[]).filter(p=>nameKey(p.carrier)===k&&p.channel).forEach(p=>counts[p.channel]=(counts[p.channel]||0)+1);
   carrierRates.filter(r=>nameKey(r.carrier)===k).forEach(r=>counts[r.channel]=(counts[r.channel]||0)+(r.observations||1));
   return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
 }
 async function ensureCarrier(name,channel){
   name=String(name||'').trim();if(!name||!carriersLoaded)return null;
-  const found=carriersList.find(x=>nameKey(x.name)===nameKey(name));if(found)return found;
-  const {data:ins,error}=await _supabase.from('carriers').upsert([{name,default_channel:channel||null}],{onConflict:'name_key',ignoreDuplicates:true}).select();
+  const same=carriersList.filter(x=>nameKey(x.name)===nameKey(name));
+  const found=same.find(x=>(x.default_channel||'')===(channel||''))||(!channel&&same[0]);if(found)return found;
+  // A known carrier used through a new channel gets its own entry; a brand new carrier becomes the main entry
+  const {data:ins,error}=await _supabase.from('carriers').upsert([{name:same[0]?same[0].name:name,default_channel:channel||null,is_primary:!same.length}],{onConflict:'name_key,default_channel',ignoreDuplicates:true}).select();
   if(error){console.warn('carrier save',error);return null;}
   if(ins&&ins[0]){carriersList.push(ins[0]);return ins[0];}
   return null;
@@ -1671,16 +1682,16 @@ function initCombo(input,onPick){
   const list=document.createElement('div');list.className='combo-list';wrap.appendChild(list);
   let items=[],active=-1,addMode=false;
   const close=()=>{wrap.classList.remove('open');addMode=false;active=-1;};
-  const pick=name=>{input.value=name;close();onPick&&onPick(name);};
+  const pick=(name,channel)=>{input.value=name;close();onPick&&onPick(name,channel);};
   const render=()=>{
     if(addMode)return;
     const q=input.value.trim(),qk=nameKey(q);
-    const names=allCarrierNames().filter(n=>!qk||nameKey(n).includes(qk)).sort((a,b)=>(nameKey(b).startsWith(qk)?1:0)-(nameKey(a).startsWith(qk)?1:0)||a.localeCompare(b));
-    items=names.map(n=>({type:'pick',name:n}));
+    const opts=allCarrierOptions().filter(o=>!qk||nameKey(o.name).includes(qk)).sort((a,b)=>(nameKey(b.name).startsWith(qk)?1:0)-(nameKey(a.name).startsWith(qk)?1:0));
+    items=opts.map(o=>({type:'pick',name:o.name,channel:o.channel}));
     if(q&&!allCarrierNames().some(n=>nameKey(n)===qk))items.push({type:'add',name:q});
     if(active>=items.length)active=items.length-1;
     list.innerHTML=(items.length?'':'<div class="combo-empty">Type a carrier name to add it.</div>')+items.map((it,i)=>it.type==='pick'
-      ?`<div class="combo-item${i===active?' active':''}" data-i="${i}"><span>${esc(it.name)}</span><small>${esc(carrierDefaultChannel(it.name))}</small></div>`
+      ?`<div class="combo-item${i===active?' active':''}" data-i="${i}"><span>${esc(it.name)}</span><small>${it.channel?'via '+esc(it.channel):''}</small></div>`
       :`<div class="combo-item combo-add${i===active?' active':''}" data-i="${i}">+ Add "${esc(it.name)}" as a new carrier</div>`).join('');
   };
   const showAdd=name=>{
@@ -1695,10 +1706,10 @@ function initCombo(input,onPick){
       const row=await ensureCarrier(name,ch);
       if(row){showToast(`Added ${name} to your carriers`);}
       else{showToast(`Could not save ${name} to the carrier list. It will still be used on this policy.`);}
-      addMode=false;pick(row?row.name:name);
+      addMode=false;pick(row?row.name:name,ch);
     };
   };
-  const choose=i=>{const it=items[i];if(!it)return;if(it.type==='add')showAdd(it.name);else pick(it.name);};
+  const choose=i=>{const it=items[i];if(!it)return;if(it.type==='add')showAdd(it.name);else pick(it.name,it.channel);};
   list.addEventListener('mousedown',e=>{if(!e.target.closest('select,button'))e.preventDefault();});
   list.addEventListener('click',e=>{const el=e.target.closest('.combo-item');if(el)choose(Number(el.dataset.i));});
   input.addEventListener('focus',()=>{wrap.classList.add('open');render();});
@@ -1715,13 +1726,13 @@ function initCombo(input,onPick){
   document.addEventListener('mousedown',e=>{if(!wrap.contains(e.target))close();});
 }
 function initCarrierCombos(){
-  initCombo(document.getElementById('pf-carrier'),name=>{
-    const d=carrierDefaultChannel(name),ch=document.getElementById('pf-channel');
+  initCombo(document.getElementById('pf-carrier'),(name,channel)=>{
+    const d=channel||carrierDefaultChannel(name),ch=document.getElementById('pf-channel');
     if(d&&ch)ch.value=d;
     applyCarrierRate();
   });
-  initCombo(document.getElementById('rt-carrier'),name=>{
-    const d=carrierDefaultChannel(name),ch=document.getElementById('rt-channel');
+  initCombo(document.getElementById('rt-carrier'),(name,channel)=>{
+    const d=channel||carrierDefaultChannel(name),ch=document.getElementById('rt-channel');
     if(d&&ch&&!editingRateId)ch.value=d;
   });
 }
