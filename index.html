@@ -272,6 +272,19 @@ tr:hover td{background:#f4f6fa;}
 
 /* WIDE MODAL */
 .modal-xl{width:900px;}
+.combo{position:relative;display:flex;flex-direction:column;}
+.combo>input{width:100%;box-sizing:border-box;padding-right:32px !important;}
+.combo-caret{position:absolute;right:11px;top:50%;transform:translateY(-50%);pointer-events:none;color:#7a8396;font-size:11px;}
+.combo-list{display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #d8dbe3;border-radius:10px;box-shadow:0 10px 28px rgba(12,30,58,0.16);max-height:270px;overflow-y:auto;z-index:60;padding:4px;}
+.combo.open .combo-list{display:block;}
+.combo-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:14px;color:#1a1a1a;}
+.combo-item small{color:#7a8396;font-size:11px;white-space:nowrap;}
+.combo-item.active,.combo-item:hover{background:#eef2f8;}
+.combo-empty{padding:10px;font-size:13px;color:#888;}
+.combo-add{color:#0c1e3a;font-weight:600;border-top:1px solid #eef0f4;margin-top:4px;padding-top:10px;}
+.combo-addpanel{padding:10px;border-top:1px solid #eef0f4;margin-top:4px;font-size:13px;}
+.combo-addpanel select{width:100%;margin:6px 0 10px;padding:8px 10px;border:1px solid #ccc;border-radius:8px;font-size:14px;}
+.combo-addpanel .btns{display:flex;gap:8px;justify-content:flex-end;}
 
 /* CO-APPLICANT TOGGLE */
 .coapp-toggle{width:100%;text-align:left;background:#f4f7fb;border:1px dashed #b0bdd0;border-radius:8px;padding:10px 16px;color:#0c1e3a;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all 0.15s;font-family:'Segoe UI',Arial,sans-serif;margin-top:2px;}
@@ -510,7 +523,7 @@ tr:hover td{background:#f4f6fa;}
     <div class="modal-body">
       <div class="form-row">
         <div class="form-group"><label>Channel *</label><select id="rt-channel"><option>Smart Choice</option><option>First Connect</option><option>Progressive Direct</option><option>AIM</option><option>Direct Appointment</option><option>Other</option></select></div>
-        <div class="form-group"><label>Carrier *</label><input id="rt-carrier" list="carrier-list"></div>
+        <div class="form-group"><label>Carrier *</label><input id="rt-carrier" type="text" autocomplete="off" placeholder="Search or add a carrier"></div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Line of Business *</label><input id="rt-line" placeholder="e.g. Personal Auto, Homeowners"></div>
@@ -1191,7 +1204,7 @@ tr:hover td{background:#f4f6fa;}
 <option>Commercial Life / Health</option>
 <option>Other (Commercial)</option></select></div>
         <div class="form-group"><label>Policy Term</label><select id="pf-term" onchange="onPfTermChange()"><option value="6">6 Months</option><option value="12" selected>12 Months (Annual)</option></select></div>
-        <div class="form-group"><label>Carrier *</label><input id="pf-carrier" type="text" list="carrier-list" autocomplete="off" onchange="applyCarrierRate()"><datalist id="carrier-list"></datalist></div>
+        <div class="form-group"><label>Carrier *</label><input id="pf-carrier" type="text" autocomplete="off" placeholder="Search or add a carrier" onchange="applyCarrierRate()"></div>
       </div>
       <div class="form-row cols3">
         <div class="form-group"><label>Written Through</label><select id="pf-channel" onchange="applyCarrierRate()"><option value="">Select...</option><option>Smart Choice</option><option>First Connect</option><option>Progressive Direct</option><option>AIM</option><option>Direct Appointment</option><option>Other</option></select></div>
@@ -1572,11 +1585,13 @@ function premiumDisplay(p){const t=Number(p.term)||12;return fmt(p.premium)+(t==
 // ==================== CARRIER COMMISSION RATES ====================
 let carrierRates=[], commStatements=[], ratesLoaded=false;
 async function loadCarrierRates(){
-  const [r,st]=await Promise.all([
+  const [r,st,cr]=await Promise.all([
     _supabase.from('carrier_commission_rates').select('*').order('channel').order('carrier'),
-    _supabase.from('commission_statements').select('*').order('statement_month')
+    _supabase.from('commission_statements').select('*').order('statement_month'),
+    _supabase.from('carriers').select('*').order('name')
   ]);
   if(!r.error){carrierRates=r.data||[];ratesLoaded=true;}
+  if(!cr.error){carriersList=cr.data||[];carriersLoaded=true;}
   if(!st.error)commStatements=st.data||[];
   fillCarrierList();
 }
@@ -1612,6 +1627,8 @@ function showRateHint(){
   return {nb,ren};
 }
 function applyCarrierRate(){
+  const chEl0=document.getElementById('pf-channel'),car0=document.getElementById('pf-carrier').value;
+  if(chEl0&&!chEl0.value&&car0){const d=carrierDefaultChannel(car0);if(d)chEl0.value=d;}
   const res=showRateHint();if(!res||!res.nb)return;
   const nbEl=document.getElementById('pf-comm-rate'),renEl=document.getElementById('pf-comm-rate-renewal');
   // On a new policy always fill; when editing only fill empty fields
@@ -1621,11 +1638,94 @@ function applyCarrierRate(){
   const chEl=document.getElementById('pf-channel');if(chEl&&!chEl.value)chEl.value=res.nb.channel;
   updateCommPreview();
 }
-function fillCarrierList(){
-  const dl=document.getElementById('carrier-list');if(!dl)return;
-  const names=[...new Set([...carrierRates.map(r=>r.carrier),...data.policies.map(p=>p.carrier).filter(Boolean)])].sort((a,b)=>a.localeCompare(b));
-  dl.innerHTML=names.map(n=>`<option value="${esc(n)}">`).join('');
+// ---------- Carrier picker (dashboard-styled dropdown) ----------
+let carriersList=[],carriersLoaded=false;
+const CHANNELS=['Smart Choice','First Connect','Progressive Direct','AIM','Direct Appointment','Other'];
+function nameKey(n){return String(n||'').toLowerCase().replace(/[^a-z0-9]/g,'');}
+function allCarrierNames(){
+  const m=new Map();
+  const add=n=>{n=String(n||'').trim();if(n&&!m.has(nameKey(n)))m.set(nameKey(n),n);};
+  carriersList.forEach(c=>add(c.name));carrierRates.forEach(r=>add(r.carrier));(data.policies||[]).forEach(p=>add(p.carrier));
+  return [...m.values()].sort((a,b)=>a.localeCompare(b));
 }
+function carrierDefaultChannel(name){
+  const k=nameKey(name);if(!k)return '';
+  const c=carriersList.find(x=>nameKey(x.name)===k);if(c&&c.default_channel)return c.default_channel;
+  const counts={};(data.policies||[]).filter(p=>nameKey(p.carrier)===k&&p.channel).forEach(p=>counts[p.channel]=(counts[p.channel]||0)+1);
+  carrierRates.filter(r=>nameKey(r.carrier)===k).forEach(r=>counts[r.channel]=(counts[r.channel]||0)+(r.observations||1));
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
+}
+async function ensureCarrier(name,channel){
+  name=String(name||'').trim();if(!name||!carriersLoaded)return null;
+  const found=carriersList.find(x=>nameKey(x.name)===nameKey(name));if(found)return found;
+  const {data:ins,error}=await _supabase.from('carriers').upsert([{name,default_channel:channel||null}],{onConflict:'name_key',ignoreDuplicates:true}).select();
+  if(error){console.warn('carrier save',error);return null;}
+  if(ins&&ins[0]){carriersList.push(ins[0]);return ins[0];}
+  return null;
+}
+function initCombo(input,onPick){
+  if(!input||input.dataset.combo)return;input.dataset.combo='1';
+  const wrap=document.createElement('div');wrap.className='combo';
+  input.parentNode.insertBefore(wrap,input);wrap.appendChild(input);
+  const caret=document.createElement('span');caret.className='combo-caret';caret.textContent='▼';wrap.appendChild(caret);
+  const list=document.createElement('div');list.className='combo-list';wrap.appendChild(list);
+  let items=[],active=-1,addMode=false;
+  const close=()=>{wrap.classList.remove('open');addMode=false;active=-1;};
+  const pick=name=>{input.value=name;close();onPick&&onPick(name);};
+  const render=()=>{
+    if(addMode)return;
+    const q=input.value.trim(),qk=nameKey(q);
+    const names=allCarrierNames().filter(n=>!qk||nameKey(n).includes(qk)).sort((a,b)=>(nameKey(b).startsWith(qk)?1:0)-(nameKey(a).startsWith(qk)?1:0)||a.localeCompare(b));
+    items=names.map(n=>({type:'pick',name:n}));
+    if(q&&!allCarrierNames().some(n=>nameKey(n)===qk))items.push({type:'add',name:q});
+    if(active>=items.length)active=items.length-1;
+    list.innerHTML=(items.length?'':'<div class="combo-empty">Type a carrier name to add it.</div>')+items.map((it,i)=>it.type==='pick'
+      ?`<div class="combo-item${i===active?' active':''}" data-i="${i}"><span>${esc(it.name)}</span><small>${esc(carrierDefaultChannel(it.name))}</small></div>`
+      :`<div class="combo-item combo-add${i===active?' active':''}" data-i="${i}">+ Add "${esc(it.name)}" as a new carrier</div>`).join('');
+  };
+  const showAdd=name=>{
+    addMode=true;const cur=(document.getElementById('pf-channel')||{}).value||'';
+    list.innerHTML=`<div class="combo-addpanel"><div>New carrier: <strong>${esc(name)}</strong></div>
+      <div style="margin-top:8px;color:#555;">Usually written through</div>
+      <select class="combo-ch"><option value="">Select...</option>${CHANNELS.map(c=>`<option${c===cur?' selected':''}>${c}</option>`).join('')}</select>
+      <div class="btns"><button type="button" class="btn btn-sm combo-cancel">Cancel</button><button type="button" class="btn btn-sm btn-primary combo-save">Save carrier</button></div></div>`;
+    list.querySelector('.combo-cancel').onclick=()=>{addMode=false;render();input.focus();};
+    list.querySelector('.combo-save').onclick=async()=>{
+      const ch=list.querySelector('.combo-ch').value,btn=list.querySelector('.combo-save');btn.disabled=true;btn.textContent='Saving...';
+      const row=await ensureCarrier(name,ch);
+      if(row){showToast(`Added ${name} to your carriers`);}
+      else{showToast(`Could not save ${name} to the carrier list. It will still be used on this policy.`);}
+      addMode=false;pick(row?row.name:name);
+    };
+  };
+  const choose=i=>{const it=items[i];if(!it)return;if(it.type==='add')showAdd(it.name);else pick(it.name);};
+  list.addEventListener('mousedown',e=>{if(!e.target.closest('select,button'))e.preventDefault();});
+  list.addEventListener('click',e=>{const el=e.target.closest('.combo-item');if(el)choose(Number(el.dataset.i));});
+  input.addEventListener('focus',()=>{wrap.classList.add('open');render();});
+  input.addEventListener('click',()=>{if(!wrap.classList.contains('open')){wrap.classList.add('open');render();}});
+  input.addEventListener('input',()=>{addMode=false;active=0;wrap.classList.add('open');render();});
+  input.addEventListener('keydown',e=>{
+    const open=wrap.classList.contains('open');
+    if(e.key==='ArrowDown'){e.preventDefault();if(!open){wrap.classList.add('open');}active=Math.min(active+1,items.length-1);render();list.querySelector('.active')?.scrollIntoView({block:'nearest'});}
+    else if(e.key==='ArrowUp'){e.preventDefault();active=Math.max(active-1,0);render();list.querySelector('.active')?.scrollIntoView({block:'nearest'});}
+    else if(e.key==='Enter'&&open&&!addMode&&active>=0){e.preventDefault();choose(active);}
+    else if(e.key==='Escape'&&open){e.preventDefault();e.stopPropagation();close();}
+    else if(e.key==='Tab'){close();}
+  });
+  document.addEventListener('mousedown',e=>{if(!wrap.contains(e.target))close();});
+}
+function initCarrierCombos(){
+  initCombo(document.getElementById('pf-carrier'),name=>{
+    const d=carrierDefaultChannel(name),ch=document.getElementById('pf-channel');
+    if(d&&ch)ch.value=d;
+    applyCarrierRate();
+  });
+  initCombo(document.getElementById('rt-carrier'),name=>{
+    const d=carrierDefaultChannel(name),ch=document.getElementById('rt-channel');
+    if(d&&ch&&!editingRateId)ch.value=d;
+  });
+}
+function fillCarrierList(){initCarrierCombos();}
 async function learnCarrierRate(v){
   if(!ratesLoaded||!v.carrier||!v.type||!Number(v.commRate))return;
   const channel=v.channel||'Direct Appointment';
@@ -2495,7 +2595,7 @@ function saveClient(){
 function savePolicy(){
   const vals={clientId:document.getElementById('pf-client').value,type:document.getElementById('pf-type').value,term:document.getElementById('pf-term').value||'12',carrier:document.getElementById('pf-carrier').value.trim(),number:document.getElementById('pf-number').value.trim(),premium:document.getElementById('pf-premium').value,commRate:document.getElementById('pf-comm-rate').value||0,commRateRenewal:document.getElementById('pf-comm-rate-renewal').value||0,commType:document.getElementById('pf-comm-type').value,channel:document.getElementById('pf-channel').value,effective:document.getElementById('pf-effective').value,renewal:document.getElementById('pf-renewal').value,status:document.getElementById('pf-status').value||'Active',notes:document.getElementById('pf-notes').value.trim()};
   if(!vals.clientId||!vals.carrier||!vals.renewal){appAlert('Client, carrier, and renewal date required.');return;}
-  learnCarrierRate(vals);
+  learnCarrierRate(vals);ensureCarrier(vals.carrier,vals.channel);
   if(editingPolicyId){const idx=data.policies.findIndex(x=>x.id===editingPolicyId);if(idx!==-1)data.policies[idx]={...data.policies[idx],...vals,id:editingPolicyId};editingPolicyId=null;}
   else{data.policies.push({...vals,id:'p'+Date.now()});}
   document.querySelector('#policy-modal .modal-header h3').textContent='Add Policy';
