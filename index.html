@@ -53,6 +53,8 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#eef0f4;color:#1a1a1a;mi
 .page-header-left p{font-size:13px;color:#666;margin-top:2px;}
 .page-body{padding:24px 32px;overflow-y:auto;flex:1;}
 .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin-bottom:24px;}
+.rate-hint{font-size:13px;line-height:1.45;color:#1a6b3a;background:#eef7f0;border:1px solid #cfe7d6;border-radius:8px;padding:8px 12px;min-height:38px;}
+.rate-hint:empty{display:none;}
 .metric-alarm{background:#fdecec;border-color:#e8a3a3;}
 #save-banner{position:sticky;top:0;z-index:500;background:#fde8e8;color:#7a1f1f;border-bottom:2px solid #e8a3a3;padding:12px 20px;font-size:14px;line-height:1.5;}
 #save-banner .sb-actions{display:inline-flex;gap:8px;flex-wrap:wrap;margin-left:10px;vertical-align:middle;}
@@ -367,6 +369,7 @@ tr:hover td{background:#f4f6fa;}
     <div class="nav-label">Financials</div>
     <div class="nav-item" onclick="nav('commissions',this)"><span class="nav-icon">$</span>Commissions</div>
     <div class="nav-item" onclick="nav('carriers',this)"><span class="nav-icon">⬡</span>Book of Business</div>
+    <div class="nav-item" onclick="nav('rates',this)"><span class="nav-icon">%</span>Carrier Rates</div>
     <div class="nav-item" onclick="nav('expenses',this)"><span class="nav-icon">◩</span>Business Expenses</div>
   </div>
   <div class="nav-section">
@@ -490,6 +493,40 @@ tr:hover td{background:#f4f6fa;}
   </div>
 </div>
 
+<!-- CARRIER RATES -->
+<div class="page" id="page-rates">
+  <div class="page-header"><div class="page-header-left"><h2>Carrier Commission Rates</h2><p>Your rate for each carrier, line and channel. New policies fill these in automatically.</p></div><button class="btn btn-primary" onclick="editRate(null)">+ Add Rate</button></div>
+  <div class="page-body">
+    <div class="toolbar"><input type="text" id="rates-search" placeholder="Search carrier or line..." oninput="renderRates()"></div>
+    <div class="section-card"><table><thead><tr><th>Channel</th><th>Carrier</th><th>Line of Business</th><th>Transaction</th><th>Gross Rate</th><th>You Keep</th><th>Your Net Rate</th><th>Based On</th><th></th></tr></thead><tbody id="rates-tbody"></tbody></table></div>
+    <p style="font-size:13px;color:#666;margin-top:10px;">Gross rate is what the carrier pays. "You Keep" is your share after the aggregator (Smart Choice keeps 30% on most programs). Your net rate is what fills in on new policies.</p>
+  </div>
+</div>
+
+<!-- RATE MODAL -->
+<div class="modal-overlay" id="rate-modal">
+  <div class="modal">
+    <div class="modal-header"><h3 id="rate-modal-title">Add Carrier Rate</h3><button class="modal-close" onclick="document.getElementById('rate-modal').classList.remove('open')">×</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>Channel *</label><select id="rt-channel"><option>Smart Choice</option><option>First Connect</option><option>Progressive Direct</option><option>AIM</option><option>Direct Appointment</option><option>Other</option></select></div>
+        <div class="form-group"><label>Carrier *</label><input id="rt-carrier" list="carrier-list"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Line of Business *</label><input id="rt-line" placeholder="e.g. Personal Auto, Homeowners"></div>
+        <div class="form-group"><label>Transaction</label><select id="rt-txn"><option>New Business</option><option>Renewal</option><option>Endorsement</option></select></div>
+      </div>
+      <div class="form-row cols3">
+        <div class="form-group"><label>Gross Rate % *</label><input id="rt-gross" type="number" step="0.1" oninput="updateRateNet()"></div>
+        <div class="form-group"><label>You Keep %</label><input id="rt-share" type="number" step="1" oninput="updateRateNet()"></div>
+        <div class="form-group"><label>Your Net Rate</label><div id="rt-net" style="font-size:20px;font-weight:700;color:#2a7a4a;padding-top:6px;">—</div></div>
+      </div>
+      <div class="form-row single"><div class="form-group"><label>Note</label><input id="rt-note"></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="document.getElementById('rate-modal').classList.remove('open')">Cancel</button><button class="btn btn-primary" onclick="saveRate()">Save Rate</button></div>
+  </div>
+</div>
+
 <!-- SECURITY & BACKUP -->
 <div class="page" id="page-security">
   <div class="page-header"><div class="page-header-left"><h2>Security &amp; Backup</h2><p>Keep your agency data safe</p></div></div>
@@ -569,8 +606,12 @@ tr:hover td{background:#f4f6fa;}
         <div style="padding:4px 0;" id="comm-by-lob"></div>
       </div>
     </div>
+    <div class="section-card" style="margin-bottom:18px;">
+      <div class="section-card-header"><h3>💵 Commission Received (from your statements)</h3></div>
+      <div id="comm-received" style="padding:4px 2px;"></div>
+    </div>
     <div class="section-card">
-      <div class="section-card-header"><h3>All Policies — Commission Detail</h3></div>
+      <div class="section-card-header"><h3>All Policies: Estimated Commission</h3></div>
       <table class="comm-table"><thead><tr><th>Client</th><th>Type</th><th>Carrier</th><th>Annual Premium</th><th>NB Comm %</th><th>Ren Comm %</th><th>Annual Commission</th><th>Monthly Est.</th></tr></thead>
       <tbody id="comm-detail-tbody"></tbody></table>
     </div>
@@ -1111,7 +1152,7 @@ tr:hover td{background:#f4f6fa;}
     <div class="modal-body">
       <div class="form-row single"><div class="form-group"><label>Client *</label><select id="pf-client"></select></div></div>
       <div class="form-row cols3">
-        <div class="form-group"><label>Policy Type</label><select id="pf-type" onchange="onPfTypeChange()"><optgroup label="── Personal Lines ──" disabled></optgroup>
+        <div class="form-group"><label>Policy Type</label><select id="pf-type" onchange="onPfTypeChange();applyCarrierRate()"><optgroup label="── Personal Lines ──" disabled></optgroup>
 <option>Personal Auto</option>
 <option>Homeowners</option>
 <option>Renters</option>
@@ -1150,7 +1191,11 @@ tr:hover td{background:#f4f6fa;}
 <option>Commercial Life / Health</option>
 <option>Other (Commercial)</option></select></div>
         <div class="form-group"><label>Policy Term</label><select id="pf-term" onchange="onPfTermChange()"><option value="6">6 Months</option><option value="12" selected>12 Months (Annual)</option></select></div>
-        <div class="form-group"><label>Carrier *</label><input id="pf-carrier" type="text"></div>
+        <div class="form-group"><label>Carrier *</label><input id="pf-carrier" type="text" list="carrier-list" autocomplete="off" onchange="applyCarrierRate()"><datalist id="carrier-list"></datalist></div>
+      </div>
+      <div class="form-row cols3">
+        <div class="form-group"><label>Written Through</label><select id="pf-channel" onchange="applyCarrierRate()"><option value="">Select...</option><option>Smart Choice</option><option>First Connect</option><option>Progressive Direct</option><option>AIM</option><option>Direct Appointment</option><option>Other</option></select></div>
+        <div class="form-group" style="grid-column:span 2;"><label>&nbsp;</label><div id="pf-rate-hint" class="rate-hint"></div></div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Policy Number</label><input id="pf-number" type="text"></div>
@@ -1524,6 +1569,137 @@ function commAmtAnnual(p){const term=Number(p.term)||12;return Math.round(commAm
 function commAmtMonthly(p){return Math.round(commAmtAnnual(p)/12);}
 function termLabel(p){return (Number(p.term)||12)===6?'<span class="term-badge term-6mo">6-mo</span>':'<span class="term-badge term-12mo">12-mo</span>';}
 function premiumDisplay(p){const t=Number(p.term)||12;return fmt(p.premium)+(t===6?'<span style="font-size:11px;color:#888;">/6mo</span>':'<span style="font-size:11px;color:#888;">/yr</span>');}
+// ==================== CARRIER COMMISSION RATES ====================
+let carrierRates=[], commStatements=[], ratesLoaded=false;
+async function loadCarrierRates(){
+  const [r,st]=await Promise.all([
+    _supabase.from('carrier_commission_rates').select('*').order('channel').order('carrier'),
+    _supabase.from('commission_statements').select('*').order('statement_month')
+  ]);
+  if(!r.error){carrierRates=r.data||[];ratesLoaded=true;}
+  if(!st.error)commStatements=st.data||[];
+  fillCarrierList();
+}
+const CARRIER_ALIASES={'orion180':'orion180','orion':'orion180','nationwide':'nationwide','allied':'nationwide','foremost':'foremostsignature','met':'foremostsignature','metlife':'foremostsignature','natgen':'nationalgeneral','nationalgeneralpremier':'nationalgeneral','hartford':'thehartford','hoa':'homeownersofamerica','coalition':'attune','coalitioninc':'attune'};
+function carrierKey(c){const k=String(c||'').toLowerCase().replace(/[^a-z0-9]/g,'');return CARRIER_ALIASES[k]||k;}
+function rateLine(type){
+  if(!type)return '';
+  if(type==='Condo (HO-6)'||type==='Renters')return 'Homeowners';
+  return type;
+}
+function findCarrierRate(carrier,type,channel,txn){
+  const ck=carrierKey(carrier),lob=rateLine(type);if(!ck||!lob)return null;
+  const tx=txn||'New Business';
+  const pool=carrierRates.filter(r=>carrierKey(r.carrier)===ck);
+  const score=r=>(r.line_of_business===lob?4:(lob==='Personal Auto'&&r.line_of_business.startsWith('Personal Auto')?3:0))+(channel&&r.channel===channel?2:0)+(r.transaction===tx?1:0);
+  const best=pool.filter(r=>score(r)>=3).sort((a,b)=>score(b)-score(a)||(b.observations||0)-(a.observations||0))[0];
+  return best||null;
+}
+function rateHintHtml(nb,ren,channel){
+  if(!nb)return '';
+  const via=nb.channel!==channel&&channel?` <span style="color:#b26b00;">(rate is from ${esc(nb.channel)}, not ${esc(channel)})</span>`:'';
+  const split=Number(nb.agency_share)<100?`${Number(nb.gross_rate)}% gross, you keep ${Number(nb.agency_share)}% = <strong>${Number(nb.net_rate)}%</strong>`:`<strong>${Number(nb.net_rate)}%</strong>`;
+  const renTxt=ren?` · renewal ${Number(ren.net_rate)}%`:'';
+  const seen=nb.source==='manual'?'entered by you':`seen on ${nb.observations} statement line${nb.observations===1?'':'s'}`;
+  return `✓ From your rate table: ${esc(nb.carrier)} ${esc(nb.line_of_business)} via ${esc(nb.channel)}: ${split}${renTxt} <span style="color:#888;">(${seen})</span>${via}`;
+}
+function showRateHint(){
+  const h=document.getElementById('pf-rate-hint');if(!h)return;
+  const carrier=document.getElementById('pf-carrier').value,type=document.getElementById('pf-type').value,ch=document.getElementById('pf-channel').value;
+  if(!carrier){h.innerHTML='';return;}
+  const nb=findCarrierRate(carrier,type,ch,'New Business'),ren=findCarrierRate(carrier,type,ch,'Renewal');
+  h.innerHTML=nb?rateHintHtml(nb,ren&&ren.transaction==='Renewal'?ren:null,ch):`No saved rate for ${esc(carrier)} ${esc(type)} yet. The rate you enter will be saved for next time.`;
+  return {nb,ren};
+}
+function applyCarrierRate(){
+  const res=showRateHint();if(!res||!res.nb)return;
+  const nbEl=document.getElementById('pf-comm-rate'),renEl=document.getElementById('pf-comm-rate-renewal');
+  // On a new policy always fill; when editing only fill empty fields
+  if(!editingPolicyId||!Number(nbEl.value))nbEl.value=Number(res.nb.net_rate);
+  const renRate=res.ren&&res.ren.transaction==='Renewal'?res.ren.net_rate:res.nb.net_rate;
+  if(!editingPolicyId||!Number(renEl.value))renEl.value=Number(renRate);
+  const chEl=document.getElementById('pf-channel');if(chEl&&!chEl.value)chEl.value=res.nb.channel;
+  updateCommPreview();
+}
+function fillCarrierList(){
+  const dl=document.getElementById('carrier-list');if(!dl)return;
+  const names=[...new Set([...carrierRates.map(r=>r.carrier),...data.policies.map(p=>p.carrier).filter(Boolean)])].sort((a,b)=>a.localeCompare(b));
+  dl.innerHTML=names.map(n=>`<option value="${esc(n)}">`).join('');
+}
+async function learnCarrierRate(v){
+  if(!ratesLoaded||!v.carrier||!v.type||!Number(v.commRate))return;
+  const channel=v.channel||'Direct Appointment';
+  if(findCarrierRate(v.carrier,v.type,v.channel,'New Business'))return;
+  // Smart Choice keeps 30% on most programs: the rate typed on a policy is the net rate Paul keeps
+  const share=channel==='Smart Choice'?70:100, gross=n=>Math.round(Number(n)*10000/share)/100;
+  const rows=[{channel,program:null,carrier:v.carrier.trim(),line_of_business:rateLine(v.type),transaction:'New Business',gross_rate:gross(v.commRate),agency_share:share,net_rate:Number(v.commRate),observations:0,source:'manual',note:'Saved from a policy you entered'}];
+  if(Number(v.commRateRenewal)&&Number(v.commRateRenewal)!==Number(v.commRate))rows.push({...rows[0],transaction:'Renewal',gross_rate:gross(v.commRateRenewal),net_rate:Number(v.commRateRenewal)});
+  const {data:ins,error}=await _supabase.from('carrier_commission_rates').upsert(rows,{onConflict:'channel,carrier,line_of_business,transaction',ignoreDuplicates:true}).select();
+  if(!error&&ins){carrierRates.push(...ins);fillCarrierList();showToast(`Saved ${v.carrier} ${v.type} rate for next time`);}
+}
+
+// ---------- Carrier Rates page ----------
+function renderRates(){
+  const q=(document.getElementById('rates-search')||{}).value?.toLowerCase()||'';
+  const rows=carrierRates.filter(r=>!q||(r.carrier+' '+r.line_of_business+' '+r.channel).toLowerCase().includes(q));
+  const tb=document.getElementById('rates-tbody');if(!tb)return;
+  if(!ratesLoaded){tb.innerHTML='<tr><td colspan="9" class="empty-state">Loading rates...</td></tr>';return;}
+  if(!rows.length){tb.innerHTML='<tr><td colspan="9" class="empty-state">No rates found</td></tr>';return;}
+  tb.innerHTML=rows.map(r=>`<tr>
+    <td><span class="badge ${r.channel==='Smart Choice'?'badge-navy':r.channel==='First Connect'?'badge-blue':'badge-gray'}">${esc(r.channel)}</span></td>
+    <td><strong>${esc(r.carrier)}</strong></td><td>${esc(r.line_of_business)}</td><td>${esc(r.transaction)}</td>
+    <td>${r.gross_rate!=null?Number(r.gross_rate)+'%':'—'}${r.min_rate!=null&&Number(r.min_rate)!==Number(r.max_rate)?`<div style="font-size:11px;color:#888;">range ${Number(r.min_rate)}–${Number(r.max_rate)}%</div>`:''}</td>
+    <td>${Number(r.agency_share)}%</td><td style="font-weight:700;color:#2a7a4a;">${Number(r.net_rate)}%</td>
+    <td style="font-size:12px;color:#666;">${r.source==='manual'?'Entered by you':`${r.observations} line${r.observations===1?'':'s'}`}${r.last_seen?`<br>last ${fd(r.last_seen)}`:''}</td>
+    <td style="white-space:nowrap;"><button class="btn btn-sm" onclick="editRate(${r.id})">Edit</button> <button class="btn btn-sm" onclick="deleteRate(${r.id})">✕</button></td></tr>`).join('');
+}
+let editingRateId=null;
+function editRate(id){
+  editingRateId=id||null;const r=carrierRates.find(x=>x.id===id)||{channel:'Smart Choice',transaction:'New Business',agency_share:70};
+  const g=k=>document.getElementById(k);
+  g('rt-channel').value=r.channel||'';g('rt-carrier').value=r.carrier||'';g('rt-line').value=r.line_of_business||'';g('rt-txn').value=r.transaction||'New Business';
+  g('rt-gross').value=r.gross_rate??'';g('rt-share').value=r.agency_share??100;g('rt-note').value=r.note||'';
+  g('rate-modal-title').textContent=id?'Edit Carrier Rate':'Add Carrier Rate';updateRateNet();
+  g('rate-modal').classList.add('open');
+}
+function updateRateNet(){const g=Number(document.getElementById('rt-gross').value)||0,s=Number(document.getElementById('rt-share').value)||0;document.getElementById('rt-net').textContent=g?(Math.round(g*s)/100)+'%':'—';}
+async function saveRate(){
+  const g=k=>document.getElementById(k).value.trim();
+  const row={channel:g('rt-channel'),carrier:g('rt-carrier'),line_of_business:g('rt-line'),transaction:g('rt-txn'),gross_rate:Number(g('rt-gross')),agency_share:Number(g('rt-share'))||100,note:g('rt-note')||null};
+  if(!row.channel||!row.carrier||!row.line_of_business||!row.gross_rate){appAlert('Channel, carrier, line of business and gross rate are required.');return;}
+  row.net_rate=Math.round(row.gross_rate*row.agency_share)/100;row.updated_at=new Date().toISOString();
+  let res;
+  if(editingRateId)res=await _supabase.from('carrier_commission_rates').update(row).eq('id',editingRateId).select();
+  else res=await _supabase.from('carrier_commission_rates').insert({...row,source:'manual',observations:0}).select();
+  if(res.error){appAlert('Could not save the rate: '+(res.error.message||'')+(String(res.error.message).includes('duplicate')?' (that carrier, line and channel already has a rate; edit it instead).':''));return;}
+  await loadCarrierRates();document.getElementById('rate-modal').classList.remove('open');editingRateId=null;renderRates();showToast('Rate saved');
+}
+async function deleteRate(id){
+  const r=carrierRates.find(x=>x.id===id);if(!r)return;
+  if(!await appConfirm(`Delete the ${r.carrier} ${r.line_of_business} rate (${r.channel})?`,{title:'Delete rate',okText:'Delete',danger:true}))return;
+  const {error}=await _supabase.from('carrier_commission_rates').delete().eq('id',id);
+  if(error){appAlert('Could not delete: '+error.message);return;}
+  carrierRates=carrierRates.filter(x=>x.id!==id);renderRates();
+}
+
+// ---------- Commission received (from statements) ----------
+function renderCommReceived(){
+  const box=document.getElementById('comm-received');if(!box)return;
+  if(!commStatements.length){box.innerHTML='<p class="empty-state">No commission statements loaded yet.</p>';return;}
+  const srcs=[...new Set(commStatements.map(s=>s.source))];
+  const months=[...new Set(commStatements.map(s=>s.statement_month))].sort();
+  const cell=(m,src)=>{const x=commStatements.filter(s=>s.statement_month===m&&s.source===src);return x.length?x.reduce((a,s)=>a+Number(s.total_paid||0),0):null;};
+  const tot=src=>commStatements.filter(s=>s.source===src).reduce((a,s)=>a+Number(s.total_paid||0),0);
+  const grand=commStatements.reduce((a,s)=>a+Number(s.total_paid||0),0);
+  const mName=m=>new Date(m+'-01T00:00:00').toLocaleDateString('en-US',{month:'short',year:'numeric'});
+  const money=n=>n==null?'<span style="color:#bbb;">—</span>':'$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  box.innerHTML=`<div class="metrics" style="margin-bottom:14px;">${srcs.map(src=>`<div class="metric-card"><div class="metric-label">${esc(src)}</div><div class="metric-value" style="font-size:22px;">${money(tot(src))}</div><div class="metric-sub">received to date</div></div>`).join('')}
+    <div class="metric-card metric-gold"><div class="metric-label">Total Received</div><div class="metric-value" style="font-size:22px;">${money(grand)}</div><div class="metric-sub">all sources, by statement month</div></div></div>
+    <table class="comm-table"><thead><tr><th>Statement Month</th>${srcs.map(s=>`<th>${esc(s)}</th>`).join('')}<th>Total</th></tr></thead><tbody>
+    ${months.map(m=>{const vals=srcs.map(s=>cell(m,s));return `<tr><td><strong>${mName(m)}</strong></td>${vals.map(v=>`<td>${money(v)}</td>`).join('')}<td style="font-weight:700;">${money(vals.reduce((a,v)=>a+(v||0),0))}</td></tr>`;}).join('')}
+    </tbody></table>
+    <p style="font-size:12px;color:#888;margin-top:8px;">Amounts are what was actually paid to you (Smart Choice after their 30% share). First Connect months with a negative balance show $0 and carry forward to the next month.</p>`;
+}
 function commRateFor(p){return (p.commType==='Renewal'&&Number(p.commRateRenewal))?Number(p.commRateRenewal):(Number(p.commRate)||0);}
 function commAmt(p){return Math.round((Number(p.premium)||0)*commRateFor(p)/100);}
 function isLive(p){return !['Cancelled','Non-Renewed','Lapsed'].includes(p.status);}
@@ -1588,7 +1764,7 @@ function nav(page,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   const pg=document.getElementById('page-'+page);pg.classList.add('active');
   const pb=pg.querySelector('.page-body');if(pb)pb.scrollTop=0;
-  ({dashboard:renderDashboard,clients:renderClients,policies:()=>{renderPolicies();populateCarrierFilter();},renewals:()=>renderRenewals(30),reshop:renderReshop,quotes:renderQuotes,followups:renderPipeline,commissions:renderCommissions,carriers:renderCarriers,expenses:renderExpenses,reports:renderReports,security:renderSecurity})[page]?.();
+  ({dashboard:renderDashboard,clients:renderClients,policies:()=>{renderPolicies();populateCarrierFilter();},renewals:()=>renderRenewals(30),reshop:renderReshop,quotes:renderQuotes,followups:renderPipeline,commissions:renderCommissions,carriers:renderCarriers,expenses:renderExpenses,reports:renderReports,security:renderSecurity,rates:renderRates})[page]?.();
 }
 
 // ==================== DASHBOARD ====================
@@ -1601,7 +1777,7 @@ function navTo(page){
 function refreshCurrentPage(){
   const active=document.querySelector('.page.active');if(!active)return;
   const id=active.id.replace('page-','');
-  ({dashboard:renderDashboard,clients:renderClients,policies:()=>{renderPolicies();populateCarrierFilter();},renewals:()=>renderRenewals(currentRenewalDays),reshop:renderReshop,quotes:renderQuotes,followups:renderPipeline,commissions:renderCommissions,carriers:renderCarriers,expenses:renderExpenses,reports:renderReports,security:renderSecurity})[id]?.();
+  ({dashboard:renderDashboard,clients:renderClients,policies:()=>{renderPolicies();populateCarrierFilter();},renewals:()=>renderRenewals(currentRenewalDays),reshop:renderReshop,quotes:renderQuotes,followups:renderPipeline,commissions:renderCommissions,carriers:renderCarriers,expenses:renderExpenses,reports:renderReports,security:renderSecurity,rates:renderRates})[id]?.();
 }
 
 let currentRenewalDays=30;
@@ -1985,6 +2161,7 @@ function deleteTask(id){data.tasks=data.tasks.filter(x=>x.id!==id);save();render
 
 // ==================== COMMISSIONS ====================
 function renderCommissions(){
+  renderCommReceived();
   const totalAnn=data.policies.filter(isLive).reduce((s,p)=>s+commAmtAnnual(p),0);
   const totalMon=Math.round(totalAnn/12);
   const urgentComm=data.policies.filter(p=>du(p.renewal)>=0&&du(p.renewal)<=30).reduce((s,p)=>s+commAmtAnnual(p),0);
@@ -2058,6 +2235,7 @@ function canOpenModal(id){
 function openModal(id){
   if(!canOpenModal(id))return;
   if(['policy-modal','task-modal','reshop-modal'].includes(id))populateClientSelects();
+  if(id==='policy-modal'&&!editingPolicyId){const ch=document.getElementById('pf-channel');if(ch)ch.value='';const h=document.getElementById('pf-rate-hint');if(h)h.innerHTML='';fillCarrierList();}
   // Reset editing state when opening a fresh add form
   if(id==='task-modal'&&!editingTaskId){document.querySelector('#task-modal .modal-header h3').textContent='Add Follow-Up Task';document.querySelectorAll('#task-modal input,#task-modal select,#task-modal textarea').forEach(el=>{if(el.tagName==='SELECT'&&el.options.length)el.selectedIndex=0;else el.value='';});}
   if(id==='reshop-modal'&&!editingReshopId){document.querySelector('#reshop-modal .modal-header h3').textContent='Add to Re-Shop Queue';document.querySelectorAll('#reshop-modal input,#reshop-modal select,#reshop-modal textarea').forEach(el=>{if(el.tagName==='SELECT'&&el.options.length)el.selectedIndex=0;else el.value='';});}
@@ -2315,9 +2493,10 @@ function saveClient(){
 }
 
 function savePolicy(){
-  const vals={clientId:document.getElementById('pf-client').value,type:document.getElementById('pf-type').value,term:document.getElementById('pf-term').value||'12',carrier:document.getElementById('pf-carrier').value.trim(),number:document.getElementById('pf-number').value.trim(),premium:document.getElementById('pf-premium').value,commRate:document.getElementById('pf-comm-rate').value||0,commRateRenewal:document.getElementById('pf-comm-rate-renewal').value||0,commType:document.getElementById('pf-comm-type').value,effective:document.getElementById('pf-effective').value,renewal:document.getElementById('pf-renewal').value,status:document.getElementById('pf-status').value||'Active',notes:document.getElementById('pf-notes').value.trim()};
+  const vals={clientId:document.getElementById('pf-client').value,type:document.getElementById('pf-type').value,term:document.getElementById('pf-term').value||'12',carrier:document.getElementById('pf-carrier').value.trim(),number:document.getElementById('pf-number').value.trim(),premium:document.getElementById('pf-premium').value,commRate:document.getElementById('pf-comm-rate').value||0,commRateRenewal:document.getElementById('pf-comm-rate-renewal').value||0,commType:document.getElementById('pf-comm-type').value,channel:document.getElementById('pf-channel').value,effective:document.getElementById('pf-effective').value,renewal:document.getElementById('pf-renewal').value,status:document.getElementById('pf-status').value||'Active',notes:document.getElementById('pf-notes').value.trim()};
   if(!vals.clientId||!vals.carrier||!vals.renewal){appAlert('Client, carrier, and renewal date required.');return;}
-  if(editingPolicyId){const idx=data.policies.findIndex(x=>x.id===editingPolicyId);if(idx!==-1)data.policies[idx]={...vals,id:editingPolicyId};editingPolicyId=null;}
+  learnCarrierRate(vals);
+  if(editingPolicyId){const idx=data.policies.findIndex(x=>x.id===editingPolicyId);if(idx!==-1)data.policies[idx]={...data.policies[idx],...vals,id:editingPolicyId};editingPolicyId=null;}
   else{data.policies.push({...vals,id:'p'+Date.now()});}
   document.querySelector('#policy-modal .modal-header h3').textContent='Add Policy';
   save();closeModal('policy-modal');
@@ -2515,7 +2694,8 @@ function editPolicy(id){
   document.getElementById('pf-renewal').value=p.renewal||'';
   document.getElementById('pf-status').value=p.status||'Active';
   document.getElementById('pf-notes').value=p.notes||'';
-  onPfTermChange();updateCommPreview();
+  document.getElementById('pf-channel').value=p.channel||'';
+  onPfTermChange();updateCommPreview();showRateHint();
   if(!canOpenModal('policy-modal'))return;
   document.querySelector('#policy-modal .modal-header h3').textContent='Edit Policy';
   document.getElementById('policy-modal').classList.add('open');
@@ -2861,6 +3041,7 @@ async function init() {
   dataVersion = rows ? rows.version : null;
   updateSyncStatus(true, 'Cloud connected');
   renderDashboard();
+  loadCarrierRates();
 }
 
 init();
