@@ -60,6 +60,15 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#eef0f4;color:#1a1a1a;mi
 .btn-danger-outline{border-color:#c43a3a !important;color:#c43a3a !important;}
 #app-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#0c1e3a;color:#fff;padding:10px 18px;border-radius:8px;font-size:14px;opacity:0;pointer-events:none;transition:all .25s;z-index:10000;}
 #app-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#app-dialog{display:none;position:fixed;inset:0;background:rgba(12,30,58,0.45);z-index:9000;align-items:center;justify-content:center;padding:16px;}
+#app-dialog.open{display:flex;}
+#app-dialog .ad-box{background:#fff;border-radius:14px;max-width:440px;width:100%;padding:24px 24px 18px;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+#app-dialog .ad-title{font-size:17px;font-weight:700;color:#0c1e3a;margin-bottom:10px;}
+#app-dialog .ad-message{font-size:14px;color:#333;line-height:1.55;white-space:pre-line;margin-bottom:20px;}
+#app-dialog .ad-actions{display:flex;justify-content:flex-end;gap:10px;}
+.btn-danger{background:#c43a3a !important;border-color:#c43a3a !important;color:#fff !important;}
+@keyframes modalNudge{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.modal-nudge{animation:modalNudge .25s ease;}
 .metric-card{background:#fff;border-radius:10px;padding:20px 22px;border:1px solid #d8dbe3;}
 .metric-label{font-size:12px;color:#888;text-transform:uppercase;letter-spacing:0.6px;font-weight:600;}
 .metric-value{font-size:30px;font-weight:700;margin-top:6px;line-height:1;color:#0c1e3a;}
@@ -104,7 +113,7 @@ tr:hover td{background:#f4f6fa;}
 .toolbar input{flex:1;max-width:340px;}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:400;align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;}
-.modal{background:#fff;border-radius:14px;border:1px solid #d8dbe3;width:600px;max-width:96vw;max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.18);}
+.modal{background:#fff;border-radius:14px;border:1px solid #d8dbe3;width:600px;max-width:96vw;max-height:92vh;overflow-y:auto;overflow-x:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.18);}
 .modal-lg{width:720px;}
 .modal-header{padding:18px 24px;border-bottom:1px solid #d8dbe3;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:1;}
 .modal-header h3{font-size:17px;font-weight:700;color:#0c1e3a;}
@@ -114,9 +123,9 @@ tr:hover td{background:#f4f6fa;}
 .modal-footer{padding:16px 24px;border-top:1px solid #d8dbe3;display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:0;background:#fff;}
 .form-section{margin-bottom:22px;}
 .form-section-title{font-size:13px;font-weight:700;color:#0c1e3a;text-transform:uppercase;letter-spacing:0.6px;padding-bottom:8px;border-bottom:2px solid #f0c060;margin-bottom:14px;}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
-.form-row.cols3{grid-template-columns:1fr 1fr 1fr;}
-.form-row.cols4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.form-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px;}
+.form-row.cols3{grid-template-columns:repeat(3,minmax(0,1fr));}
+.form-row.cols4{grid-template-columns:repeat(4,minmax(0,1fr));}
 .form-row.single{grid-template-columns:1fr;}
 .form-group{display:flex;flex-direction:column;gap:5px;}
 .form-group label{font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.4px;}
@@ -376,6 +385,13 @@ tr:hover td{background:#f4f6fa;}
 <div class="main">
 <div id="save-banner" role="alert" style="display:none;"></div>
 <div id="app-toast" role="status"></div>
+<div id="app-dialog" role="dialog" aria-modal="true">
+  <div class="ad-box">
+    <h3 class="ad-title"></h3>
+    <p class="ad-message"></p>
+    <div class="ad-actions"><button class="btn ad-cancel">Cancel</button><button class="btn btn-primary ad-ok">OK</button></div>
+  </div>
+</div>
 
 <!-- DASHBOARD -->
 <div class="page active" id="page-dashboard">
@@ -1062,9 +1078,35 @@ tr:hover td{background:#f4f6fa;}
   </div>
 </div>
 
+<!-- RENEW POLICY -->
+<div class="modal-overlay" id="renew-modal">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h3>✓ Renew Policy</h3><button class="modal-close" onclick="cancelRenew()">×</button></div>
+    <div class="modal-body">
+      <div id="rn-summary" style="background:#f4f6fa;border:1px solid #e1e5ee;border-radius:10px;padding:14px 16px;margin-bottom:18px;line-height:1.6;"></div>
+      <div class="form-row cols3">
+        <div class="form-group"><label>Term</label><select id="rn-term" onchange="renewDatesChanged()"><option value="6">6 months</option><option value="12">12 months</option></select></div>
+        <div class="form-group"><label>New Effective Date</label><input id="rn-effective" type="date" onchange="renewDatesChanged()"></div>
+        <div class="form-group"><label>New Renewal Date</label><input id="rn-renewal" type="date" onchange="updateRenewPreview()"></div>
+      </div>
+      <div class="form-row cols3">
+        <div class="form-group"><label>New Premium ($) *</label><input id="rn-premium" type="number" step="0.01" oninput="updateRenewPreview()"><div id="rn-old-premium" style="font-size:12px;color:#888;margin-top:4px;"></div></div>
+        <div class="form-group"><label>Renewal Commission %</label><input id="rn-rate" type="number" step="0.01" oninput="updateRenewPreview()"></div>
+        <div class="form-group"><label>Policy Number</label><input id="rn-number"></div>
+      </div>
+      <div class="form-row single"><div class="form-group"><label>Note (optional, saved to the client's notes)</label><input id="rn-note" placeholder="e.g. Rate increase 8%, client happy, re-shop next term"></div></div>
+      <div id="rn-preview" style="font-size:14px;color:#2a7a4a;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="cancelRenew()">Cancel</button>
+      <button class="btn btn-green" onclick="saveRenewal()">Save Renewal</button>
+    </div>
+  </div>
+</div>
+
 <!-- ADD POLICY -->
 <div class="modal-overlay" id="policy-modal">
-  <div class="modal">
+  <div class="modal modal-xl">
     <div class="modal-header"><h3>Add Policy</h3><button class="modal-close" onclick="closeModal('policy-modal')">×</button></div>
     <div class="modal-body">
       <div class="form-row single"><div class="form-group"><label>Client *</label><select id="pf-client"></select></div></div>
@@ -1383,9 +1425,9 @@ function showSaveBanner(kind,detail){
 function hideSaveBanner(){const b=document.getElementById('save-banner');if(b)b.style.display='none';}
 function reloadLatest(){unsaved=false;location.reload();}
 async function forceSaveMine(){
-  if(!confirm('Keep the version on this screen? Any changes made on the other device since you opened this page will be replaced. (They stay in the save history, so they can still be recovered.)'))return;
+  if(!await appConfirm('Keep the version on this screen? Any changes made on the other device since you opened this page will be replaced. (They stay in the save history, so they can still be recovered.)'))return;
   const {data:row,error}=await _supabase.from('fortex_data').select('version').eq('id','main').single();
-  if(error){alert('Could not reach the database. Please try again.');return;}
+  if(error){appAlert('Could not reach the database. Please try again.');return;}
   dataVersion=row.version;saveBlocked=false;doSave();
 }
 async function checkForRemoteChanges(){
@@ -1415,6 +1457,24 @@ function downloadBackup(label){
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
   const el=document.getElementById('sec-last-download');if(el)el.textContent='Downloaded '+new Date().toLocaleString();
 }
+// ==================== IN-APP DIALOGS (replace browser pop-ups) ====================
+function appDialog({title='Please confirm',message='',okText='OK',cancelText='Cancel',danger=false,showCancel=true}={}){
+  return new Promise(resolve=>{
+    const ov=document.getElementById('app-dialog');
+    ov.querySelector('.ad-title').textContent=title;
+    ov.querySelector('.ad-message').textContent=message;
+    const ok=ov.querySelector('.ad-ok'),cancel=ov.querySelector('.ad-cancel');
+    ok.textContent=okText;ok.className='btn ad-ok '+(danger?'btn-danger':'btn-primary');
+    cancel.textContent=cancelText;cancel.style.display=showCancel?'':'none';
+    const done=v=>{ov.classList.remove('open');document.removeEventListener('keydown',onKey,true);resolve(v);};
+    const onKey=e=>{if(e.key==='Enter'){e.preventDefault();e.stopPropagation();done(true);}else if(e.key==='Escape'&&showCancel){e.preventDefault();e.stopPropagation();done(false);}};
+    ok.onclick=()=>done(true);cancel.onclick=()=>done(false);
+    document.addEventListener('keydown',onKey,true);
+    ov.classList.add('open');setTimeout(()=>ok.focus(),30);
+  });
+}
+function appConfirm(message,opts={}){return appDialog({message,...opts});}
+function appAlert(message,opts={}){return appDialog({title:opts.title||'Fortex Dashboard',message,okText:'OK',showCancel:false});}
 function esc(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
 function cn(id){const c=data.clients.find(x=>x.id===id);if(!c)return 'Unknown';return c.clientType==='commercial'&&c.bizName?c.bizName:c.first+' '+c.last;}
 function du(ds){if(!ds)return 9999;const t=new Date();t.setHours(0,0,0,0);const d=new Date(ds);d.setHours(0,0,0,0);return Math.round((d-t)/86400000);}
@@ -1469,17 +1529,57 @@ function commAmt(p){return Math.round((Number(p.premium)||0)*commRateFor(p)/100)
 function isLive(p){return !['Cancelled','Non-Renewed','Lapsed'].includes(p.status);}
 function overduePolicies(){return data.policies.filter(p=>isLive(p)&&p.renewal&&du(p.renewal)<0).sort((a,b)=>du(a.renewal)-du(b.renewal));}
 function addMonthsISO(iso,months){const d=new Date(iso+'T00:00:00');const day=d.getDate();d.setMonth(d.getMonth()+months);if(d.getDate()<day)d.setDate(0);return d.toISOString().slice(0,10);}
+let renewingPolicyId=null;
 function renewPolicy(id){
   const p=data.policies.find(x=>x.id===id);if(!p||!p.renewal)return;
-  const term=Number(p.term)||12;const next=addMonthsISO(p.renewal,term);
-  if(!confirm(`Mark ${cn(p.clientId)}'s ${p.type} (${p.carrier}) as renewed?\n\nNew term: ${fd(p.renewal)} to ${fd(next)}\nCommission switches to the renewal rate.\n\nThe policy form opens next so you can update the new premium.`))return;
-  p.effective=p.renewal;p.renewal=next;p.status='Active';p.commType='Renewal';
-  save();showToast('Policy renewed. Update the premium if it changed.');
-  editPolicy(id);
+  if(!canOpenModal('renew-modal'))return;
+  renewingPolicyId=id;
+  const term=Number(p.term)||12;
+  document.getElementById('rn-summary').innerHTML=`<strong>${esc(cn(p.clientId))}</strong><br>${esc(p.type)} · ${esc(p.carrier)} · #${esc(p.number||'')}<br><span style="color:#666;font-size:13px;">Current term: ${fd(p.effective)} to ${fd(p.renewal)} ${rb(du(p.renewal))}</span>`;
+  document.getElementById('rn-term').value=String(term);
+  document.getElementById('rn-effective').value=p.renewal;
+  document.getElementById('rn-renewal').value=addMonthsISO(p.renewal,term);
+  document.getElementById('rn-premium').value=p.premium||'';
+  document.getElementById('rn-old-premium').textContent=p.premium?('Last term: '+fmt(p.premium)):'';
+  document.getElementById('rn-rate').value=Number(p.commRateRenewal)||Number(p.commRate)||'';
+  document.getElementById('rn-number').value=p.number||'';
+  document.getElementById('rn-note').value='';
+  updateRenewPreview();
+  document.getElementById('renew-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('rn-premium').focus(),50);
 }
-function markNotRenewed(id){
+function renewDatesChanged(){
+  const eff=document.getElementById('rn-effective').value;const term=Number(document.getElementById('rn-term').value)||12;
+  if(eff)document.getElementById('rn-renewal').value=addMonthsISO(eff,term);
+  updateRenewPreview();
+}
+function updateRenewPreview(){
+  const prem=Number(document.getElementById('rn-premium').value)||0;const rate=Number(document.getElementById('rn-rate').value)||0;
+  const term=Number(document.getElementById('rn-term').value)||12;const per=Math.round(prem*rate/100);
+  document.getElementById('rn-preview').innerHTML=`Commission this term: <strong>${fmtc(per)}</strong>${term===6?` (${fmtc(per*2)}/yr)`:'/yr'}`;
+}
+function cancelRenew(){renewingPolicyId=null;document.getElementById('renew-modal').classList.remove('open');}
+async function saveRenewal(){
+  const p=data.policies.find(x=>x.id===renewingPolicyId);if(!p){cancelRenew();return;}
+  const eff=document.getElementById('rn-effective').value,ren=document.getElementById('rn-renewal').value;
+  const prem=document.getElementById('rn-premium').value.trim(),rate=document.getElementById('rn-rate').value.trim();
+  if(!eff||!ren){appAlert('Please enter the new effective and renewal dates.');return;}
+  if(ren<=eff){appAlert('The new renewal date must be after the effective date.');return;}
+  if(!prem){appAlert('Please enter the new premium (use the same amount if it did not change).');return;}
+  const oldPrem=p.premium,oldRen=p.renewal;
+  p.term=document.getElementById('rn-term').value;p.effective=eff;p.renewal=ren;p.premium=prem;p.status='Active';p.commType='Renewal';
+  if(rate)p.commRateRenewal=rate;
+  const num=document.getElementById('rn-number').value.trim();if(num)p.number=num;
+  const c=data.clients.find(x=>x.id===p.clientId);
+  if(c){if(!Array.isArray(c.notes))c.notes=c.notes?[{date:(c.added||'').slice(0,10),text:String(c.notes)}]:[];
+    const extra=document.getElementById('rn-note').value.trim();
+    c.notes.push({date:new Date().toISOString().split('T')[0],text:`Renewed ${p.type} (${p.carrier}): ${fd(eff)} to ${fd(ren)}. Premium ${fmt(oldPrem)} → ${fmt(prem)}.`+(extra?' '+extra:'')});}
+  cancelRenew();save();showToast('Renewal saved');
+}
+
+async function markNotRenewed(id){
   const p=data.policies.find(x=>x.id===id);if(!p)return;
-  if(!confirm(`Mark ${cn(p.clientId)}'s ${p.type} (${p.carrier}) as Non-Renewed? It will leave your renewal lists and commission totals.`))return;
+  if(!await appConfirm(`Mark ${cn(p.clientId)}'s ${p.type} (${p.carrier}) as Non-Renewed? It will leave your renewal lists and commission totals.`,{title:'Not renewed',okText:'Mark Non-Renewed',danger:true}))return;
   p.status='Non-Renewed';save();
 }
 
@@ -1581,7 +1681,7 @@ function copyDigest(){
     const s=document.getElementById('digest-status');
     s.textContent='✓ Copied to clipboard! Paste it into any email app.';
     s.className='digest-status success';
-  }).catch(()=>alert('Could not copy — please select the text and copy manually.'));
+  }).catch(()=>appAlert('Could not copy — please select the text and copy manually.'));
 }
 
 function sendDigest(){
@@ -1843,7 +1943,7 @@ function renderRenewals(days){
   if(!filtered.length){tbody.innerHTML=`<tr><td colspan="8" class="empty-state">${days===-1?'Nothing overdue. Nice work!':'No renewals in this window'}</td></tr>`;return;}
   tbody.innerHTML=filtered.map(p=>{const d=du(p.renewal);const rc=d<0?'renewal-row-urgent':d<=30?'renewal-row-urgent':d<=60?'renewal-row-soon':'renewal-row-ok';return`<tr class="${rc} row-link" onclick="openProfile('${p.clientId}')"><td><strong>${esc(cn(p.clientId))}</strong></td><td>${esc(p.type)}${termLabel(p)}</td><td>${esc(p.carrier)}</td><td>${fd(p.renewal)}</td><td>${rb(d)}</td><td>${premiumDisplay(p)}</td><td style="font-weight:700;color:#2a7a4a;">${fmtc(commAmtAnnual(p))}/yr${(Number(p.term)||12)===6?`<br><span style="font-size:11px;font-weight:400;color:#888;">${fmtc(commAmt(p))}/term</span>`:''}</td><td onclick="event.stopPropagation()" style="white-space:nowrap;"><button class="btn btn-sm btn-green" onclick="renewPolicy('${p.id}')" title="Roll dates forward one term">✓ Renewed</button> ${d<0?`<button class="btn btn-sm" onclick="markNotRenewed('${p.id}')" title="Client left or policy ended">✕ Not Renewed</button>`:''} <button class="btn btn-sm" onclick="addTaskForRenewal('${p.id}')">+ Task</button></td></tr>`;}).join('');
 }
-function addTaskForRenewal(polId){const pol=data.policies.find(p=>p.id===polId);if(!pol)return;data.tasks.push({id:'t'+Date.now(),title:'Renew '+pol.type+' for '+cn(pol.clientId),clientId:pol.clientId,cat:'Renewal',due:pol.renewal,priority:'High',notes:pol.carrier+' '+pol.number,status:'To Do'});save();alert('Follow-up task added!');}
+function addTaskForRenewal(polId){const pol=data.policies.find(p=>p.id===polId);if(!pol)return;data.tasks.push({id:'t'+Date.now(),title:'Renew '+pol.type+' for '+cn(pol.clientId),clientId:pol.clientId,cat:'Renewal',due:pol.renewal,priority:'High',notes:pol.carrier+' '+pol.number,status:'To Do'});save();appAlert('Follow-up task added!');}
 
 // ==================== RESHOP ====================
 function renderReshop(){
@@ -1941,7 +2041,7 @@ function importCSV(e){
       data.clients.push({id:'c'+Date.now()+i,clientType:'personal',first,last,middle:'',suffix:'',dob:row['dob']||'',gender:'',marital:'',occupation:'',ssn:'',phoneCell:row['cell']||row['cell phone']||row['phone']||'',phoneHome:row['home phone']||'',phoneWork:'',fax:'',email1:row['email']||'',email2:'',prefContact:'',bestTime:'',dnc:'No',addr1:row['address']||'',addr2:'',city:row['city']||'',state:row['state']||'',zip:row['zip']||'',county:'',mailAddr1:'',mailAddr2:'',mailCity:'',mailState:'',mailZip:'',mailCounty:'',bizName:'',bizType:'',fein:'',leadSource:'EZLynx Import',agent:'',tag:'',dlNum:'',dlState:'',dlExp:'',dlClass:'',sr22:'No',yrsLic:'',notes:[{date:new Date().toISOString().split('T')[0],text:'Imported from EZLynx CSV'}],added:new Date().toISOString().split('T')[0]});
       imported++;
     }
-    save();renderClients();alert(`Imported ${imported} client records!`);
+    save();renderClients();appAlert(`Imported ${imported} client records!`);
   };
   reader.readAsText(file);
 }
@@ -1950,7 +2050,7 @@ function importCSV(e){
 function canOpenModal(id){
   const anyOpen=document.querySelector('.modal-overlay.open');
   if(anyOpen&&anyOpen.id!==id){
-    alert('Please save or close the open form first before opening another.');
+    appAlert('Please save or close the open form first before opening another.');
     return false;
   }
   return true;
@@ -1963,7 +2063,7 @@ function openModal(id){
   if(id==='reshop-modal'&&!editingReshopId){document.querySelector('#reshop-modal .modal-header h3').textContent='Add to Re-Shop Queue';document.querySelectorAll('#reshop-modal input,#reshop-modal select,#reshop-modal textarea').forEach(el=>{if(el.tagName==='SELECT'&&el.options.length)el.selectedIndex=0;else el.value='';});}
   document.getElementById(id).classList.add('open');
 }
-function closeModal(id){document.getElementById(id).classList.remove('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');resetEditingState();}
 function populateClientSelects(){const opts=data.clients.map(c=>`<option value="${c.id}">${esc(cn(c.id))}</option>`).join('');['pf-client','tf-client','rf-client'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=(id==='tf-client'?'<option value="">None</option>':'')+opts;});}
 
 function switchCfTab(tab,el){
@@ -2147,9 +2247,9 @@ function saveClient(){
   };
 
   if(isComm){
-    if(!c.bizName){alert('Business Legal Name is required.');return;}
+    if(!c.bizName){appAlert('Business Legal Name is required.');return;}
   } else {
-    if(!c.first||!c.last){alert('First and last name required.');return;}
+    if(!c.first||!c.last){appAlert('First and last name required.');return;}
   }
 
   data.clients.push(c);
@@ -2216,7 +2316,7 @@ function saveClient(){
 
 function savePolicy(){
   const vals={clientId:document.getElementById('pf-client').value,type:document.getElementById('pf-type').value,term:document.getElementById('pf-term').value||'12',carrier:document.getElementById('pf-carrier').value.trim(),number:document.getElementById('pf-number').value.trim(),premium:document.getElementById('pf-premium').value,commRate:document.getElementById('pf-comm-rate').value||0,commRateRenewal:document.getElementById('pf-comm-rate-renewal').value||0,commType:document.getElementById('pf-comm-type').value,effective:document.getElementById('pf-effective').value,renewal:document.getElementById('pf-renewal').value,status:document.getElementById('pf-status').value||'Active',notes:document.getElementById('pf-notes').value.trim()};
-  if(!vals.clientId||!vals.carrier||!vals.renewal){alert('Client, carrier, and renewal date required.');return;}
+  if(!vals.clientId||!vals.carrier||!vals.renewal){appAlert('Client, carrier, and renewal date required.');return;}
   if(editingPolicyId){const idx=data.policies.findIndex(x=>x.id===editingPolicyId);if(idx!==-1)data.policies[idx]={...vals,id:editingPolicyId};editingPolicyId=null;}
   else{data.policies.push({...vals,id:'p'+Date.now()});}
   document.querySelector('#policy-modal .modal-header h3').textContent='Add Policy';
@@ -2291,7 +2391,7 @@ function showCoApplicantAddInProfile(){
 let editingTaskId=null;
 function saveTask(){
   const vals={title:document.getElementById('tf-title').value.trim(),clientId:document.getElementById('tf-client').value,cat:document.getElementById('tf-cat').value,due:document.getElementById('tf-due').value,priority:document.getElementById('tf-priority').value,notes:document.getElementById('tf-notes').value.trim()};
-  if(!vals.title){alert('Task title required.');return;}
+  if(!vals.title){appAlert('Task title required.');return;}
   if(editingTaskId){const idx=data.tasks.findIndex(x=>x.id===editingTaskId);if(idx!==-1)data.tasks[idx]={...data.tasks[idx],...vals};editingTaskId=null;}
   else{data.tasks.push({...vals,id:'t'+Date.now(),status:'To Do'});}
   document.querySelector('#task-modal .modal-header h3').textContent='Add Follow-Up Task';
@@ -2316,7 +2416,7 @@ function editTask(id){
 let editingReshopId=null;
 function saveReshop(){
   const vals={clientId:document.getElementById('rf-client').value,type:document.getElementById('rf-type').value,carrier:document.getElementById('rf-carrier').value.trim(),premium:document.getElementById('rf-premium').value,due:document.getElementById('rf-due').value,reason:document.getElementById('rf-reason').value,notes:document.getElementById('rf-notes').value.trim()};
-  if(!vals.clientId){alert('Client required.');return;}
+  if(!vals.clientId){appAlert('Client required.');return;}
   if(editingReshopId){const idx=data.reshop.findIndex(x=>x.id===editingReshopId);if(idx!==-1)data.reshop[idx]={...data.reshop[idx],...vals};editingReshopId=null;}
   else{data.reshop.push({...vals,id:'r'+Date.now(),status:'Pending'});}
   document.querySelector('#reshop-modal .modal-header h3').textContent='Add to Re-Shop Queue';
@@ -2340,9 +2440,9 @@ function editReshop(id){
 }
 
 function saveVehicle(){
-  if(!activeClientId){alert('No client selected.');return;}
+  if(!activeClientId){appAlert('No client selected.');return;}
   const vals={clientId:activeClientId,year:document.getElementById('vf-year').value.trim(),make:document.getElementById('vf-make').value.trim(),model:document.getElementById('vf-model').value.trim(),vin:document.getElementById('vf-vin').value.trim(),body:document.getElementById('vf-body').value,use:document.getElementById('vf-use').value,miles:document.getElementById('vf-miles').value,garageZip:document.getElementById('vf-garage-zip').value.trim(),ownership:document.getElementById('vf-ownership').value,lien:document.getElementById('vf-lien').value.trim(),policy:document.getElementById('vf-policy').value.trim(),notes:document.getElementById('vf-notes').value.trim()};
-  if(!vals.year||!vals.make||!vals.model){alert('Year, make, and model required.');return;}
+  if(!vals.year||!vals.make||!vals.model){appAlert('Year, make, and model required.');return;}
   if(editingVehicleId){const idx=data.vehicles.findIndex(x=>x.id===editingVehicleId);if(idx!==-1)data.vehicles[idx]={...vals,id:editingVehicleId};editingVehicleId=null;}
   else{data.vehicles.push({...vals,id:'v'+Date.now()});}
   document.querySelector('#vehicle-modal .modal-header h3').textContent='Add Vehicle';
@@ -2351,9 +2451,9 @@ function saveVehicle(){
 }
 
 function saveProperty(){
-  if(!activeClientId){alert('No client selected.');return;}
+  if(!activeClientId){appAlert('No client selected.');return;}
   const vals={clientId:activeClientId,addr:document.getElementById('propf-addr').value.trim(),city:document.getElementById('propf-city').value.trim(),state:document.getElementById('propf-state').value.trim(),zip:document.getElementById('propf-zip').value.trim(),type:document.getElementById('propf-type').value,yearBuilt:document.getElementById('propf-year').value.trim(),sqft:document.getElementById('propf-sqft').value,construction:document.getElementById('propf-construction').value,roof:document.getElementById('propf-roof').value,roofYear:document.getElementById('propf-roof-year').value.trim(),occupancy:document.getElementById('propf-occupancy').value,value:document.getElementById('propf-value').value,mortgage:document.getElementById('propf-mortgage').value.trim(),policy:document.getElementById('propf-policy').value.trim(),notes:document.getElementById('propf-notes').value.trim()};
-  if(!vals.addr){alert('Property address required.');return;}
+  if(!vals.addr){appAlert('Property address required.');return;}
   if(editingPropertyId){const idx=data.properties.findIndex(x=>x.id===editingPropertyId);if(idx!==-1)data.properties[idx]={...vals,id:editingPropertyId};editingPropertyId=null;}
   else{data.properties.push({...vals,id:'prop'+Date.now()});}
   document.querySelector('#property-modal .modal-header h3').textContent='Add Property';
@@ -2364,7 +2464,7 @@ function saveProperty(){
 let editingQuoteId=null;
 function saveQuote(){
   const vals={name:document.getElementById('qf-name').value.trim(),phone:document.getElementById('qf-phone').value.trim(),email:document.getElementById('qf-email').value.trim(),lob:document.getElementById('qf-lob').value,premium:document.getElementById('qf-premium').value,source:document.getElementById('qf-source').value,due:document.getElementById('qf-due').value,priority:document.getElementById('qf-priority').value,notes:document.getElementById('qf-notes').value.trim()};
-  if(!vals.name){alert('Prospect name required.');return;}
+  if(!vals.name){appAlert('Prospect name required.');return;}
   if(editingQuoteId){const idx=data.quotes.findIndex(x=>x.id===editingQuoteId);if(idx!==-1)data.quotes[idx]={...data.quotes[idx],...vals};editingQuoteId=null;}
   else{data.quotes.push({...vals,id:'q'+Date.now(),status:'New Lead'});}
   document.querySelector('#quote-modal .modal-header h3').textContent='New Quote / Prospect';
@@ -2388,12 +2488,14 @@ function editQuote(id){
   document.getElementById('quote-modal').classList.add('open');
 }
 
-function deleteVehicle(id){if(!confirm('Remove this vehicle?'))return;data.vehicles=data.vehicles.filter(x=>x.id!==id);save();loadVehiclesTab(activeClientId);}
-function deleteProperty(id){if(!confirm('Remove this property?'))return;data.properties=data.properties.filter(x=>x.id!==id);save();loadPropertiesTab(activeClientId);}
-function deletePolicy(id){if(!confirm('Remove this policy?'))return;const pol=data.policies.find(x=>x.id===id);data.policies=data.policies.filter(p=>p.id!==id);save();renderPolicies();renderDashboard();const adp=document.querySelector('.page.active');if(adp&&adp.id==='page-carriers')renderCarriers();if(adp&&adp.id==='page-commissions')renderCommissions();if(activeClientId&&pol&&activeClientId===pol.clientId)loadPoliciesTab(activeClientId);}
-function deleteClient(id,name){const n=name||cn(id)||'this client';if(!confirm('Are you sure you want to delete '+n+' and all their data?\n\nThis cannot be undone.'))return;data.clients=data.clients.filter(c=>c.id!==id);data.policies=data.policies.filter(p=>p.clientId!==id);data.vehicles=data.vehicles.filter(v=>v.clientId!==id);data.properties=data.properties.filter(p=>p.clientId!==id);data.reminders=(data.reminders||[]).filter(r=>r.clientId!==id);data.tasks=(data.tasks||[]).filter(t=>t.clientId!==id);save();renderClients();}
+async function deleteVehicle(id){if(!await appConfirm('Remove this vehicle?',{title:'Remove vehicle',okText:'Remove',danger:true}))return;data.vehicles=data.vehicles.filter(x=>x.id!==id);save();loadVehiclesTab(activeClientId);}
+async function deleteProperty(id){if(!await appConfirm('Remove this property?',{title:'Remove property',okText:'Remove',danger:true}))return;data.properties=data.properties.filter(x=>x.id!==id);save();loadPropertiesTab(activeClientId);}
+async function deletePolicy(id){if(!await appConfirm('Remove this policy?',{title:'Remove policy',okText:'Remove',danger:true}))return;const pol=data.policies.find(x=>x.id===id);data.policies=data.policies.filter(p=>p.id!==id);save();renderPolicies();renderDashboard();const adp=document.querySelector('.page.active');if(adp&&adp.id==='page-carriers')renderCarriers();if(adp&&adp.id==='page-commissions')renderCommissions();if(activeClientId&&pol&&activeClientId===pol.clientId)loadPoliciesTab(activeClientId);}
+async function deleteClient(id,name){const n=name||cn(id)||'this client';if(!await appConfirm('Delete '+n+' and all their policies, vehicles, properties and tasks? This cannot be undone.',{title:'Delete client',okText:'Delete',danger:true}))return;data.clients=data.clients.filter(c=>c.id!==id);data.policies=data.policies.filter(p=>p.clientId!==id);data.vehicles=data.vehicles.filter(v=>v.clientId!==id);data.properties=data.properties.filter(p=>p.clientId!==id);data.reminders=(data.reminders||[]).filter(r=>r.clientId!==id);data.tasks=(data.tasks||[]).filter(t=>t.clientId!==id);save();renderClients();}
 
-document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m){m.classList.remove('open');editingPolicyId=null;editingVehicleId=null;editingPropertyId=null;editingTaskId=null;editingReshopId=null;editingQuoteId=null;document.querySelector('#policy-modal .modal-header h3').textContent='Add Policy';document.querySelector('#vehicle-modal .modal-header h3').textContent='Add Vehicle';document.querySelector('#property-modal .modal-header h3').textContent='Add Property';document.querySelector('#task-modal .modal-header h3').textContent='Add Follow-Up Task';document.querySelector('#reshop-modal .modal-header h3').textContent='Add to Re-Shop Queue';document.querySelector('#quote-modal .modal-header h3').textContent='New Quote / Prospect';}}));
+// Forms stay open when you click outside them (so nothing typed is lost). A gentle shake shows the box is still active.
+function resetEditingState(){editingPolicyId=null;editingVehicleId=null;editingPropertyId=null;editingTaskId=null;editingReshopId=null;editingQuoteId=null;document.querySelector('#policy-modal .modal-header h3').textContent='Add Policy';document.querySelector('#vehicle-modal .modal-header h3').textContent='Add Vehicle';document.querySelector('#property-modal .modal-header h3').textContent='Add Property';document.querySelector('#task-modal .modal-header h3').textContent='Add Follow-Up Task';document.querySelector('#reshop-modal .modal-header h3').textContent='Add to Re-Shop Queue';document.querySelector('#quote-modal .modal-header h3').textContent='New Quote / Prospect';}
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m){const box=m.querySelector('.modal');if(box){box.classList.remove('modal-nudge');void box.offsetWidth;box.classList.add('modal-nudge');}}}));
 
 // ==================== EDIT POLICY ====================
 function editPolicy(id){
@@ -2465,8 +2567,8 @@ function editProperty(id){
 }
 
 // ==================== NOTES EDIT/DELETE ====================
-function deleteNote(origIdx){
-  if(!confirm('Delete this note?'))return;
+async function deleteNote(origIdx){
+  if(!await appConfirm('Delete this note?',{title:'Delete note',okText:'Delete',danger:true}))return;
   const c=data.clients.find(x=>x.id===activeClientId);if(!c)return;
   c.notes.splice(origIdx,1);
   save();loadNotes(c);
@@ -2480,7 +2582,7 @@ function editNote(origIdx){
 function saveNoteEdit(origIdx){
   const c=data.clients.find(x=>x.id===activeClientId);if(!c||!c.notes||!c.notes[origIdx])return;
   const ta=document.getElementById('note-edit-ta-'+origIdx);if(!ta)return;
-  const newText=ta.value.trim();if(!newText){alert('Note cannot be empty.');return;}
+  const newText=ta.value.trim();if(!newText){appAlert('Note cannot be empty.');return;}
   c.notes[origIdx].text=newText;
   save();loadNotes(c);
 }
@@ -2601,7 +2703,7 @@ function saveDriver(){
   }
   const first=document.getElementById('drf-first').value.trim();
   const last=document.getElementById('drf-last').value.trim();
-  if(!first||!last){alert('First and last name required.');return;}
+  if(!first||!last){appAlert('First and last name required.');return;}
   if(!c.drivers)c.drivers=[];
   const d={id:editingDriverId||'d'+Date.now(),first,last,dob:document.getElementById('drf-dob').value,gender:document.getElementById('drf-gender').value,relationship:document.getElementById('drf-rel').value,dlNum:document.getElementById('drf-dl-num').value.trim(),dlState:document.getElementById('drf-dl-state').value.trim(),dlExp:document.getElementById('drf-dl-exp').value,dlClass:document.getElementById('drf-dl-class').value,sr22:document.getElementById('drf-sr22').value,yrsLic:document.getElementById('drf-yrs-lic').value.trim()};
   if(editingDriverId){const idx=c.drivers.findIndex(x=>x.id===editingDriverId);if(idx!==-1)c.drivers[idx]=d;editingDriverId=null;}
@@ -2609,8 +2711,8 @@ function saveDriver(){
   save();closeDriverModal();loadDriversTab(activeClientId);
 }
 
-function deleteDriver(driverId){
-  if(!confirm('Remove this driver?'))return;
+async function deleteDriver(driverId){
+  if(!await appConfirm('Remove this driver?',{title:'Remove driver',okText:'Remove',danger:true}))return;
   const c=data.clients.find(x=>x.id===activeClientId);if(!c||!c.drivers)return;
   c.drivers=c.drivers.filter(x=>x.id!==driverId);
   save();loadDriversTab(activeClientId);
@@ -2703,7 +2805,7 @@ async function startMfaSetup(){
   const {data:f}=await _supabase.auth.mfa.listFactors();
   for(const x of ((f&&f.all)||[]).filter(x=>x.status!=='verified')){await _supabase.auth.mfa.unenroll({factorId:x.id});}
   const {data:en,error}=await _supabase.auth.mfa.enroll({factorType:'totp',friendlyName:'Fortex AMS '+Date.now()});
-  if(error){alert('Could not start setup: '+error.message);return;}
+  if(error){appAlert('Could not start setup: '+error.message);return;}
   pendingFactorId=en.id;
   document.getElementById('sec-mfa-qr').src=en.totp.qr_code;
   document.getElementById('sec-mfa-secret').textContent=en.totp.secret;
@@ -2718,13 +2820,13 @@ async function finishMfaSetup(){
   const {error}=await _supabase.auth.mfa.challengeAndVerify({factorId:pendingFactorId,code});
   if(error){errEl.textContent='That code did not work. Wait for the next code and try again.';return;}
   pendingFactorId=null;
-  alert('Two-factor login is ON. Next time you sign in, you will be asked for a code from your app.');
+  appAlert('Two-factor login is ON. Next time you sign in, you will be asked for a code from your app.');
   renderSecurity();
 }
 async function removeMfa(factorId){
-  if(!confirm('Turn off two-factor login? Your account will be protected by your password only.'))return;
+  if(!await appConfirm('Turn off two-factor login? Your account will be protected by your password only.'))return;
   const {error}=await _supabase.auth.mfa.unenroll({factorId});
-  if(error){alert('Could not turn it off: '+error.message);return;}
+  if(error){appAlert('Could not turn it off: '+error.message);return;}
   await _supabase.auth.refreshSession();
   renderSecurity();
 }
@@ -3010,7 +3112,7 @@ function saveExpense(){
     receipt:document.getElementById('ef-receipt').value.trim(),
     notes:document.getElementById('ef-notes').value.trim()
   };
-  if(!vals.date||!vals.amount||!vals.category||!vals.description){alert('Date, amount, category and description are required.');return;}
+  if(!vals.date||!vals.amount||!vals.category||!vals.description){appAlert('Date, amount, category and description are required.');return;}
   if(!data.expenses)data.expenses=[];
   if(editingExpenseId){
     const idx=data.expenses.findIndex(x=>x.id===editingExpenseId);
@@ -3037,8 +3139,8 @@ function editExpense(id){
   openModal('expense-modal');
 }
 
-function deleteExpense(id){
-  if(!confirm('Delete this expense?'))return;
+async function deleteExpense(id){
+  if(!await appConfirm('Delete this expense?',{title:'Delete expense',okText:'Delete',danger:true}))return;
   data.expenses=data.expenses.filter(x=>x.id!==id);
   save();renderExpenses();
 }
