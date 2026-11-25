@@ -25,18 +25,21 @@ Paul Tadrous, owner of Fortex Insurance Group LLC (DBA Fortex Insure, fortexinsu
 5. Never put secrets or API keys in `index.html`. The Supabase publishable key is fine to be public; service keys are not.
 6. Files in this repo other than index.html and vercel.json are excluded from deploys by `.vercelignore`.
 
-## Known issues found in the Nov 2026 audit
-- Single JSON blob storage (last save wins across devices, no history).
-- `save()` reports "Saved" even when Supabase returns an error (supabase-js resolves with `{error}`, it does not reject).
-- Policies past their renewal date drop off Renewals and the home screen instead of being flagged as overdue.
-- Commission math uses the new business rate even on renewal terms, and has no aggregator split or paid vs expected tracking.
-- Daily Digest "Send" calls the Anthropic API directly from the browser and cannot work.
-- User text is inserted into HTML unescaped.
-- Supabase RLS policy allows ANY logged-in user; public sign-ups must stay disabled.
+## Phase 1 (live Nov 25, 2026): how things work now
+- Saving: `save()` calls RPC `public.save_fortex_data(p_data, p_expected_version)`. A version mismatch raises VERSION_CONFLICT and the app shows a red banner (reload / download copy / keep mine). Other errors show a banner and auto-retry every 15s. If loading fails the app refuses to save.
+- History: trigger `trg_fortex_history` copies the previous row into `backups.fortex_data_history` on every change (30 days). pg_cron job `fortex-nightly-backup` (08:00 UTC) snapshots into `backups.fortex_data_nightly` (60 days).
+- Access: RLS policy `fortex_data_app_users` = `private.is_app_user()` (table `public.app_users`) AND `private.mfa_ok()` (requires aal2 once a verified TOTP factor exists). Add a future user by inserting into `app_users`.
+- UI helpers: `esc()` for all user text, `appConfirm()` / `appAlert()` in-app dialogs (never use browser alert/confirm), forms do not close on outside click, `closeModal()` resets edit state.
+- Renewals: Overdue tab and Home card; Renew Policy box (`renewPolicy`/`saveRenewal`) logs a note to the client; `commRateFor()` uses the renewal rate when commType is Renewal; `isLive()` excludes Cancelled/Non-Renewed/Lapsed.
+- Security and Backup page: TOTP two-factor setup and full JSON backup download.
+
+## Still open (later phases)
+- Single JSON blob storage (fixed by the Phase 2 data model).
+- No aggregator split or paid vs expected commission tracking (Phase 4).
 
 ## Roadmap (AMS redesign)
 - Phase 0: Audit and planning (done Nov 25, 2026)
-- Phase 1: Stabilize: fix save errors, overdue renewals, escaping, security settings, one-click backup
+- Phase 1: Stabilize (done Nov 25, 2026)
 - Phase 2: New data model in Supabase (accounts, contacts, leads, quotes, policies, drivers, vehicles, properties, carriers, commissions, tasks, activities, documents) and migration of existing data
 - Phase 3: Redesigned UI (Home, Client 360, Leads pipeline, Policy detail, Commissions)
 - Phase 4: Leads intake, commission reconciliation, documents and activity log, helper login with limited access
