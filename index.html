@@ -1438,6 +1438,35 @@ if(!data.quotes)data.quotes=[];
 // ==================== SAVING (conflict-safe) ====================
 let dataVersion=null;      // version of the data this screen last loaded or saved
 let saveInFlight=false, savePending=false, saveBlocked=false, unsaved=false, retryTimer=null;
+// Phase 2: every client, policy, quote, etc. is its own database record.
+// We remember what each record looked like when last loaded or saved, and on save send only the ones that changed.
+const BOOK_TABLES=['clients','policies','quotes','tasks','reshop','vehicles','properties','expenses','reminders'];
+let syncedRecs={}, recRevs={}, forceNextSave=false;
+function snapshotSynced(){
+  syncedRecs={};
+  BOOK_TABLES.forEach(t=>{const m={};(data[t]||[]).forEach(r=>{if(r&&r.id!=null&&!(r.id in m))m[r.id]=JSON.stringify(r);});syncedRecs[t]=m;});
+}
+function collectChanges(){
+  const changes=[];
+  BOOK_TABLES.forEach(t=>{
+    const before=syncedRecs[t]||{},seen=new Set(),revs=recRevs[t]||{};
+    (data[t]||[]).forEach((r,i)=>{
+      if(!r)return;
+      if(r.id==null||r.id==='')r.id=t.slice(0,1)+Date.now()+Math.random().toString(36).slice(2,6);
+      const id=String(r.id);if(seen.has(id))return;seen.add(id);
+      const str=JSON.stringify(r);
+      if(before[id]!==str)changes.push({t,op:'upsert',id,rec:r,rev:(id in revs)?revs[id]:null,pos:i,_str:str});
+    });
+    Object.keys(before).forEach(id=>{if(!seen.has(id))changes.push({t,op:'delete',id,rev:(id in revs)?revs[id]:null});});
+  });
+  return changes;
+}
+async function loadBook(){
+  const {data:res,error}=await _supabase.rpc('load_book');
+  if(error)throw error;
+  data=normalizeData(res.data);recRevs=res.revs||{};dataVersion=res.version;
+  snapshotSynced();
+}
 function save(){
   refreshCurrentPage();
   unsaved=true;
@@ -1449,9 +1478,20 @@ async function doSave(){
   saveInFlight=true;
   updateSyncStatus(true,'Saving...');
   try{
-    const {data:newVer,error}=await _supabase.rpc('save_fortex_data',{p_data:data,p_expected_version:dataVersion});
-    if(error)throw error;
-    dataVersion=newVer;unsaved=false;
+    const changes=collectChanges();
+    if(changes.length){
+      const force=forceNextSave;
+      const {data:res,error}=await _supabase.rpc('save_book_changes',{p_changes:changes.map(({_str,...c})=>c),p_force:force});
+      if(error)throw error;
+      forceNextSave=false;
+      changes.forEach(c=>{
+        if(!syncedRecs[c.t])syncedRecs[c.t]={};if(!recRevs[c.t])recRevs[c.t]={};
+        if(c.op==='delete'){delete syncedRecs[c.t][c.id];delete recRevs[c.t][c.id];}
+        else{syncedRecs[c.t][c.id]=c._str;const nr=res&&res.revs&&res.revs[c.t]&&res.revs[c.t][c.id];if(nr!=null)recRevs[c.t][c.id]=nr;}
+      });
+      if(res&&res.version!=null)dataVersion=res.version;
+    }
+    unsaved=false;
     clearTimeout(retryTimer);hideSaveBanner();
     updateSyncStatus(true,'Saved ✓ '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}));
   }catch(err){
@@ -1489,15 +1529,14 @@ function hideSaveBanner(){const b=document.getElementById('save-banner');if(b)b.
 function reloadLatest(){unsaved=false;location.reload();}
 async function forceSaveMine(){
   if(!await appConfirm('Keep the version on this screen? Any changes made on the other device since you opened this page will be replaced. (They stay in the save history, so they can still be recovered.)'))return;
-  const {data:row,error}=await _supabase.from('fortex_data').select('version').eq('id','main').single();
-  if(error){appAlert('Could not reach the database. Please try again.');return;}
-  dataVersion=row.version;saveBlocked=false;doSave();
+  forceNextSave=true;saveBlocked=false;doSave();
 }
 async function checkForRemoteChanges(){
   if(unsaved||saveInFlight||saveBlocked||dataVersion===null)return;
-  const {data:row,error}=await _supabase.from('fortex_data').select('data,version').eq('id','main').single();
+  const {data:row,error}=await _supabase.from('fortex_data').select('version').eq('id','main').single();
   if(error||!row||row.version===dataVersion||unsaved||saveInFlight)return;
-  data=normalizeData(row.data);dataVersion=row.version;
+  try{await loadBook();}catch(e){return;}
+  if(unsaved||saveInFlight)return;
   refreshCurrentPage();
   showToast('Updated with changes from another device');
 }
@@ -3149,20 +3188,15 @@ async function init() {
     showMfaStep();
     return;
   }
-  const { data: rows, error } = await _supabase
-    .from('fortex_data')
-    .select('data,version')
-    .eq('id', 'main')
-    .maybeSingle();
-  if (error) {
-    // Do NOT let the app run on empty data: a save would overwrite the real book
+  try {
+    await loadBook();
+  } catch (error) {
+    // Do NOT let the app run on empty data
     saveBlocked = true;
-    showSaveBanner('error', 'Could not load your data: ' + (error.message || error));
+    showSaveBanner('error', 'Could not load your data: ' + ((error && error.message) || error));
     updateSyncStatus(false, 'Could not load data');
     return;
   }
-  data = normalizeData(rows ? rows.data : null);
-  dataVersion = rows ? rows.version : null;
   updateSyncStatus(true, 'Cloud connected');
   renderDashboard();
   loadCarrierRates();
