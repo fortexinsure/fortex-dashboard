@@ -60,6 +60,13 @@ Paul Tadrous, owner of Fortex Insurance Group LLC (DBA Fortex Insure, fortexinsu
 - History: per-record old versions in `backups.record_history` (tbl, rec_id, op, old_row, changed_at, changed_by). No automatic cleanup yet (add a cron job when it grows). Whole-book history and nightly snapshots still run on fortex_data.
 - FKs to clients are DEFERRABLE INITIALLY DEFERRED: policies/tasks/vehicles/properties/reminders cascade on delete; quotes/reshop set null.
 
+## Phase 3 screens (Nov 26, 2026)
+- Mockups: design canvas https://claude.ai/artifact/R1zcLeFShaAukxfjAR1S3a (Home, Client 360, computer + phone). Paul's choices: refine current navy/gold look, phone matters, mockups first.
+- Home (`renderDashboard`, `p3Items`): global search (`p3Search`: names, phones, emails, EZLynx id, policy numbers, VINs; "/" focuses it), quick add buttons, KPI cards (premium on books = live annualized premium, commission received this year from commission_statements, renewals next 60 days, open leads = open quotes + Prospect clients), "Needs you today" (overdue/30-day renewals, tasks due, quote follow-ups, policies with no commission rate, previous month's statements missing after the 15th) with filters, This month, renewal calendar, commission by channel, lead pipeline. Re-renders after loadCarrierRates.
+- Client 360 = page `page-client` (no more slide-in panel). `openProfile()` fills it; `c360Mount()` moves the old panel's tab sections (ptab-details/policies/vehicles/property/notes/driver) into `#c360-body` so all their edit functions still work. New tabs: ptab-overview (`refreshC360`), ptab-documents (Google Drive search link until Phase 4), ptab-commission (`loadC360Commission` reads commission_lines by client_id). `closeProfile()` returns to `lastPage`. refreshCurrentPage maps 'client' to refreshC360.
+- Phones (<=768px): sidebar hidden, bottom bar `#p3-tabbar` (Home, Clients, + sheet, Tasks, More opens sidebar drawer).
+- `du()` now parses YYYY-MM-DD as local date (was a day early in Texas).
+
 ## Still open (later phases)
 - Remove the fortex_data mirror once nothing depends on it; drivers, activities, documents tables come with Phase 4 features.
 - No aggregator split or paid vs expected commission tracking (Phase 4).
