@@ -3571,8 +3571,10 @@ function isPersonal(p){
 function lineType(p){return isPersonal(p)?'Personal':'Commercial';}
 
 function renderBookOfBusiness(){
-  const personal=data.policies.filter(p=>isPersonal(p));
-  const commercial=data.policies.filter(p=>!isPersonal(p));
+  // Book size rule (same as Home): active policies only, 6 month premiums doubled to a yearly figure
+  const live=data.policies.filter(isLive);
+  const personal=live.filter(p=>isPersonal(p));
+  const commercial=live.filter(p=>!isPersonal(p));
 
   function buildSection(policies, mId, tbId){
     const byType={};
@@ -3580,10 +3582,10 @@ function renderBookOfBusiness(){
       const t=p.type||'Unknown';
       if(!byType[t])byType[t]={count:0,prem:0,comm:0};
       byType[t].count++;
-      byType[t].prem+=Number(p.premium||0);
+      byType[t].prem+=annualPrem(p);
       byType[t].comm+=commAmtAnnual(p);
     });
-    const totalP=policies.reduce((s,p)=>s+Number(p.premium||0),0);
+    const totalP=policies.reduce((s,p)=>s+annualPrem(p),0);
     const totalC=policies.reduce((s,p)=>s+commAmtAnnual(p),0);
     const totalN=policies.length;
 
@@ -3594,7 +3596,7 @@ function renderBookOfBusiness(){
       </div>
       <div style="text-align:center;background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px 16px;min-width:120px;">
         <div style="font-size:18px;font-weight:800;color:#0c1e3a;">${fmtc(totalP)}</div>
-        <div style="font-size:11px;color:#888;font-weight:600;">Total Premium</div>
+        <div style="font-size:11px;color:#888;font-weight:600;">Annual Premium</div>
       </div>
       <div style="text-align:center;background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px 16px;min-width:120px;">
         <div style="font-size:18px;font-weight:800;color:#2a7a4a;">${fmtc(totalC)}</div>
@@ -3604,7 +3606,7 @@ function renderBookOfBusiness(){
     const sorted=Object.entries(byType).sort((a,b)=>b[1].prem-a[1].prem);
     document.getElementById(tbId).innerHTML=sorted.length
       ? sorted.map(([type,v])=>`<tr>
-          <td style="padding:6px 8px;">${type}</td>
+          <td style="padding:6px 8px;">${esc(type)}</td>
           <td style="text-align:right;padding:6px 8px;">${esc(v.count)}</td>
           <td style="text-align:right;padding:6px 8px;font-weight:600;">${fmtc(v.prem)}</td>
           <td style="text-align:right;padding:6px 8px;font-weight:600;color:#2a7a4a;">${fmtc(v.comm)}</td>
@@ -3642,10 +3644,13 @@ function renderBookOfBusiness(){
 function renderCarriers(){
   renderBookOfBusiness();
   const byC={};
-  data.policies.forEach(p=>{
+  const livePols=data.policies.filter(isLive);
+  const asEntered=data.policies.reduce((s,p)=>s+Number(p.premium||0),0);
+  const notLive=data.policies.length-livePols.length;
+  livePols.forEach(p=>{
     const key=p.carrier||'Unknown';
     if(!byC[key])byC[key]={prem:0,comm:0,count:0,types:new Set()};
-    byC[key].prem+=Number(p.premium||0);
+    byC[key].prem+=annualPrem(p);
     byC[key].comm+=commAmtAnnual(p);
     byC[key].count++;
     if(p.type)byC[key].types.add(p.type);
@@ -3657,9 +3662,9 @@ function renderCarriers(){
 
   // Metrics
   document.getElementById('carrier-metrics').innerHTML=`
-    <div class="metric-card"><div class="metric-label">Total Carriers</div><div class="metric-value">${sorted.length}</div><div class="metric-sub">Active in book</div></div>
-    <div class="metric-card"><div class="metric-label">Total Policies</div><div class="metric-value">${totalCount}</div><div class="metric-sub">Across all carriers</div></div>
-    <div class="metric-card metric-gold"><div class="metric-label">Total Annual Premium</div><div class="metric-value">${fmtc(totalPrem)}</div><div class="metric-sub">All carriers combined</div></div>
+    <div class="metric-card"><div class="metric-label">Total Carriers</div><div class="metric-value">${sorted.length}</div><div class="metric-sub">With active policies</div></div>
+    <div class="metric-card"><div class="metric-label">Active Policies</div><div class="metric-value">${totalCount}</div><div class="metric-sub">${notLive?notLive+' cancelled or non-renewed not counted':'Across all carriers'}</div></div>
+    <div class="metric-card metric-gold"><div class="metric-label">Total Annual Premium</div><div class="metric-value">${fmtc(totalPrem)}</div><div class="metric-sub">Active policies, 6 month terms doubled. As entered: ${fmtc(asEntered)}</div></div>
     <div class="metric-card"><div class="metric-label">Total Est. Commission</div><div class="metric-value metric-value" style="color:#2a7a4a;">${fmtc(totalComm)}</div><div class="metric-sub">Annual estimate</div></div>`;
 
   // Bar chart
