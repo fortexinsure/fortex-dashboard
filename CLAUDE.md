@@ -71,6 +71,13 @@ Paul Tadrous, owner of Fortex Insurance Group LLC (DBA Fortex Insure, fortexinsu
 - `du()` now parses YYYY-MM-DD as local date (was a day early in Texas).
 - Premium rule everywhere (Paul's decision): book size = annual premium of active policies (`annualPrem`: 6 month terms doubled). Book of Business also shows premium in force (current terms of active policies) under the total.
 
+## Phase 4 (in progress, Nov 26, 2026)
+- Website leads: Edge Function `lead-intake` (verify_jwt off, only accepts posts from fortexinsure.com) calls `public.intake_web_lead(p)` (service_role only). Creates a quote with source Website, status New Lead, due today. Dedupes same email/phone within 10 min, caps 30 per hour, honeypot fields ignored. Optional secrets: FORMSPREE_URL (forwards for the email alert), LEAD_THANKS_URL. Home shows "New web lead" items.
+- Reconciliation: Commissions page has Overview and Reconcile tabs (`reconRows`, `renderRecon`). Rule (Paul): flag Missing when no payment 60+ days after a term starts (only for months whose statements are loaded), Short or Overpaid when off by more than $5. Also lists statement lines with no policy match. Home item and policy page chip use the same rows. Lines load once per session (`loadAllLines`).
+- Activity timeline: Client 360 Activity tab (`loadC360Activity`, `renderC360Activity`) merges notes, quote stage history, commission payments and record changes from `public.client_activity(p_client_id)` (reads backups.record_history, app users only).
+- Documents: Client 360 Documents tab (`renderC360Docs`) stores Google Drive links on the client (`driveFiles` [{name,url,policyId,added}], `driveFolder`, both in extra). Only drive.google.com and docs.google.com links are accepted.
+- Helper login: waiting until Paul hires.
+
 ## Still open (later phases)
 - Remove the fortex_data mirror once nothing depends on it; drivers, activities, documents tables come with Phase 4 features.
 - No aggregator split or paid vs expected commission tracking (Phase 4).
@@ -80,5 +87,5 @@ Paul Tadrous, owner of Fortex Insurance Group LLC (DBA Fortex Insure, fortexinsu
 - Phase 1: Stabilize (done Nov 25, 2026)
 - Phase 2 (record tables and dashboard switch done and live Nov 25, 2026): New data model in Supabase (accounts, contacts, leads, quotes, policies, drivers, vehicles, properties, carriers, commissions, tasks, activities, documents) and migration of existing data
 - Phase 3 (done and live Nov 26, 2026): Redesigned UI (Home, Client 360, Leads pipeline, Policy detail, Commissions, phone bottom bar)
-- Phase 4: Leads intake, commission reconciliation, documents and activity log, helper login with limited access
+- Phase 4 (in progress Nov 26, 2026): Leads intake, commission reconciliation, documents and activity log, helper login with limited access
 - Phase 5: Automations (renewal and follow-up emails, reminders, scheduled reports)
