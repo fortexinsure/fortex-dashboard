@@ -4,9 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fortex Insurance Group Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Segoe UI',Arial,sans-serif;background:#eef0f4;color:#1a1a1a;min-height:100vh;font-size:15px;}
+body{font-family:Inter,'Segoe UI',Arial,sans-serif;background:#eef0f4;color:#1a1a1a;min-height:100vh;font-size:15px;}
 .app{display:grid;grid-template-columns:260px 1fr;min-height:100vh;}
 /* ── Sidebar collapse ── */
 .sidebar{transition:transform 0.28s ease,width 0.28s ease;}
@@ -321,6 +323,97 @@ tr:hover td{background:#f4f6fa;}
 .term-badge{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:5px;vertical-align:middle;}
 .term-6mo{background:#fff3cd;color:#856404;}
 .term-12mo{background:#d1ecf1;color:#0c5460;}
+
+/* ===== Phase 3: Home + Client 360 ===== */
+.p3-wrap{max-width:1280px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:20px;}
+.p3-card{background:#fff;border:1px solid #e0e4ed;border-radius:14px;}
+.p3-lbl{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5b6475;}
+.p3-h2{margin:0;font-size:17px;font-weight:700;color:#0c1e3a;}
+.p3-chip{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;}
+.chip-red{background:#fde8e8;color:#9b2c2c}.chip-amber{background:#fff2d6;color:#7a4a00}.chip-blue{background:#e4ecf8;color:#1a4a8a}
+.chip-purple{background:#efe7fb;color:#5b2a9e}.chip-green{background:#e6f3ea;color:#1a6b3a}.chip-gray{background:#eef0f4;color:#0c1e3a}
+.p3-btn{font:inherit;font-size:13px;font-weight:600;border-radius:9px;padding:8px 14px;cursor:pointer;border:1px solid #d0d5dd;background:#fff;color:#0c1e3a;min-height:36px;display:inline-flex;align-items:center;justify-content:center;gap:7px;text-decoration:none;white-space:nowrap;}
+.p3-btn:hover{border-color:#0c1e3a;}
+.p3-btn.dark{background:#0c1e3a;color:#fff;border-color:#0c1e3a;}
+.p3-btn.gold{background:#f0c060;color:#0c1e3a;border-color:#f0c060;}
+.p3-btn.sm{min-height:30px;padding:4px 10px;font-size:12px;}
+.p3-btn[aria-disabled="true"]{opacity:.45;pointer-events:none;}
+.p3-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;}
+.p3-kpi{padding:18px 20px;cursor:pointer;}
+.p3-kpi .v{font-size:28px;font-weight:800;color:#0c1e3a;margin-top:8px;}
+.p3-kpi .s{font-size:13px;color:#5b6475;margin-top:4px;}
+.p3-cols{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start;}
+.p3-main{flex:2 1 520px;min-width:0;display:flex;flex-direction:column;gap:20px;}
+.p3-side{flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:20px;}
+.p3-row{display:flex;align-items:center;gap:14px;padding:14px 20px;border-top:1px solid #eef0f4;}
+.p3-row .t{flex:1;min-width:0;}
+.p3-row .t strong{display:block;font-weight:600;cursor:pointer;}
+.p3-row .t span{font-size:13px;color:#5b6475;}
+.p3-filters{display:flex;gap:6px;flex-wrap:wrap;}
+.p3-filters button{font:inherit;font-size:12px;font-weight:600;border-radius:8px;padding:5px 11px;border:1px solid #d0d5dd;background:#fff;color:#0c1e3a;cursor:pointer;min-height:32px;}
+.p3-filters button.on{background:#0c1e3a;color:#fff;border-color:#0c1e3a;}
+.p3-cal{display:flex;gap:12px;align-items:center;cursor:pointer;}
+.p3-date{width:46px;flex:none;text-align:center;border-radius:9px;padding:6px 0;font-weight:800;line-height:1.1;font-size:13px;}
+.p3-bar{height:8px;border-radius:4px;background:#eef0f4;margin-top:5px;overflow:hidden;}
+.p3-bar>div{height:8px;border-radius:4px;}
+.p3-pipe{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;text-align:center;font-size:12px;color:#5b6475;}
+.p3-pipe>div{background:#f4f5f8;border-radius:9px;padding:10px 4px;cursor:pointer;}
+.p3-pipe b{display:block;font-size:20px;font-weight:800;color:#0c1e3a;}
+.p3-search{position:relative;flex:1 1 320px;}
+.p3-search label{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #d8dbe3;border-radius:11px;padding:0 14px;min-height:44px;}
+.p3-search input{border:0;outline:0;font:inherit;font-size:14px;flex:1;min-width:0;background:transparent;}
+.p3-results{position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #d8dbe3;border-radius:12px;box-shadow:0 10px 28px rgba(12,30,58,.16);z-index:80;max-height:360px;overflow-y:auto;padding:4px;display:none;}
+.p3-results.open{display:block;}
+.p3-results button{display:flex;width:100%;justify-content:space-between;gap:10px;text-align:left;font:inherit;font-size:14px;padding:9px 10px;border:0;background:none;border-radius:8px;cursor:pointer;color:#1a1a1a;}
+.p3-results button:hover,.p3-results button.act{background:#eef2f8;}
+.p3-results small{color:#5b6475;font-size:12px;}
+.p3-kv{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid #eef0f4;font-size:14px;}
+.p3-kv span:first-child{color:#5b6475;}
+.p3-kv span:last-child{text-align:right;word-break:break-word;}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+/* Client 360 */
+#page-client .profile-tab-content{display:none;padding:4px 0 0;}
+#page-client .profile-tab-content.active{display:block;}
+.c360-tabs{display:flex;gap:22px;border-bottom:1px solid #d8dbe3;overflow-x:auto;}
+.c360-tabs .profile-tab{font-size:14px;font-weight:600;padding:12px 2px;border:0;border-bottom:3px solid transparent;background:none;color:#5b6475;cursor:pointer;white-space:nowrap;}
+.c360-tabs .profile-tab.active{color:#0c1e3a;border-bottom-color:#f0c060;}
+.c360-head{padding:22px 24px;display:flex;flex-wrap:wrap;gap:18px;align-items:center;}
+.c360-av{width:64px;height:64px;border-radius:50%;background:#f0c060;color:#0c1e3a;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex:none;}
+.c360-stats{flex-basis:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;border-top:1px solid #eef0f4;padding-top:16px;}
+.c360-stats .v{font-size:22px;font-weight:800;color:#0c1e3a;margin-top:4px;}
+.c360-pol{padding:16px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;}
+.c360-gaps{border:1px dashed #d79a1e;background:#fffaf0;border-radius:14px;padding:14px 18px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:14px;}
+/* Bottom bar (phones) */
+.p3-tabbar{display:none;}
+.p3-sheet{display:none;position:fixed;inset:0;z-index:420;background:rgba(0,0,0,.45);align-items:flex-end;}
+.p3-sheet.open{display:flex;}
+.p3-sheet-box{background:#fff;width:100%;border-radius:18px 18px 0 0;padding:18px 16px 28px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.p3-sheet-box .p3-btn{min-height:52px;font-size:15px;}
+@media(max-width:1000px){.p3-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}.c360-stats{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .app .sidebar.open{display:flex;}
+  .hamburger-btn{display:none !important;}
+  .page-header{padding-left:16px !important;padding-right:16px;}
+  .page-body{padding:16px 14px 100px;}
+  .p3-tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:250;background:#fff;border-top:1px solid #d8dbe3;align-items:center;padding:6px 8px calc(10px + env(safe-area-inset-bottom));}
+  .p3-tabbar>a,.p3-tabbar>button.tb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font:inherit;font-size:11px;font-weight:600;color:#5b6475;text-decoration:none;padding:6px 0;min-height:44px;background:none;border:0;cursor:pointer;}
+  .p3-tabbar>.on{color:#0c1e3a;}
+  .p3-tabbar .plus{width:54px;height:54px;border-radius:50%;border:0;background:#f0c060;color:#0c1e3a;font-size:28px;font-weight:700;margin:0 6px;flex:none;cursor:pointer;}
+  .p3-kpi{padding:14px;}.p3-kpi .v{font-size:21px;}
+  .p3-row{flex-wrap:wrap;padding:14px 16px;gap:8px 10px;}
+  .p3-row .p3-chip{order:1;}
+  .p3-row .t{order:2;flex:1 1 100%;}
+  .p3-row .p3-btn{order:3;flex:1 1 100%;min-height:44px;}
+  .app .sidebar{z-index:320;overflow-y:auto;}
+  .sidebar-overlay{z-index:310;}
+  .p3-quick{display:none !important;}
+  .c360-head{padding:18px 16px;}
+  .c360-actions{width:100%;display:grid !important;grid-template-columns:repeat(3,minmax(0,1fr));}
+  .c360-actions .p3-btn{min-height:44px;}
+  .c360-actions .addbtn{display:none !important;}
+  .p3-greet h1{font-size:23px !important;}
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
@@ -355,6 +448,22 @@ tr:hover td{background:#f4f6fa;}
   </div>
 </div>
 <button class="hamburger-btn" id="hamburger-btn" onclick="toggleSidebar()" title="Toggle menu">&#9776;</button>
+<nav class="p3-tabbar" id="p3-tabbar" aria-label="Main">
+  <a href="#" data-pg="dashboard" onclick="navTo('dashboard');return false;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Home</a>
+  <a href="#" data-pg="clients" onclick="navTo('clients');return false;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/></svg>Clients</a>
+  <button type="button" class="plus" aria-label="Add new" onclick="openSheet()">+</button>
+  <a href="#" data-pg="followups" onclick="navTo('followups');return false;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>Tasks</a>
+  <button type="button" class="tb" onclick="toggleSidebar()"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>More</button>
+</nav>
+<div class="p3-sheet" id="p3-sheet" onclick="if(event.target===this)closeSheet()">
+  <div class="p3-sheet-box" role="dialog" aria-label="Add new">
+    <button class="p3-btn dark" type="button" onclick="closeSheet();openModal('client-modal')">New client</button>
+    <button class="p3-btn" type="button" onclick="closeSheet();openModal('policy-modal')">New policy</button>
+    <button class="p3-btn" type="button" onclick="closeSheet();openModal('quote-modal')">New quote</button>
+    <button class="p3-btn" type="button" onclick="closeSheet();openModal('task-modal')">New task</button>
+    <button class="p3-btn" type="button" style="grid-column:span 2;" onclick="closeSheet()">Cancel</button>
+  </div>
+</div>
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 <div class="app" id="app">
 <div class="sidebar">
@@ -364,19 +473,19 @@ tr:hover td{background:#f4f6fa;}
   </div>
   <div class="nav-section">
     <div class="nav-label">Overview</div>
-    <div class="nav-item active" onclick="nav('dashboard',this)"><span class="nav-icon">◈</span>Dashboard</div>
+    <div class="nav-item active" onclick="nav('dashboard',this)"><span class="nav-icon">◈</span>Home</div>
   </div>
   <div class="nav-section">
     <div class="nav-label">Management</div>
     <div class="nav-item" onclick="nav('clients',this)"><span class="nav-icon">◉</span>Clients</div>
     <div class="nav-item" onclick="nav('policies',this)"><span class="nav-icon">◧</span>Policies</div>
-    <div class="nav-item" onclick="nav('renewals',this)"><span class="nav-icon">◷</span>Renewals</div>
+    <div class="nav-item" onclick="nav('renewals',this)"><span class="nav-icon">◷</span>Renewals<span id="nav-ren-count" class="p3-chip" style="margin-left:auto;background:#c43a3a;color:#fff;display:none;"></span></div>
     <div class="nav-item" onclick="nav('reshop',this)"><span class="nav-icon">↺</span>Re-Shop Queue</div>
-    <div class="nav-item" onclick="nav('quotes',this)"><span class="nav-icon">◎</span>Quote Pipeline</div>
+    <div class="nav-item" onclick="nav('quotes',this)"><span class="nav-icon">◎</span>Leads and Quotes</div>
   </div>
   <div class="nav-section">
     <div class="nav-label">Pipeline</div>
-    <div class="nav-item" onclick="nav('followups',this)"><span class="nav-icon">◌</span>Follow-Ups</div>
+    <div class="nav-item" onclick="nav('followups',this)"><span class="nav-icon">◌</span>Tasks</div>
   </div>
   <div class="nav-section">
     <div class="nav-label">Financials</div>
@@ -411,26 +520,78 @@ tr:hover td{background:#f4f6fa;}
 
 <!-- DASHBOARD -->
 <div class="page active" id="page-dashboard">
-  <div class="page-header">
-    <div class="page-header-left">
-      <h2>Fortex Insurance Group Dashboard</h2>
-      <p id="dash-date">Loading...</p>
-    </div>
-    <button class="btn btn-green" onclick="openDigestModal()" style="gap:8px;">
-      ✉ Daily Digest
-    </button>
-  </div>
   <div class="page-body">
-    <div class="metrics" id="dash-metrics"></div>
-    <div class="dash-grid">
-      <div class="section-card"><div class="section-card-header"><h3>🔴 Overdue &amp; Urgent Renewals (≤30 days)</h3></div><div id="dash-urgent-list"></div></div>
-      <div class="section-card"><div class="section-card-header"><h3>📋 Open Follow-Up Tasks</h3></div><div id="dash-tasks-list"></div></div>
+   <div class="p3-wrap">
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+      <div class="p3-search">
+        <label><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5b6475" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5"/></svg>
+        <span class="sr-only">Search</span><input id="p3-search" type="search" autocomplete="off" placeholder="Search clients, policy numbers, phones, VINs" oninput="p3Search()" onkeydown="p3SearchKey(event)" onfocus="p3Search()"></label>
+        <div class="p3-results" id="p3-results" role="listbox"></div>
+      </div>
+      <div class="p3-quick" style="display:flex;flex-wrap:wrap;gap:8px;">
+        <button class="p3-btn dark" type="button" onclick="openModal('client-modal')">+ New client</button>
+        <button class="p3-btn" type="button" onclick="openModal('policy-modal')">+ Policy</button>
+        <button class="p3-btn" type="button" onclick="openModal('quote-modal')">+ Quote</button>
+        <button class="p3-btn" type="button" style="color:#1a6b3a;border-color:#a9d3b8;" onclick="openDigestModal()">Daily digest</button>
+      </div>
     </div>
-    <div class="dash-grid" style="margin-top:18px;">
-      <div class="section-card"><div class="section-card-header"><h3>🟡 Renewals 31–60 Days Out</h3></div><div id="dash-soon-list"></div></div>
-      <div class="section-card"><div class="section-card-header"><h3>💰 Commission This Month</h3></div><div id="dash-comm-list"></div></div>
-      <div class="section-card"><div class="section-card-header"><h3>⬡ Premium by Carrier (Top 5)</h3><a href="#" onclick="navTo('carriers');return false;" style="font-size:12px;color:#0c1e3a;font-weight:600;">View All →</a></div><div id="dash-carrier-list"></div></div>
+    <div class="p3-greet"><h1 id="p3-greeting" style="margin:0;font-size:28px;font-weight:800;color:#0c1e3a;">Welcome back</h1><p id="dash-date" style="margin:4px 0 0;color:#5b6475;font-size:14px;">Loading...</p></div>
+    <div class="p3-kpis" id="dash-metrics"></div>
+    <div class="p3-cols">
+      <section class="p3-card p3-main" style="gap:0;overflow:hidden;" aria-labelledby="p3-today-h">
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:16px 20px;">
+          <h2 class="p3-h2" id="p3-today-h">Needs you today</h2>
+          <div class="p3-filters" id="p3-filters"></div>
+        </div>
+        <div id="p3-today"></div>
+      </section>
+      <div class="p3-side">
+        <section class="p3-card" style="padding:18px 20px;" aria-labelledby="p3-month-h"><h2 class="p3-h2" id="p3-month-h" style="margin-bottom:14px;">This month so far</h2><div id="p3-month" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;"></div></section>
+        <section class="p3-card" style="padding:18px 20px;" aria-labelledby="p3-cal-h"><h2 class="p3-h2" id="p3-cal-h" style="margin-bottom:14px;">Renewal calendar</h2><div id="p3-cal" style="display:flex;flex-direction:column;gap:12px;font-size:14px;"></div><a href="#" onclick="navTo('renewals');return false;" style="display:inline-block;margin-top:14px;font-size:13px;font-weight:600;color:#0c1e3a;">See all renewals</a></section>
+        <section class="p3-card" style="padding:18px 20px;" aria-labelledby="p3-comm-h"><h2 class="p3-h2" id="p3-comm-h">Commission received by channel</h2><p id="p3-comm-sub" style="margin:4px 0 14px;font-size:13px;color:#5b6475;"></p><div id="p3-comm" style="display:flex;flex-direction:column;gap:12px;font-size:13px;"></div></section>
+        <section class="p3-card" style="padding:18px 20px;" aria-labelledby="p3-pipe-h"><h2 class="p3-h2" id="p3-pipe-h" style="margin-bottom:14px;">Lead pipeline</h2><div class="p3-pipe" id="p3-pipe"></div></section>
+      </div>
     </div>
+   </div>
+  </div>
+</div>
+
+<!-- CLIENT 360 -->
+<div class="page" id="page-client">
+  <div class="page-body">
+   <div class="p3-wrap">
+    <a href="#" onclick="closeProfile();return false;" style="font-size:13px;font-weight:600;color:#0c1e3a;text-decoration:none;">&#8592; <span id="c360-back">Back</span></a>
+    <section class="p3-card c360-head">
+      <div class="c360-av" id="c360-av">?</div>
+      <div style="flex:1 1 260px;min-width:0;">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;"><h1 id="c360-name" style="margin:0;font-size:26px;font-weight:800;color:#0c1e3a;"></h1><span id="c360-chips" style="display:flex;gap:6px;flex-wrap:wrap;"></span></div>
+        <div id="c360-line" style="margin-top:6px;font-size:14px;color:#5b6475;"></div>
+      </div>
+      <div class="c360-actions" style="display:flex;flex-wrap:wrap;gap:8px;">
+        <a class="p3-btn" id="c360-call" href="#">Call</a>
+        <a class="p3-btn" id="c360-text" href="#">Text</a>
+        <a class="p3-btn" id="c360-email" href="#">Email</a>
+        <button class="p3-btn dark addbtn" type="button" onclick="openPolicyModalForClient()">+ Policy</button>
+      </div>
+      <div class="c360-stats" id="c360-stats"></div>
+    </section>
+    <div class="c360-tabs" role="tablist" aria-label="Client sections">
+      <button type="button" role="tab" class="profile-tab active" onclick="switchProfileTab('overview',this)">Overview</button>
+      <button type="button" role="tab" class="profile-tab" onclick="switchProfileTab('policies',this)">Policies</button>
+      <button type="button" role="tab" class="profile-tab" onclick="switchProfileTab('vehicles',this)">Vehicles</button>
+      <button type="button" role="tab" class="profile-tab" onclick="switchProfileTab('driver',this)">Drivers</button>
+      <button type="button" role="tab" class="profile-tab" onclick="switchProfileTab('property',this)">Properties</button>
+      <button type="button" role="tab" class="profile-tab" onclick="switchProfileTab('notes',this)">Activity</button>
+      <button type="button" role="tab" class="profile-tab" onclick="switchProfileTab('details',this)">Details</button>
+      <button type="button" role="tab" class="profile-tab" onclick="switchProfileTab('documents',this)">Documents</button>
+      <button type="button" role="tab" class="profile-tab" onclick="switchProfileTab('commission',this);loadC360Commission()">Commission</button>
+    </div>
+    <div id="c360-body">
+      <div class="profile-tab-content active" id="ptab-overview"></div>
+      <div class="profile-tab-content" id="ptab-documents"></div>
+      <div class="profile-tab-content" id="ptab-commission"></div>
+    </div>
+   </div>
   </div>
 </div>
 
@@ -760,14 +921,7 @@ tr:hover td{background:#f4f6fa;}
     <div class="profile-header-info"><h2 id="prof-name">—</h2><p id="prof-sub">—</p></div>
     <button class="profile-close" onclick="closeProfile()">×</button>
   </div>
-  <div class="profile-tabs">
-    <div class="profile-tab active" onclick="switchProfileTab('details',this)">Details</div>
-    <div class="profile-tab" onclick="switchProfileTab('policies',this)">Policies</div>
-    <div class="profile-tab" onclick="switchProfileTab('vehicles',this)">Vehicles</div>
-    <div class="profile-tab" onclick="switchProfileTab('property',this)">Properties</div>
-    <div class="profile-tab" onclick="switchProfileTab('notes',this)">Notes</div>
-    <div class="profile-tab" onclick="switchProfileTab('driver',this)">Driver / ID</div>
-  </div>
+
   <div class="profile-body">
 
     <!-- DETAILS -->
@@ -1579,7 +1733,7 @@ function appConfirm(message,opts={}){return appDialog({message,...opts});}
 function appAlert(message,opts={}){return appDialog({title:opts.title||'Fortex Dashboard',message,okText:'OK',showCancel:false});}
 function esc(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
 function cn(id){const c=data.clients.find(x=>x.id===id);if(!c)return 'Unknown';return c.clientType==='commercial'&&c.bizName?c.bizName:c.first+' '+c.last;}
-function du(ds){if(!ds)return 9999;const t=new Date();t.setHours(0,0,0,0);const d=new Date(ds);d.setHours(0,0,0,0);return Math.round((d-t)/86400000);}
+function du(ds){if(!ds)return 9999;const t=new Date();t.setHours(0,0,0,0);const d=/^\d{4}-\d{2}-\d{2}$/.test(String(ds))?new Date(ds+'T00:00:00'):new Date(ds);if(isNaN(d))return 9999;d.setHours(0,0,0,0);return Math.round((d-t)/86400000);}
 function rb(days){if(days<0)return`<span class="badge badge-red">${-days}d overdue</span>`;if(days<=30)return`<span class="badge badge-red">${days}d</span>`;if(days<=60)return`<span class="badge badge-amber">${days}d</span>`;return`<span class="badge badge-green">${days}d</span>`;}
 function fmt(n){return'$'+Number(n||0).toLocaleString();}
 function fmtc(n){return'$'+Number(n||0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
@@ -1639,6 +1793,7 @@ async function loadCarrierRates(){
   if(!r.error){carrierRates=r.data||[];ratesLoaded=true;}
   if(!cr.error){carriersList=cr.data||[];carriersLoaded=true;}
   if(!st.error)commStatements=st.data||[];
+  if(document.getElementById('page-dashboard').classList.contains('active'))renderDashboard();
   fillCarrierList();
 }
 const CARRIER_ALIASES={'orion180':'orion180','orion':'orion180','nationwide':'nationwide','allied':'nationwide','foremost':'foremostsignature','met':'foremostsignature','metlife':'foremostsignature','natgen':'nationalgeneral','nationalgeneralpremier':'nationalgeneral','hartford':'thehartford','hoa':'homeownersofamerica','coalition':'attune','coalitioninc':'attune'};
@@ -1926,7 +2081,14 @@ function nav(page,el){
   const pg=document.getElementById('page-'+page);pg.classList.add('active');
   const pb=pg.querySelector('.page-body');if(pb)pb.scrollTop=0;
   ({dashboard:renderDashboard,clients:renderClients,policies:()=>{renderPolicies();populateCarrierFilter();},renewals:()=>renderRenewals(30),reshop:renderReshop,quotes:renderQuotes,followups:renderPipeline,commissions:renderCommissions,carriers:renderCarriers,expenses:renderExpenses,reports:renderReports,security:renderSecurity,rates:renderRates})[page]?.();
+  if(page!=='client')lastPage=page;
+  updateTabbar(page);
+  if(window.innerWidth<=768)closeSidebar&&closeSidebar();
 }
+let lastPage='dashboard';
+function updateTabbar(page){document.querySelectorAll('#p3-tabbar [data-pg]').forEach(a=>a.classList.toggle('on',a.dataset.pg===page||(page==='client'&&a.dataset.pg==='clients')));}
+function openSheet(){document.getElementById('p3-sheet').classList.add('open');}
+function closeSheet(){document.getElementById('p3-sheet').classList.remove('open');}
 
 // ==================== DASHBOARD ====================
 function openOverdue(){navTo('renewals');const t=document.querySelector('#page-renewals .tab-overdue');if(t)switchRenewalTab(-1,t);}
@@ -1938,39 +2100,104 @@ function navTo(page){
 function refreshCurrentPage(){
   const active=document.querySelector('.page.active');if(!active)return;
   const id=active.id.replace('page-','');
-  ({dashboard:renderDashboard,clients:renderClients,policies:()=>{renderPolicies();populateCarrierFilter();},renewals:()=>renderRenewals(currentRenewalDays),reshop:renderReshop,quotes:renderQuotes,followups:renderPipeline,commissions:renderCommissions,carriers:renderCarriers,expenses:renderExpenses,reports:renderReports,security:renderSecurity,rates:renderRates})[id]?.();
+  ({dashboard:renderDashboard,client:refreshC360,clients:renderClients,policies:()=>{renderPolicies();populateCarrierFilter();},renewals:()=>renderRenewals(currentRenewalDays),reshop:renderReshop,quotes:renderQuotes,followups:renderPipeline,commissions:renderCommissions,carriers:renderCarriers,expenses:renderExpenses,reports:renderReports,security:renderSecurity,rates:renderRates})[id]?.();
 }
 
 let currentRenewalDays=30;
 
-function renderDashboard(){
-  document.getElementById('dash-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  const overdue=overduePolicies();
-  const urgent=data.policies.filter(p=>isLive(p)&&du(p.renewal)>=0&&du(p.renewal)<=30);
-  const soon=data.policies.filter(p=>isLive(p)&&du(p.renewal)>30&&du(p.renewal)<=60);
-  const openTasks=data.tasks.filter(t=>t.status!=='Done');
-  const totalComm=data.policies.filter(isLive).reduce((s,p)=>s+commAmtAnnual(p),0);
-  const monthlyComm=Math.round(totalComm/12);
-  document.getElementById('dash-metrics').innerHTML=`
-    <div class="metric-card metric-urgent${overdue.length?' metric-alarm':''}" style="cursor:pointer;" onclick="openOverdue()" title="Policies past their renewal date"><div class="metric-label">Overdue Renewals</div><div class="metric-value">${overdue.length}</div><div class="metric-sub">${overdue.length?'Past renewal date, update now →':'All caught up'}</div></div>
-    <div class="metric-card metric-urgent" style="cursor:pointer;" onclick="navTo('renewals')" title="Click to view all renewals"><div class="metric-label">Urgent Renewals</div><div class="metric-value">${urgent.length}</div><div class="metric-sub">Expiring in ≤30 days →</div></div>
-    <div class="metric-card metric-warn" style="cursor:pointer;" onclick="navTo('renewals')" title="Click to view renewals"><div class="metric-label">Renewals 31–60 Days</div><div class="metric-value">${soon.length}</div><div class="metric-sub">Start quoting now →</div></div>
-    <div class="metric-card" style="cursor:pointer;" onclick="navTo('clients')" title="Click to view clients"><div class="metric-label">Total Clients</div><div class="metric-value">${data.clients.length}</div><div class="metric-sub">${data.policies.length} active policies →</div></div>
-    <div class="metric-card metric-gold" style="cursor:pointer;" onclick="navTo('commissions')" title="Click to view commissions"><div class="metric-label">Monthly Commission Est.</div><div class="metric-value" style="font-size:22px;">${fmtc(monthlyComm)}</div><div class="metric-sub">${fmtc(totalComm)}/yr total book →</div></div>`;
-  const ul=document.getElementById('dash-urgent-list');
-  const urgentAll=[...overdue,...urgent.sort((a,b)=>du(a.renewal)-du(b.renewal))];
-  ul.innerHTML=urgentAll.length===0?'<p class="empty-state">No urgent renewals. All clear!</p>':urgentAll.map(p=>`<div class="dash-row" style="cursor:pointer;" onclick="openProfile('${p.clientId}')" title="Open client profile"><span><strong>${esc(cn(p.clientId))}</strong> &nbsp;<span class="badge badge-navy" style="font-size:11px;">${esc(p.type)}</span></span><div style="display:flex;gap:8px;align-items:center;">${rb(du(p.renewal))}<span style="font-size:12px;color:#888;">${fd(p.renewal)}</span></div></div>`).join('');
-  const tl=document.getElementById('dash-tasks-list');
-  tl.innerHTML=!openTasks.length?'<p class="empty-state">No open tasks!</p>':openTasks.sort((a,b)=>du(a.due)-du(b.due)).slice(0,6).map(t=>`<div class="dash-row" style="cursor:pointer;" onclick="navTo('followups')" title="Open Follow-Up Pipeline"><span><strong>${esc(t.title)}</strong>${t.clientId?` <span style="font-size:12px;color:#888;">— ${esc(cn(t.clientId))}</span>`:''}</span><span class="badge ${t.priority==='High'?'badge-red':t.priority==='Medium'?'badge-amber':'badge-gray'}">${esc(t.priority)}</span></div>`).join('');
-  const sl=document.getElementById('dash-soon-list');
-  sl.innerHTML=!soon.length?'<p class="empty-state">No renewals in this range</p>':soon.map(p=>`<div class="dash-row" style="cursor:pointer;" onclick="openProfile('${p.clientId}')" title="Open client profile"><span><strong>${esc(cn(p.clientId))}</strong> — ${esc(p.type)}</span><div style="display:flex;gap:8px;align-items:center;">${rb(du(p.renewal))}<span style="font-size:13px;font-weight:600;color:#2a7a4a;">${fmtc(commAmtAnnual(p))}/yr</span></div></div>`).join('');
-  const cl=document.getElementById('dash-comm-list');
-  const top=[...data.policies].sort((a,b)=>commAmtAnnual(b)-commAmtAnnual(a)).slice(0,5);
-  cl.innerHTML=top.map(p=>`<div class="dash-row" style="cursor:pointer;" onclick="openProfile('${p.clientId}')" title="Open client profile"><span><strong>${esc(cn(p.clientId))}</strong> — ${esc(p.carrier)}</span><span style="font-weight:700;color:#2a7a4a;">${fmtc(commAmtAnnual(p))}/yr</span></div>`).join('');
-  // Premium by Carrier widget on dashboard
-  const dcl=document.getElementById('dash-carrier-list');
-  if(dcl){const byC={};data.policies.forEach(p=>{if(!byC[p.carrier])byC[p.carrier]={prem:0,count:0};byC[p.carrier].prem+=Number(p.premium||0);byC[p.carrier].count++;});const sorted=Object.entries(byC).sort((a,b)=>b[1].prem-a[1].prem).slice(0,5);dcl.innerHTML=sorted.length?sorted.map(([c,v])=>`<div class="dash-row" style="cursor:pointer;" onclick="navTo('carriers')" title="View all carriers"><span><strong>${c}</strong> <span style="font-size:12px;color:#888;">(${esc(v.count)} polic${v.count!==1?'ies':'y'})</span></span><span style="font-weight:700;color:#0c1e3a;">${fmtc(v.prem)}/yr</span></div>`).join(''):'<div class="empty-state" style="padding:24px;">No policies added yet.</div>';}
+const OWNER_FIRST_NAME='Paul';
+let p3Filter='all';
+function p3Esc(x){return esc(x==null?'':String(x));}
+function annualPrem(p){const t=Number(p.term)||12;return (Number(p.premium)||0)*(12/t);}
+function p3Days(n){return n===1?'1 day':n+' days';}
+function p3Items(){
+  const items=[];
+  overduePolicies().forEach(p=>items.push({kind:'ren',chip:'chip-red',label:p3Days(-du(p.renewal))+' overdue',title:cn(p.clientId),sub:`${p.type||'Policy'} · ${p.carrier||''} · ${fmtc(p.premium)}`,open:`openProfile('${p.clientId}')`,btn:'Mark renewed',act:`renewPolicy('${p.id}')`,sort:du(p.renewal)}));
+  data.policies.filter(p=>isLive(p)&&du(p.renewal)>=0&&du(p.renewal)<=30).forEach(p=>{const d=du(p.renewal);items.push({kind:'ren',chip:d<=14?'chip-red':'chip-amber',label:d===0?'Renews today':'Renews in '+p3Days(d),title:cn(p.clientId),sub:`${p.type||'Policy'} · ${p.carrier||''} · ${fmtc(p.premium)}`,open:`openProfile('${p.clientId}')`,btn:d<=14?'Renew':'Open',act:d<=14?`renewPolicy('${p.id}')`:`openProfile('${p.clientId}')`,sort:d});});
+  (data.tasks||[]).filter(t=>t.status!=='Done'&&t.due&&du(t.due)<=0).forEach(t=>{const d=du(t.due);items.push({kind:'task',chip:'chip-blue',label:d===0?'Task due today':'Task '+p3Days(-d)+' late',title:t.title,sub:(t.clientId?cn(t.clientId)+' · ':'')+(t.cat||'Task'),open:t.clientId?`openProfile('${t.clientId}')`:`navTo('followups')`,btn:'Done',act:`p3TaskDone('${t.id}')`,sort:d});});
+  (data.quotes||[]).filter(q=>!['Closed Won','Closed Lost'].includes(q.status)&&q.due&&du(q.due)<=0).forEach(q=>items.push({kind:'lead',chip:'chip-blue',label:'Quote follow-up',title:q.name,sub:`${q.lob||'Quote'} · ${q.status||''}`,open:`navTo('quotes')`,btn:'Open',act:`navTo('quotes')`,sort:du(q.due)}));
+  const noRate=data.policies.filter(p=>isLive(p)&&!Number(p.commRate)&&!Number(p.commRateRenewal));
+  if(noRate.length)items.push({kind:'other',chip:'chip-purple',label:'Missing info',title:noRate.length===1?'1 policy has no commission rate':noRate.length+' policies have no commission rate',sub:'They show $0 commission until a rate is added',open:`editPolicy('${noRate[0].id}')`,btn:'Fix',act:`editPolicy('${noRate[0].id}')`,sort:50});
+  if(ratesLoaded&&commStatements.length){
+    const now=new Date();if(now.getDate()>=15){const pm=new Date(now.getFullYear(),now.getMonth()-1,1);const key=pm.getFullYear()+'-'+String(pm.getMonth()+1).padStart(2,'0');
+      const srcs=[...new Set(commStatements.map(x=>x.source))];const missing=srcs.filter(src=>!commStatements.some(x=>x.source===src&&x.statement_month===key));
+      if(missing.length)items.push({kind:'other',chip:'chip-purple',label:'Statement due',title:pm.toLocaleDateString('en-US',{month:'long'})+' statements not loaded yet',sub:missing.join(', '),open:`navTo('commissions')`,btn:'Load',act:`p3StatementHelp()`,sort:60});}
+  }
+  return items.sort((x,y)=>x.sort-y.sort);
 }
+function p3TaskDone(id){const t=data.tasks.find(x=>x.id===id);if(!t)return;t.status='Done';save();showToast('Task marked done');}
+function p3StatementHelp(){appAlert('Save the new statement files in your AMS Commission Samples folder, then ask Claude in this project to load them. It checks for duplicates and links each line to its policy.');}
+function p3SetFilter(f){p3Filter=f;renderDashboard();}
+function renderDashboard(){
+  const now=new Date();const h=now.getHours();
+  const email=(window._p3UserEmail||'').toLowerCase();
+  const name=email.startsWith('paul')?', '+OWNER_FIRST_NAME:'';
+  document.getElementById('p3-greeting').textContent=(h<12?'Good morning':h<17?'Good afternoon':'Good evening')+name;
+  const items=p3Items();
+  document.getElementById('dash-date').textContent=now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+' · '+(items.length?(items.length===1?'1 thing needs you today':items.length+' things need you today'):'nothing urgent today');
+  const live=data.policies.filter(isLive);
+  const prem=live.reduce((a,p)=>a+annualPrem(p),0);
+  const clientsWithPol=new Set(live.map(p=>p.clientId)).size;
+  const yr=String(now.getFullYear());
+  const recv=commStatements.filter(x=>String(x.statement_month||'').startsWith(yr));
+  const recvTot=recv.reduce((a,x)=>a+Number(x.total_paid||0),0);
+  const mN=m=>new Date(m+'-01T00:00:00').toLocaleDateString('en-US',{month:'short'});
+  const ms=[...new Set(recv.map(x=>x.statement_month))].sort();
+  const ren60=live.filter(p=>du(p.renewal)>=0&&du(p.renewal)<=60);const ren30=ren60.filter(p=>du(p.renewal)<=30).length;const od=overduePolicies().length;
+  const openQ=(data.quotes||[]).filter(q=>!['Closed Won','Closed Lost'].includes(q.status));
+  const prospects=data.clients.filter(c=>c.tag==='Prospect').length;
+  document.getElementById('dash-metrics').innerHTML=`
+    <div class="p3-card p3-kpi" role="button" tabindex="0" onclick="navTo('carriers')"><div class="p3-lbl">Premium on the books</div><div class="v">${fmtc(prem)}</div><div class="s">${live.length} active policies · ${clientsWithPol} clients</div></div>
+    <div class="p3-card p3-kpi" role="button" tabindex="0" onclick="navTo('commissions')"><div class="p3-lbl">Commission received ${yr}</div><div class="v" style="color:#1a6b3a;">${ratesLoaded?fmtc(recvTot):'...'}</div><div class="s">${ms.length?mN(ms[0])+' to '+mN(ms[ms.length-1])+' statements':'From your statements'}</div></div>
+    <div class="p3-card p3-kpi${od?' metric-alarm':''}" role="button" tabindex="0" onclick="${od?'openOverdue()':"navTo('renewals')"}"><div class="p3-lbl">Renewals next 60 days</div><div class="v" style="color:#a15c00;">${ren60.length}</div><div class="s">${ren30} inside 30 days${od?` · <strong style="color:#9b2c2c;">${od} overdue</strong>`:''}</div></div>
+    <div class="p3-card p3-kpi" role="button" tabindex="0" onclick="navTo('quotes')"><div class="p3-lbl">Open leads</div><div class="v">${openQ.length+prospects}</div><div class="s">${openQ.length} quotes · ${prospects} prospects</div></div>`;
+  const nav=document.getElementById('nav-ren-count');if(nav){const n=od+ren30;nav.textContent=n;nav.style.display=n?'':'none';}
+  const groups=[['all','All'],['ren','Renewals'],['task','Tasks'],['lead','Leads'],['other','Other']];
+  const counts={all:items.length};items.forEach(x=>counts[x.kind]=(counts[x.kind]||0)+1);
+  document.getElementById('p3-filters').innerHTML=groups.filter(([k])=>k==='all'||counts[k]).map(([k,l])=>`<button type="button" class="${p3Filter===k?'on':''}" onclick="p3SetFilter('${k}')">${l}${counts[k]?' '+counts[k]:''}</button>`).join('');
+  const shown=items.filter(x=>p3Filter==='all'||x.kind===p3Filter);
+  document.getElementById('p3-today').innerHTML=shown.length?shown.map(x=>`<div class="p3-row"><span class="p3-chip ${x.chip}">${p3Esc(x.label)}</span><div class="t"><strong onclick="${x.open}">${p3Esc(x.title)}</strong><span>${p3Esc(x.sub)}</span></div><button class="p3-btn" type="button" onclick="${x.act}">${x.btn}</button></div>`).join(''):'<p class="empty-state" style="padding:32px;">You are all caught up.</p>';
+  // this month
+  const ym=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const nb=data.policies.filter(p=>String(p.effective||'').startsWith(ym)&&(p.commType||'New Business')!=='Renewal');
+  const nbPrem=nb.reduce((a,p)=>a+(Number(p.premium)||0),0);
+  const nbComm=nb.reduce((a,p)=>a+commAmt(p)+bonusAmt(p),0);
+  const stat=(l,v,c)=>`<div><div class="p3-lbl">${l}</div><div style="font-size:22px;font-weight:800;color:${c||'#0c1e3a'};margin-top:4px;">${v}</div></div>`;
+  document.getElementById('p3-month').innerHTML=stat('New policies',nb.length)+stat('Premium written',fmtc(nbPrem))+stat('Commission expected',fmtc(nbComm),'#1a6b3a')+stat('Open quotes',openQ.length);
+  // calendar
+  const cal=[...overduePolicies(),...live.filter(p=>du(p.renewal)>=0&&du(p.renewal)<=60).sort((x,y)=>du(x.renewal)-du(y.renewal))].slice(0,6);
+  document.getElementById('p3-cal').innerHTML=cal.length?cal.map(p=>{const d=du(p.renewal);const st=d<0||d<=14?'background:#fde8e8;color:#9b2c2c':d<=30?'background:#fff2d6;color:#7a4a00':'background:#eef0f4;color:#0c1e3a';const dt=new Date(p.renewal+'T00:00:00');return`<div class="p3-cal" onclick="openProfile('${p.clientId}')"><div class="p3-date" style="${st}">${dt.toLocaleDateString('en-US',{month:'short'}).toUpperCase()}<br>${dt.getDate()}</div><div><div style="font-weight:600;">${p3Esc(cn(p.clientId))}</div><div style="color:#5b6475;font-size:13px;">${p3Esc(p.type)} · ${fmtc(p.premium)}${d<0?' · overdue':''}</div></div></div>`;}).join(''):'<p style="color:#5b6475;font-size:14px;">No renewals in the next 60 days.</p>';
+  // commission by channel
+  const bySrc={};recv.forEach(x=>bySrc[x.source]=(bySrc[x.source]||0)+Number(x.total_paid||0));
+  const srcs=Object.entries(bySrc).sort((x,y)=>y[1]-x[1]);const mx=srcs.length?srcs[0][1]:1;const colors=['#0c1e3a','#1a4a8a','#d79a1e','#2a7a4a','#8a9bb5'];
+  document.getElementById('p3-comm-sub').textContent=ms.length?mN(ms[0])+' to '+mN(ms[ms.length-1])+' '+yr+' statements':'No statements loaded yet';
+  document.getElementById('p3-comm').innerHTML=srcs.map(([k,v],i)=>`<div><div style="display:flex;justify-content:space-between;"><span>${p3Esc(k)}</span><strong>${fmtc(v)}</strong></div><div class="p3-bar"><div style="width:${Math.max(3,Math.round(v/mx*100))}%;background:${colors[i%colors.length]};"></div></div></div>`).join('')||'<p style="color:#5b6475;">Loading...</p>';
+  // pipeline
+  const st=['New Lead','Quoted','Pending Docs','Closed Won'];const lab={'New Lead':'New','Quoted':'Quoted','Pending Docs':'Pending docs','Closed Won':'Won'};
+  document.getElementById('p3-pipe').innerHTML=st.map(x=>`<div onclick="navTo('quotes')" style="${x==='Closed Won'?'background:#e6f3ea;':''}"><b style="${x==='Closed Won'?'color:#1a6b3a;':''}">${(data.quotes||[]).filter(q=>q.status===x).length}</b>${lab[x]}</div>`).join('');
+}
+// ---- global search ----
+let p3Hits=[],p3Act=-1;
+function p3Search(){
+  const box=document.getElementById('p3-results');const q=(document.getElementById('p3-search').value||'').trim().toLowerCase();
+  if(q.length<2){box.classList.remove('open');p3Hits=[];return;}
+  const dig=q.replace(/\D/g,'');const norm=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');const qn=norm(q);
+  const hits=[];
+  data.clients.forEach(c=>{const hay=[cn(c.id),c.first+' '+c.last,c.bizName,c.email1,c.email2,c.city,c.ezlynxId].join(' ').toLowerCase();const ph=[c.phoneCell,c.phoneHome,c.phoneWork].join(' ').replace(/\D/g,'');
+    if(hay.includes(q)||(dig.length>=4&&ph.includes(dig)))hits.push({id:c.id,title:cn(c.id),sub:(c.tag||'Client')+(c.city?' · '+c.city:'')});});
+  data.policies.forEach(p=>{if(qn.length>=4&&norm(p.number).includes(qn))hits.push({id:p.clientId,title:cn(p.clientId),sub:'Policy '+(p.number||'')+' · '+(p.carrier||'')});});
+  (data.vehicles||[]).forEach(v=>{if(qn.length>=4&&norm(v.vin).includes(qn))hits.push({id:v.clientId,title:cn(v.clientId),sub:'VIN '+v.vin+' · '+[v.year,v.make,v.model].join(' ')});});
+  p3Hits=hits.slice(0,12);p3Act=p3Hits.length?0:-1;
+  box.innerHTML=p3Hits.length?p3Hits.map((x,i)=>`<button type="button" role="option" class="${i===p3Act?'act':''}" onmousedown="event.preventDefault()" onclick="p3Pick(${i})"><span>${p3Esc(x.title)}</span><small>${p3Esc(x.sub)}</small></button>`).join(''):'<div style="padding:12px;color:#5b6475;font-size:14px;">No matches</div>';
+  box.classList.add('open');
+}
+function p3Pick(i){const x=p3Hits[i];if(!x)return;document.getElementById('p3-results').classList.remove('open');document.getElementById('p3-search').value='';openProfile(x.id);}
+function p3SearchKey(e){const box=document.getElementById('p3-results');
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(!p3Hits.length)return;p3Act=(p3Act+(e.key==='ArrowDown'?1:-1)+p3Hits.length)%p3Hits.length;box.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('act',i===p3Act));}
+  else if(e.key==='Enter'){e.preventDefault();p3Pick(p3Act);}
+  else if(e.key==='Escape'){box.classList.remove('open');}}
+document.addEventListener('mousedown',e=>{const s=document.querySelector('.p3-search');if(s&&!s.contains(e.target))document.getElementById('p3-results')?.classList.remove('open');});
+document.addEventListener('keydown',e=>{if(e.key==='/'&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)&&document.getElementById('page-dashboard').classList.contains('active')){e.preventDefault();document.getElementById('p3-search').focus();}});
 
 // ==================== GMAIL DIGEST ====================
 function buildDigestText(){
@@ -2065,12 +2292,119 @@ function openProfile(clientId){
   document.getElementById('prof-name').textContent=c.clientType==='commercial'&&c.bizName?c.bizName+(c.dba?' ('+c.dba+')':''):c.first+' '+(c.middle?c.middle+' ':'')+c.last+(c.suffix?' '+c.suffix:'');
   document.getElementById('prof-sub').textContent='Client since '+fd(c.added)+(c.tag?' · '+c.tag:'');
   loadDetails(c);loadPoliciesTab(clientId);loadVehiclesTab(clientId);loadPropertiesTab(clientId);loadNotes(c);loadDriversTab(clientId);
-  document.querySelectorAll('.profile-tab').forEach((t,i)=>t.classList.toggle('active',i===0));
-  document.querySelectorAll('.profile-tab-content').forEach(t=>t.classList.remove('active'));
-  document.getElementById('ptab-details').classList.add('active');
   cancelProfileEdit();
-  document.getElementById('profile-overlay').classList.add('open');
-  document.getElementById('profile-panel').classList.add('open');
+  c360Mount();
+  document.querySelectorAll('#page-client .profile-tab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  document.querySelectorAll('#page-client .profile-tab-content').forEach(t=>t.classList.remove('active'));
+  document.getElementById('ptab-overview').classList.add('active');
+  const active=document.querySelector('.page.active');if(active&&active.id!=='page-client')lastPage=active.id.replace('page-','');
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  const pg=document.getElementById('page-client');pg.classList.add('active');
+  const pb=pg.querySelector('.page-body');if(pb)pb.scrollTop=0;
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.toggle('active',(x.getAttribute('onclick')||'').includes("'clients'")));
+  updateTabbar('client');
+  const backNames={dashboard:'Home',clients:'All clients',policies:'Policies',renewals:'Renewals',quotes:'Leads and Quotes',followups:'Tasks',commissions:'Commissions'};
+  document.getElementById('c360-back').textContent=backNames[lastPage]||'Back';
+  refreshC360();
+  document.getElementById('c360-commission-loaded')?.remove();
+}
+// The old slide-in panel's sections now live inside the Client 360 page
+let c360Mounted=false;
+function c360Mount(){
+  if(c360Mounted)return;c360Mounted=true;
+  const body=document.getElementById('c360-body');
+  document.querySelectorAll('#profile-panel .profile-tab-content').forEach(el=>{el.classList.remove('active');body.appendChild(el);});
+}
+function c360Gaps(c,pols){
+  const t=new Set(pols.filter(isLive).map(p=>p.type));const has=x=>[...t].some(y=>String(y).toLowerCase().includes(x));const g=[];
+  if(c.clientType==='commercial'){
+    if(!has('workers'))g.push('Workers Compensation');if(!has('cyber'))g.push('Cyber Liability');if(!has('umbrella'))g.push('Commercial Umbrella');if(!has('general liability')&&!has('bop')&&!has("business owner"))g.push('General Liability');
+  }else{
+    const auto=has('auto'),home=has('homeowner')||has('condo')||has('renters'),land=has('landlord');
+    if(auto&&!home&&!land)g.push('Homeowners or Renters');
+    if(home&&!auto)g.push('Personal Auto');
+    if((auto||home)&&!has('umbrella'))g.push('Personal Umbrella');
+    if(has('homeowner')&&!has('flood'))g.push('Flood');
+  }
+  return g;
+}
+function refreshC360(){
+  const c=data.clients.find(x=>x.id===activeClientId);if(!c){if(document.getElementById('page-client').classList.contains('active'))navTo('clients');return;}
+  const pols=data.policies.filter(p=>p.clientId===c.id);const live=pols.filter(isLive);
+  const isBiz=c.clientType==='commercial'&&c.bizName;
+  const name=isBiz?c.bizName+(c.dba?' ('+c.dba+')':''):[c.first,c.middle,c.last,c.suffix].filter(Boolean).join(' ');
+  document.getElementById('c360-name').textContent=name;
+  document.getElementById('c360-av').textContent=isBiz?(c.bizName[0]||'B').toUpperCase():(((c.first||'')[0]||'')+((c.last||'')[0]||'')).toUpperCase()||'?';
+  const since=c.added?fd(c.added):'';
+  document.getElementById('c360-chips').innerHTML=(c.tag?`<span class="p3-chip ${c.tag==='Prospect'?'chip-amber':'chip-green'}">${p3Esc(c.tag)}</span>`:'')+(isBiz?'<span class="p3-chip chip-blue">Business</span>':'')+(since&&since!=='—'?`<span class="p3-chip chip-gray">Client since ${p3Esc(since)}</span>`:'')+(c.dnc==='Yes'?'<span class="p3-chip chip-red">Do not contact</span>':'');
+  const phone=c.phoneCell||c.phoneHome||c.phoneWork||'';const tel=phone.replace(/[^\d+]/g,'');
+  document.getElementById('c360-line').textContent=[phone,c.email1,[c.city,c.state].filter(Boolean).join(', ')+(c.zip?' '+c.zip:'')].filter(x=>x&&x.trim()).join(' · ');
+  const setA=(id,href)=>{const a=document.getElementById(id);a.href=href||'#';a.setAttribute('aria-disabled',href?'false':'true');};
+  setA('c360-call',tel?'tel:'+tel:'');setA('c360-text',tel?'sms:'+tel:'');setA('c360-email',c.email1?'mailto:'+c.email1:'');
+  const prem=live.reduce((a,p)=>a+annualPrem(p),0);const comm=live.reduce((a,p)=>a+commAmtAnnual(p),0);
+  const next=live.filter(p=>p.renewal).sort((x,y)=>du(x.renewal)-du(y.renewal))[0];
+  let nextHtml='None';if(next){const d=du(next.renewal);nextHtml=`${new Date(next.renewal+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})} <span style="font-size:13px;font-weight:600;">(${d<0?p3Days(-d)+' overdue':p3Days(d)})</span>`;}
+  document.getElementById('c360-stats').innerHTML=`<div><div class="p3-lbl">Active policies</div><div class="v">${live.length}</div></div><div><div class="p3-lbl">Total premium</div><div class="v">${fmtc(prem)}/yr</div></div><div><div class="p3-lbl">Your commission</div><div class="v" style="color:#1a6b3a;">${fmtc(comm)}/yr</div></div><div><div class="p3-lbl">Next renewal</div><div class="v" style="color:${next&&du(next.renewal)<=30?'#9b2c2c':'#0c1e3a'};">${nextHtml}</div></div>`;
+  // overview
+  const polCard=p=>{const d=du(p.renewal);const st=!isLive(p)?`<span class="p3-chip chip-gray">${p3Esc(p.status)}</span>`:d<0?`<span class="p3-chip chip-red">${p3Days(-d)} overdue</span>`:d<=30?`<span class="p3-chip chip-red">Renews in ${p3Days(d)}</span>`:d<=60?`<span class="p3-chip chip-amber">Renews in ${p3Days(d)}</span>`:`<span class="p3-chip chip-green">Active to ${p3Esc(fd(p.renewal))}</span>`;
+    const t=Number(p.term)||12;const btn=isLive(p)&&d<=30?`<button class="p3-btn dark" type="button" onclick="renewPolicy('${p.id}')">Renew</button>`:'';
+    return`<div class="p3-card c360-pol"><div style="flex:2 1 260px;min-width:0;"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><strong style="font-size:15px;">${p3Esc(p.type||'Policy')}</strong>${st}</div><div style="font-size:13px;color:#5b6475;margin-top:4px;">${p3Esc(p.carrier||'')}${p.channel?' via '+p3Esc(p.channel):''}${p.number?' · '+p3Esc(p.number):''}${t===6?' · 6 month term':''}</div></div><div style="flex:1 1 120px;"><div class="p3-lbl">Premium</div><div style="font-weight:700;margin-top:3px;">${fmtc(p.premium)}${t===6?'/term':'/yr'}</div></div><div style="flex:1 1 120px;"><div class="p3-lbl">Commission</div><div style="font-weight:700;margin-top:3px;color:#1a6b3a;">${fmtc(commAmtAnnual(p))}/yr${bonusTag(p)}</div></div><div style="display:flex;gap:6px;">${btn}<button class="p3-btn" type="button" onclick="editPolicy('${p.id}')">Edit</button></div></div>`;};
+  const gaps=c360Gaps(c,pols);
+  const notes=Array.isArray(c.notes)?c.notes:[];
+  const openT=(data.tasks||[]).filter(t=>t.clientId===c.id&&t.status!=='Done');
+  const vehs=(data.vehicles||[]).filter(v=>v.clientId===c.id);const props=(data.properties||[]).filter(p=>p.clientId===c.id);const drv=Array.isArray(c.drivers)?c.drivers:[];
+  const kv=(k,v)=>v&&String(v).trim()?`<div class="p3-kv"><span>${k}</span><span>${p3Esc(v)}</span></div>`:'';
+  const addr=[c.addr1,c.addr2,[c.city,c.state].filter(Boolean).join(', '),c.zip].filter(x=>x&&String(x).trim()).join(' ');
+  const hh=[];
+  if(c.coApp&&(c.coApp.first||c.coApp.last))hh.push([[c.coApp.first,c.coApp.last].join(' '),c.coApp.relationship||'Co-applicant']);
+  drv.forEach(d=>hh.push([[d.first,d.last].filter(Boolean).join(' ')||'Driver',d.relationship||'Driver']));
+  vehs.forEach(v=>hh.push([[v.year,v.make,v.model].filter(Boolean).join(' '),'Vehicle']));
+  props.forEach(p=>hh.push([[p.addr||p.address,p.city].filter(Boolean).join(', '),p.type||'Property']));
+  document.getElementById('ptab-overview').innerHTML=`<div class="p3-cols">
+    <div class="p3-main">
+      <section style="display:flex;flex-direction:column;gap:12px;" aria-label="Policies">
+        <div style="display:flex;justify-content:space-between;align-items:center;"><h2 class="p3-h2">Policies</h2><button class="p3-btn" type="button" onclick="openPolicyModalForClient()">+ Policy</button></div>
+        ${pols.length?[...live,...pols.filter(p=>!isLive(p))].map(polCard).join(''):'<div class="p3-card" style="padding:24px;color:#5b6475;">No policies yet.</div>'}
+        ${gaps.length?`<div class="c360-gaps"><strong style="color:#7a4a00;">Coverage to offer:</strong>${gaps.map(g=>`<span class="p3-chip chip-amber">${p3Esc(g)}</span>`).join('')}<button class="p3-btn" type="button" style="margin-left:auto;" onclick="c360Quote()">Create quote</button></div>`:''}
+      </section>
+      <section class="p3-card" style="padding:18px 20px;" aria-label="Activity and notes">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h2 class="p3-h2">Activity and notes</h2><button class="p3-btn sm" type="button" onclick="switchProfileTab('notes',document.querySelectorAll('#page-client .profile-tab')[5])">See all</button></div>
+        <label><span class="sr-only">New note</span><textarea id="c360-note" placeholder="Type a note, call summary or follow-up..." style="width:100%;box-sizing:border-box;min-height:64px;border:1px solid #d8dbe3;border-radius:10px;padding:10px 12px;font:inherit;font-size:14px;resize:vertical;"></textarea></label>
+        <div style="display:flex;justify-content:flex-end;margin-top:8px;"><button class="p3-btn dark" type="button" onclick="c360AddNote()">Add note</button></div>
+        ${[...notes].reverse().slice(0,4).map(n=>`<div style="padding:12px 0;border-top:1px solid #eef0f4;font-size:14px;margin-top:8px;white-space:pre-wrap;">${p3Esc(n.text)}<div style="font-size:12px;color:#5b6475;margin-top:3px;">${p3Esc(fd(n.date))}</div></div>`).join('')||'<p style="color:#5b6475;font-size:14px;margin-top:10px;">No notes yet.</p>'}
+      </section>
+    </div>
+    <div class="p3-side">
+      <section class="p3-card" style="padding:18px 20px;" aria-label="Contact and details">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><h2 class="p3-h2">Contact and details</h2><button class="p3-btn sm" type="button" onclick="c360EditDetails()">Edit</button></div>
+        ${(kv('Cell',c.phoneCell)+kv('Home phone',c.phoneHome)+kv('Work phone',c.phoneWork)+kv('Email',c.email1)+kv('Address',addr)+kv('Date of birth',c.dob?fd(c.dob):'')+kv('Best time',c.bestTime)+kv('Preferred contact',c.prefContact)+kv('Lead source',c.leadSource)+kv('FEIN',c.fein)+kv('EZLynx ID',c.ezlynxId))||'<p style="color:#5b6475;font-size:14px;margin-top:8px;">No contact details yet. Click Edit to add them.</p>'}
+      </section>
+      ${hh.length?`<section class="p3-card" style="padding:18px 20px;" aria-label="Household"><h2 class="p3-h2" style="margin-bottom:10px;">${isBiz?'Locations and vehicles':'Household'}</h2>${hh.map(([a,b])=>`<div class="p3-kv"><span style="color:#1a1a1a;">${p3Esc(a)}</span><span style="color:#5b6475;">${p3Esc(b)}</span></div>`).join('')}</section>`:''}
+      <section class="p3-card" style="padding:18px 20px;" aria-label="Open tasks">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><h2 class="p3-h2">Open tasks</h2><button class="p3-btn sm" type="button" onclick="c360AddTask()">+ Task</button></div>
+        ${openT.length?openT.map(t=>`<label style="display:flex;gap:10px;align-items:flex-start;font-size:14px;padding:7px 0;cursor:pointer;"><input type="checkbox" style="width:18px;height:18px;margin-top:1px;" onchange="p3TaskDone('${t.id}')"><span>${p3Esc(t.title)}${t.due?`<br><small style="color:${du(t.due)<0?'#9b2c2c':'#5b6475'};">Due ${p3Esc(fd(t.due))}</small>`:''}</span></label>`).join(''):'<p style="color:#5b6475;font-size:14px;">No open tasks.</p>'}
+      </section>
+    </div></div>`;
+  const q=encodeURIComponent(isBiz?c.bizName:[c.first,c.last].filter(Boolean).join(' '));
+  document.getElementById('ptab-documents').innerHTML=`<div class="p3-card" style="padding:24px;"><h2 class="p3-h2">Documents</h2><p style="color:#5b6475;font-size:14px;margin:8px 0 16px;">Dec pages and applications will attach here in Phase 4. For now, open this client's files in your Google Drive.</p><a class="p3-btn dark" href="https://drive.google.com/drive/search?q=${q}" target="_blank" rel="noopener">Find in Google Drive</a></div>`;
+  loadPoliciesTab(c.id);
+}
+function c360AddNote(){const ta=document.getElementById('c360-note');const text=(ta.value||'').trim();if(!text)return;const c=data.clients.find(x=>x.id===activeClientId);if(!c)return;if(!Array.isArray(c.notes))c.notes=c.notes&&String(c.notes).trim()?[{date:'',text:String(c.notes)}]:[];c.notes.push({date:new Date().toISOString().split('T')[0],text});ta.value='';save();loadNotes(c);showToast('Note added');}
+function c360EditDetails(){const tabs=document.querySelectorAll('#page-client .profile-tab');switchProfileTab('details',tabs[6]);if(document.getElementById('prof-save-btn').style.display==='none')toggleProfileEdit();}
+function c360AddTask(){populateClientSelects&&populateClientSelects();openModal('task-modal');const sel=document.getElementById('tf-client');if(sel)sel.value=activeClientId||'';}
+function c360Quote(){const c=data.clients.find(x=>x.id===activeClientId);if(!c)return;openModal('quote-modal');const set=(id,v)=>{const e=document.getElementById(id);if(e&&v)e.value=v;};set('qf-name',cn(c.id));set('qf-phone',c.phoneCell||c.phoneHome||'');set('qf-email',c.email1||'');const g=c360Gaps(c,data.policies.filter(p=>p.clientId===c.id));const lob=document.getElementById('qf-lob');if(lob&&g.length){const o=[...lob.options].find(o=>o.text.toLowerCase().includes(g[0].toLowerCase().split(' ')[0]));if(o)lob.value=o.value;}}
+async function loadC360Commission(){
+  const box=document.getElementById('ptab-commission');const c=data.clients.find(x=>x.id===activeClientId);if(!c)return;
+  box.innerHTML='<div class="p3-card" style="padding:24px;color:#5b6475;">Loading commission history...</div>';
+  const {data:rows,error}=await _supabase.from('commission_lines').select('statement_key,carrier,policy_number,trans_type,eff_date,premium,agent_commission,kind').eq('client_id',c.id);
+  if(c.id!==activeClientId)return;
+  if(error){box.innerHTML='<div class="p3-card" style="padding:24px;color:#9b2c2c;">Could not load commission history.</div>';return;}
+  const list=(rows||[]).sort((a,b)=>String(b.statement_key).localeCompare(String(a.statement_key)));
+  const tot=list.reduce((a,r)=>a+Number(r.agent_commission||0),0);
+  const exp=data.policies.filter(p=>p.clientId===c.id&&isLive(p)).reduce((a,p)=>a+commAmtAnnual(p),0);
+  const mon=k=>{const m=String(k).split('|')[1]||'';return m?new Date(m+'-01T00:00:00').toLocaleDateString('en-US',{month:'short',year:'numeric'}):'';};
+  box.innerHTML=`<div class="p3-card" style="padding:20px;"><div style="display:flex;flex-wrap:wrap;gap:24px;margin-bottom:14px;"><div><div class="p3-lbl">Received to date</div><div style="font-size:22px;font-weight:800;color:#1a6b3a;margin-top:4px;">${fmt(tot.toFixed(2))}</div></div><div><div class="p3-lbl">Expected per year</div><div style="font-size:22px;font-weight:800;color:#0c1e3a;margin-top:4px;">${fmtc(exp)}</div></div></div>
+  ${list.length?`<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="text-align:left;color:#5b6475;"><th style="padding:8px 6px;">Statement</th><th style="padding:8px 6px;">Carrier</th><th style="padding:8px 6px;">Policy</th><th style="padding:8px 6px;">Type</th><th style="padding:8px 6px;text-align:right;">Premium</th><th style="padding:8px 6px;text-align:right;">You got</th></tr></thead><tbody>${list.map(r=>`<tr style="border-top:1px solid #eef0f4;"><td style="padding:8px 6px;">${p3Esc(String(r.statement_key).split('|')[0])} ${p3Esc(mon(r.statement_key))}</td><td style="padding:8px 6px;">${p3Esc(r.carrier)}</td><td style="padding:8px 6px;">${p3Esc(r.policy_number)}</td><td style="padding:8px 6px;">${p3Esc(r.trans_type||r.kind)}</td><td style="padding:8px 6px;text-align:right;">${r.premium!=null?fmt(Number(r.premium).toFixed(2)):''}</td><td style="padding:8px 6px;text-align:right;font-weight:600;color:${Number(r.agent_commission)<0?'#9b2c2c':'#1a6b3a'};">${fmt(Number(r.agent_commission||0).toFixed(2))}</td></tr>`).join('')}</tbody></table></div>`:'<p style="color:#5b6475;font-size:14px;">No commission statement lines are linked to this client yet.</p>'}</div>`;
 }
 
 function loadDetails(c){
@@ -2205,12 +2539,13 @@ function addNote(){
 }
 
 function switchProfileTab(tab,el){
-  document.querySelectorAll('.profile-tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.profile-tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#page-client .profile-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#page-client .profile-tab-content').forEach(t=>t.classList.remove('active'));
+  if(!el)el=[...document.querySelectorAll('#page-client .profile-tab')].find(t=>(t.getAttribute('onclick')||'').includes("'"+tab+"'"));
   if(el)el.classList.add('active');
   document.getElementById('ptab-'+tab).classList.add('active');
 }
-function closeProfile(){document.getElementById('profile-overlay').classList.remove('open');document.getElementById('profile-panel').classList.remove('open');activeClientId=null;}
+function closeProfile(){document.getElementById('profile-overlay').classList.remove('open');document.getElementById('profile-panel').classList.remove('open');activeClientId=null;if(document.getElementById('page-client').classList.contains('active'))navTo(lastPage||'clients');}
 
 function toggleProfileEdit(){
   const c=data.clients.find(x=>x.id===activeClientId);if(!c)return;
@@ -3176,6 +3511,7 @@ async function removeMfa(factorId){
 
 async function init() {
   const { data: { session } } = await _supabase.auth.getSession();
+  window._p3UserEmail=(session&&session.user&&session.user.email)||'';
   if (!session) {
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('app').style.display = 'none';
@@ -3235,8 +3571,10 @@ function isPersonal(p){
 function lineType(p){return isPersonal(p)?'Personal':'Commercial';}
 
 function renderBookOfBusiness(){
-  const personal=data.policies.filter(p=>isPersonal(p));
-  const commercial=data.policies.filter(p=>!isPersonal(p));
+  // Book size rule (same as Home): active policies only, 6 month premiums doubled to a yearly figure
+  const live=data.policies.filter(isLive);
+  const personal=live.filter(p=>isPersonal(p));
+  const commercial=live.filter(p=>!isPersonal(p));
 
   function buildSection(policies, mId, tbId){
     const byType={};
@@ -3244,10 +3582,10 @@ function renderBookOfBusiness(){
       const t=p.type||'Unknown';
       if(!byType[t])byType[t]={count:0,prem:0,comm:0};
       byType[t].count++;
-      byType[t].prem+=Number(p.premium||0);
+      byType[t].prem+=annualPrem(p);
       byType[t].comm+=commAmtAnnual(p);
     });
-    const totalP=policies.reduce((s,p)=>s+Number(p.premium||0),0);
+    const totalP=policies.reduce((s,p)=>s+annualPrem(p),0);
     const totalC=policies.reduce((s,p)=>s+commAmtAnnual(p),0);
     const totalN=policies.length;
 
@@ -3258,7 +3596,7 @@ function renderBookOfBusiness(){
       </div>
       <div style="text-align:center;background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px 16px;min-width:120px;">
         <div style="font-size:18px;font-weight:800;color:#0c1e3a;">${fmtc(totalP)}</div>
-        <div style="font-size:11px;color:#888;font-weight:600;">Total Premium</div>
+        <div style="font-size:11px;color:#888;font-weight:600;">Annual Premium</div>
       </div>
       <div style="text-align:center;background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px 16px;min-width:120px;">
         <div style="font-size:18px;font-weight:800;color:#2a7a4a;">${fmtc(totalC)}</div>
@@ -3268,7 +3606,7 @@ function renderBookOfBusiness(){
     const sorted=Object.entries(byType).sort((a,b)=>b[1].prem-a[1].prem);
     document.getElementById(tbId).innerHTML=sorted.length
       ? sorted.map(([type,v])=>`<tr>
-          <td style="padding:6px 8px;">${type}</td>
+          <td style="padding:6px 8px;">${esc(type)}</td>
           <td style="text-align:right;padding:6px 8px;">${esc(v.count)}</td>
           <td style="text-align:right;padding:6px 8px;font-weight:600;">${fmtc(v.prem)}</td>
           <td style="text-align:right;padding:6px 8px;font-weight:600;color:#2a7a4a;">${fmtc(v.comm)}</td>
@@ -3306,10 +3644,13 @@ function renderBookOfBusiness(){
 function renderCarriers(){
   renderBookOfBusiness();
   const byC={};
-  data.policies.forEach(p=>{
+  const livePols=data.policies.filter(isLive);
+  const inForce=data.policies.filter(isLive).reduce((s,p)=>s+Number(p.premium||0),0);
+  const notLive=data.policies.length-livePols.length;
+  livePols.forEach(p=>{
     const key=p.carrier||'Unknown';
     if(!byC[key])byC[key]={prem:0,comm:0,count:0,types:new Set()};
-    byC[key].prem+=Number(p.premium||0);
+    byC[key].prem+=annualPrem(p);
     byC[key].comm+=commAmtAnnual(p);
     byC[key].count++;
     if(p.type)byC[key].types.add(p.type);
@@ -3321,9 +3662,9 @@ function renderCarriers(){
 
   // Metrics
   document.getElementById('carrier-metrics').innerHTML=`
-    <div class="metric-card"><div class="metric-label">Total Carriers</div><div class="metric-value">${sorted.length}</div><div class="metric-sub">Active in book</div></div>
-    <div class="metric-card"><div class="metric-label">Total Policies</div><div class="metric-value">${totalCount}</div><div class="metric-sub">Across all carriers</div></div>
-    <div class="metric-card metric-gold"><div class="metric-label">Total Annual Premium</div><div class="metric-value">${fmtc(totalPrem)}</div><div class="metric-sub">All carriers combined</div></div>
+    <div class="metric-card"><div class="metric-label">Total Carriers</div><div class="metric-value">${sorted.length}</div><div class="metric-sub">With active policies</div></div>
+    <div class="metric-card"><div class="metric-label">Active Policies</div><div class="metric-value">${totalCount}</div><div class="metric-sub">${notLive?notLive+' cancelled or non-renewed not counted':'Across all carriers'}</div></div>
+    <div class="metric-card metric-gold"><div class="metric-label">Total Annual Premium</div><div class="metric-value">${fmtc(totalPrem)}</div><div class="metric-sub">Active policies, 6 month terms doubled. Premium in force (current terms): ${fmtc(inForce)}</div></div>
     <div class="metric-card"><div class="metric-label">Total Est. Commission</div><div class="metric-value metric-value" style="color:#2a7a4a;">${fmtc(totalComm)}</div><div class="metric-sub">Annual estimate</div></div>`;
 
   // Bar chart
