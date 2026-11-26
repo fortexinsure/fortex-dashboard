@@ -47,6 +47,10 @@ Paul Tadrous, owner of Fortex Insurance Group LLC (DBA Fortex Insure, fortexinsu
 - Carriers can have one row per channel: unique (name_key, default_channel), `is_primary` marks the default. Dropdown shows each pair (e.g. Progressive via Progressive Direct, Progressive via Smart Choice); picking a pair sets that channel. Saving a policy with a known carrier through a new channel adds a non-primary row.
 - Progressive defaults to Progressive Direct (new Progressive business goes direct); older renewing Progressive policies are via Smart Choice.
 
+## One-time bonus commission (Nov 25, 2026)
+- Policy fields `bonusRate` (%) and `bonusNote`. `bonusAmt(p)` = premium x bonusRate for the current term only; NOT included in commAmt/commAmtAnnual and never written to carrier_commission_rates.
+- Shown as "+ $X one-time bonus" (`bonusTag`) on policy lists and a "One-Time Bonuses" card on Commissions. `saveRenewal` moves the bonus into `bonusHistory` and clears it.
+
 ## Still open (later phases)
 - Single JSON blob storage (fixed by the Phase 2 data model).
 - No aggregator split or paid vs expected commission tracking (Phase 4).

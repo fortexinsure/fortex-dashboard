@@ -1223,6 +1223,11 @@ tr:hover td{background:#f4f6fa;}
         <div class="form-group"><label>Renewal Comm Rate (%)</label><input id="pf-comm-rate-renewal" type="number" step="0.1" placeholder="e.g. 12"></div>
         <div class="form-group"><label>Commission Type</label><select id="pf-comm-type"><option>New Business</option><option>Renewal</option><option>Both</option></select></div>
       </div>
+      <div class="form-row">
+        <div class="form-group"><label>One-Time Bonus (%)</label><input id="pf-bonus-rate" type="number" step="0.1" min="0" placeholder="Optional, e.g. 5" oninput="updateCommPreview()"></div>
+        <div class="form-group"><label>Bonus Note</label><input id="pf-bonus-note" type="text" placeholder="e.g. Hanover new business promo"></div>
+      </div>
+      <div class="pf-comm-hint" style="margin:-6px 0 12px;font-size:12px;color:#888;">A bonus counts for this term only. It is not saved to your rate table and is cleared when the policy renews.</div>
       <div class="form-row cols3">
         <div class="form-group"><label>Policy Status</label><select id="pf-status"><option value="Active">Active</option><option value="Pending Cancellation">Pending Cancellation</option><option value="Cancelled">Cancelled</option><option value="Non-Renewed">Non-Renewed</option><option value="Lapsed">Lapsed</option></select></div>
         <div class="form-group"><label>Effective Date</label><input id="pf-effective" type="date" onchange="autoSetRenewal()"></div>
@@ -1568,12 +1573,14 @@ function updateCommPreview(){
   const term=Number((document.getElementById('pf-term')||{}).value)||12;
   const hint=document.getElementById('pf-comm-hint');
   if(!hint)return;
+  const bonus=Number((document.getElementById('pf-bonus-rate')||{}).value)||0;
   if(prem&&rate){
     const termComm=Math.round(prem*rate/100);
     const annComm=Math.round(termComm*(12/term));
-    hint.textContent=term===6
+    const bTxt=bonus?` + $${Math.round(prem*bonus/100).toLocaleString()} one-time bonus`:'';
+    hint.textContent=(term===6
       ?`≈ $${termComm.toLocaleString()} commission/term · $${annComm.toLocaleString()} annualized/yr`
-      :`≈ $${termComm.toLocaleString()} commission/year`;
+      :`≈ $${termComm.toLocaleString()} commission/year`)+bTxt;
   } else {
     hint.textContent='';
   }
@@ -1813,6 +1820,9 @@ function renderCommReceived(){
 }
 function commRateFor(p){return (p.commType==='Renewal'&&Number(p.commRateRenewal))?Number(p.commRateRenewal):(Number(p.commRate)||0);}
 function commAmt(p){return Math.round((Number(p.premium)||0)*commRateFor(p)/100);}
+// One-time promo bonus: this term only, never part of the recurring rate
+function bonusAmt(p){return Number(p.bonusRate)>0?Math.round((Number(p.premium)||0)*Number(p.bonusRate)/100):0;}
+function bonusTag(p){const b=bonusAmt(p);return b?`<br><span style="font-size:11px;font-weight:600;color:#b26b00;" title="${esc(p.bonusNote||'One-time bonus')}">+ ${fmtc(b)} one-time bonus (${Number(p.bonusRate)}%)</span>`:'';}
 function isLive(p){return !['Cancelled','Non-Renewed','Lapsed'].includes(p.status);}
 function overduePolicies(){return data.policies.filter(p=>isLive(p)&&p.renewal&&du(p.renewal)<0).sort((a,b)=>du(a.renewal)-du(b.renewal));}
 function addMonthsISO(iso,months){const d=new Date(iso+'T00:00:00');const day=d.getDate();d.setMonth(d.getMonth()+months);if(d.getDate()<day)d.setDate(0);return d.toISOString().slice(0,10);}
@@ -1853,14 +1863,15 @@ async function saveRenewal(){
   if(!eff||!ren){appAlert('Please enter the new effective and renewal dates.');return;}
   if(ren<=eff){appAlert('The new renewal date must be after the effective date.');return;}
   if(!prem){appAlert('Please enter the new premium (use the same amount if it did not change).');return;}
-  const oldPrem=p.premium,oldRen=p.renewal;
+  const oldPrem=p.premium,oldRen=p.renewal,oldBonus=bonusAmt(p),oldBonusRate=p.bonusRate,oldBonusNote=p.bonusNote;
+  if(oldBonus){if(!Array.isArray(p.bonusHistory))p.bonusHistory=[];p.bonusHistory.push({term:`${p.effective||''} to ${oldRen||''}`,rate:oldBonusRate,amount:oldBonus,note:oldBonusNote||''});p.bonusRate='';p.bonusNote='';}
   p.term=document.getElementById('rn-term').value;p.effective=eff;p.renewal=ren;p.premium=prem;p.status='Active';p.commType='Renewal';
   if(rate)p.commRateRenewal=rate;
   const num=document.getElementById('rn-number').value.trim();if(num)p.number=num;
   const c=data.clients.find(x=>x.id===p.clientId);
   if(c){if(!Array.isArray(c.notes))c.notes=c.notes?[{date:(c.added||'').slice(0,10),text:String(c.notes)}]:[];
     const extra=document.getElementById('rn-note').value.trim();
-    c.notes.push({date:new Date().toISOString().split('T')[0],text:`Renewed ${p.type} (${p.carrier}): ${fd(eff)} to ${fd(ren)}. Premium ${fmt(oldPrem)} → ${fmt(prem)}.`+(extra?' '+extra:'')});}
+    c.notes.push({date:new Date().toISOString().split('T')[0],text:`Renewed ${p.type} (${p.carrier}): ${fd(eff)} to ${fd(ren)}. Premium ${fmt(oldPrem)} → ${fmt(prem)}.`+(oldBonus?` One-time bonus of ${fmtc(oldBonus)} (${oldBonusRate}%) on the prior term ended.`:'')+(extra?' '+extra:'')});}
   cancelRenew();save();showToast('Renewal saved');
 }
 
@@ -2083,7 +2094,7 @@ function loadPoliciesTab(clientId){
   c.innerHTML=pols.map(p=>`<div class="policy-mini-card">
     <div class="policy-mini-top">
       <div class="policy-mini-left"><h4>${esc(p.type)} — ${esc(p.carrier)} ${policyStatusBadge(p)}</h4><p>${esc(p.number)} · Eff. ${fd(p.effective)}${p.notes?' · '+esc(p.notes):''}</p></div>
-      <div class="policy-mini-right"><div class="premium">${premiumDisplay(p)}</div><div class="commission">Commission: ${fmtc(commAmtAnnual(p))}/yr${(Number(p.term)||12)===6?' ('+fmtc(commAmt(p))+'/term)':''} · NB: ${p.commRate||0}% / Ren: ${p.commRateRenewal||p.commRate||0}%</div><div class="renewal">Renews ${fd(p.renewal)} ${rb(du(p.renewal))}</div></div>
+      <div class="policy-mini-right"><div class="premium">${premiumDisplay(p)}</div><div class="commission">Commission: ${fmtc(commAmtAnnual(p))}/yr${(Number(p.term)||12)===6?' ('+fmtc(commAmt(p))+'/term)':''} · NB: ${p.commRate||0}% / Ren: ${p.commRateRenewal||p.commRate||0}%${bonusTag(p)}</div><div class="renewal">Renews ${fd(p.renewal)} ${rb(du(p.renewal))}</div></div>
     </div>
     <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #e8ebf0;">
       <button class="btn btn-sm btn-gold" onclick="editPolicy('${p.id}')">Edit</button>
@@ -2216,7 +2227,7 @@ function renderPolicies(){
   const filtered=data.policies.filter(p=>{const s=(cn(p.clientId)+p.number+p.carrier).toLowerCase();return s.includes(q.toLowerCase())&&(!type||p.type===type)&&(!carrier||p.carrier===carrier)&&(!statusF||(p.status||'Active')===statusF);});
   const tbody=document.getElementById('policies-tbody');
   if(!filtered.length){tbody.innerHTML='<tr><td colspan="10" class="empty-state">No policies found</td></tr>';return;}
-  tbody.innerHTML=filtered.map(p=>`<tr class="row-link" onclick="editPolicy('${p.id}')"><td><strong>${esc(cn(p.clientId))}</strong></td><td><span class="badge badge-navy">${esc(p.type)}</span>${termLabel(p)}</td><td>${esc(p.carrier)}</td><td style="font-size:12px;color:#666;">${esc(p.number)}</td><td>${premiumDisplay(p)}</td><td style="font-weight:600;color:#555;">${p.commRate||0}%<br><span style="font-size:11px;color:#888;font-weight:400;">Ren: ${p.commRateRenewal||p.commRate||0}%</span></td><td style="font-weight:700;color:#2a7a4a;">${fmtc(commAmtAnnual(p))}/yr${(Number(p.term)||12)===6?`<br><span style="font-size:11px;color:#888;font-weight:400;">${fmtc(commAmt(p))}/term</span>`:''}</td><td style="font-weight:600;">${fd(p.renewal)}</td><td>${policyStatusBadge(p)}</td><td onclick="event.stopPropagation()"><button class="btn btn-sm btn-danger" onclick="deletePolicy('${p.id}')">×</button></td></tr>`).join('');
+  tbody.innerHTML=filtered.map(p=>`<tr class="row-link" onclick="editPolicy('${p.id}')"><td><strong>${esc(cn(p.clientId))}</strong></td><td><span class="badge badge-navy">${esc(p.type)}</span>${termLabel(p)}</td><td>${esc(p.carrier)}</td><td style="font-size:12px;color:#666;">${esc(p.number)}</td><td>${premiumDisplay(p)}</td><td style="font-weight:600;color:#555;">${p.commRate||0}%<br><span style="font-size:11px;color:#888;font-weight:400;">Ren: ${p.commRateRenewal||p.commRate||0}%</span></td><td style="font-weight:700;color:#2a7a4a;">${fmtc(commAmtAnnual(p))}/yr${(Number(p.term)||12)===6?`<br><span style="font-size:11px;color:#888;font-weight:400;">${fmtc(commAmt(p))}/term</span>`:''}${bonusTag(p)}</td><td style="font-weight:600;">${fd(p.renewal)}</td><td>${policyStatusBadge(p)}</td><td onclick="event.stopPropagation()"><button class="btn btn-sm btn-danger" onclick="deletePolicy('${p.id}')">×</button></td></tr>`).join('');
 }
 function populateCarrierFilter(){const sel=document.getElementById('policy-filter-carrier');if(!sel)return;sel.innerHTML='<option value="">All Carriers</option>'+[...new Set(data.policies.map(p=>p.carrier))].sort().map(c=>`<option>${c}</option>`).join('');}
 
@@ -2280,6 +2291,7 @@ function renderCommissions(){
     <div class="metric-card metric-gold"><div class="metric-label">Annual Commission</div><div class="metric-value" style="font-size:24px;">${fmtc(totalAnn)}</div><div class="metric-sub">Across all policies (annualized)</div></div>
     <div class="metric-card metric-gold"><div class="metric-label">Monthly Est.</div><div class="metric-value" style="font-size:24px;">${fmtc(totalMon)}</div><div class="metric-sub">Average monthly</div></div>
     <div class="metric-card metric-urgent"><div class="metric-label">At-Risk Commission</div><div class="metric-value" style="font-size:24px;">${fmtc(urgentComm)}</div><div class="metric-sub">Renewing in ≤30 days</div></div>
+    <div class="metric-card"><div class="metric-label">One-Time Bonuses</div><div class="metric-value" style="font-size:24px;">${fmtc(data.policies.filter(isLive).reduce((s,p)=>s+bonusAmt(p),0))}</div><div class="metric-sub">${data.policies.filter(p=>isLive(p)&&bonusAmt(p)).length} polic${data.policies.filter(p=>isLive(p)&&bonusAmt(p)).length===1?'y':'ies'} with a promo bonus this term</div></div>
     <div class="metric-card"><div class="metric-label">Avg Comm Rate</div><div class="metric-value" style="font-size:24px;">${data.policies.length?(data.policies.reduce((s,p)=>s+Number(p.commRate||0),0)/data.policies.length).toFixed(1):0}%</div><div class="metric-sub">Across book</div></div>`;
   const byCarrier={};data.policies.forEach(p=>{if(!byCarrier[p.carrier])byCarrier[p.carrier]={prem:0,comm:0,count:0};byCarrier[p.carrier].prem+=commAmtAnnual(p);byCarrier[p.carrier].comm+=commAmtAnnual(p);byCarrier[p.carrier].count++;});
   document.getElementById('comm-by-carrier').innerHTML=Object.entries(byCarrier).sort((a,b)=>b[1].comm-a[1].comm).map(([carrier,v])=>`<div class="dash-row"><span><strong>${esc(carrier)}</strong> <span style="font-size:12px;color:#888;">(${esc(v.count)} polic${v.count!==1?'ies':'y'})</span></span><span style="font-weight:700;color:#2a7a4a;">${fmtc(v.comm)}/yr</span></div>`).join('');
@@ -2288,7 +2300,7 @@ function renderCommissions(){
   const tbody=document.getElementById('comm-detail-tbody');
   const sorted=[...data.policies].sort((a,b)=>commAmtAnnual(b)-commAmtAnnual(a));
   let total=0;sorted.forEach(p=>total+=commAmtAnnual(p));
-  tbody.innerHTML=sorted.map(p=>`<tr class="row-link" onclick="openProfile('${p.clientId}')"><td>${esc(cn(p.clientId))}</td><td>${esc(p.type)}${termLabel(p)}</td><td>${esc(p.carrier)}</td><td>${premiumDisplay(p)}</td><td>${p.commRate||0}%</td><td style="color:#888;">${p.commRateRenewal||p.commRate||0}%</td><td style="font-weight:700;color:#2a7a4a;">${fmtc(commAmtAnnual(p))}/yr${(Number(p.term)||12)===6?'<br><span style="font-size:11px;font-weight:400;color:#888;">('+fmtc(commAmt(p))+'/term)</span>':''}</td><td style="color:#666;">${fmtc(commAmtMonthly(p))}/mo</td></tr>`).join('')+`<tr><td colspan="6" style="font-weight:700;">TOTAL</td><td style="font-weight:700;color:#2a7a4a;">${fmtc(total)}/yr</td><td style="color:#666;">${fmtc(Math.round(total/12))}/mo</td></tr>`;
+  tbody.innerHTML=sorted.map(p=>`<tr class="row-link" onclick="openProfile('${p.clientId}')"><td>${esc(cn(p.clientId))}</td><td>${esc(p.type)}${termLabel(p)}</td><td>${esc(p.carrier)}</td><td>${premiumDisplay(p)}</td><td>${p.commRate||0}%</td><td style="color:#888;">${p.commRateRenewal||p.commRate||0}%</td><td style="font-weight:700;color:#2a7a4a;">${fmtc(commAmtAnnual(p))}/yr${(Number(p.term)||12)===6?'<br><span style="font-size:11px;font-weight:400;color:#888;">('+fmtc(commAmt(p))+'/term)</span>':''}${bonusTag(p)}</td><td style="color:#666;">${fmtc(commAmtMonthly(p))}/mo</td></tr>`).join('')+`<tr><td colspan="6" style="font-weight:700;">TOTAL</td><td style="font-weight:700;color:#2a7a4a;">${fmtc(total)}/yr</td><td style="color:#666;">${fmtc(Math.round(total/12))}/mo</td></tr>`;
 }
 
 // ==================== REPORTS ====================
@@ -2346,7 +2358,7 @@ function canOpenModal(id){
 function openModal(id){
   if(!canOpenModal(id))return;
   if(['policy-modal','task-modal','reshop-modal'].includes(id))populateClientSelects();
-  if(id==='policy-modal'&&!editingPolicyId){const ch=document.getElementById('pf-channel');if(ch)ch.value='';const h=document.getElementById('pf-rate-hint');if(h)h.innerHTML='';fillCarrierList();}
+  if(id==='policy-modal'&&!editingPolicyId){const ch=document.getElementById('pf-channel');if(ch)ch.value='';['pf-bonus-rate','pf-bonus-note'].forEach(k=>{const e=document.getElementById(k);if(e)e.value='';});const h=document.getElementById('pf-rate-hint');if(h)h.innerHTML='';fillCarrierList();}
   // Reset editing state when opening a fresh add form
   if(id==='task-modal'&&!editingTaskId){document.querySelector('#task-modal .modal-header h3').textContent='Add Follow-Up Task';document.querySelectorAll('#task-modal input,#task-modal select,#task-modal textarea').forEach(el=>{if(el.tagName==='SELECT'&&el.options.length)el.selectedIndex=0;else el.value='';});}
   if(id==='reshop-modal'&&!editingReshopId){document.querySelector('#reshop-modal .modal-header h3').textContent='Add to Re-Shop Queue';document.querySelectorAll('#reshop-modal input,#reshop-modal select,#reshop-modal textarea').forEach(el=>{if(el.tagName==='SELECT'&&el.options.length)el.selectedIndex=0;else el.value='';});}
@@ -2604,7 +2616,7 @@ function saveClient(){
 }
 
 function savePolicy(){
-  const vals={clientId:document.getElementById('pf-client').value,type:document.getElementById('pf-type').value,term:document.getElementById('pf-term').value||'12',carrier:document.getElementById('pf-carrier').value.trim(),number:document.getElementById('pf-number').value.trim(),premium:document.getElementById('pf-premium').value,commRate:document.getElementById('pf-comm-rate').value||0,commRateRenewal:document.getElementById('pf-comm-rate-renewal').value||0,commType:document.getElementById('pf-comm-type').value,channel:document.getElementById('pf-channel').value,effective:document.getElementById('pf-effective').value,renewal:document.getElementById('pf-renewal').value,status:document.getElementById('pf-status').value||'Active',notes:document.getElementById('pf-notes').value.trim()};
+  const vals={clientId:document.getElementById('pf-client').value,type:document.getElementById('pf-type').value,term:document.getElementById('pf-term').value||'12',carrier:document.getElementById('pf-carrier').value.trim(),number:document.getElementById('pf-number').value.trim(),premium:document.getElementById('pf-premium').value,commRate:document.getElementById('pf-comm-rate').value||0,commRateRenewal:document.getElementById('pf-comm-rate-renewal').value||0,commType:document.getElementById('pf-comm-type').value,channel:document.getElementById('pf-channel').value,effective:document.getElementById('pf-effective').value,renewal:document.getElementById('pf-renewal').value,status:document.getElementById('pf-status').value||'Active',notes:document.getElementById('pf-notes').value.trim(),bonusRate:document.getElementById('pf-bonus-rate').value||'',bonusNote:document.getElementById('pf-bonus-note').value.trim()};
   if(!vals.clientId||!vals.carrier||!vals.renewal){appAlert('Client, carrier, and renewal date required.');return;}
   learnCarrierRate(vals);ensureCarrier(vals.carrier,vals.channel);
   if(editingPolicyId){const idx=data.policies.findIndex(x=>x.id===editingPolicyId);if(idx!==-1)data.policies[idx]={...data.policies[idx],...vals,id:editingPolicyId};editingPolicyId=null;}
@@ -2801,6 +2813,7 @@ function editPolicy(id){
   document.getElementById('pf-comm-rate').value=p.commRate||0;
   document.getElementById('pf-comm-rate-renewal').value=p.commRateRenewal||p.commRate||0;
   document.getElementById('pf-comm-type').value=p.commType||'New Business';
+  document.getElementById('pf-bonus-rate').value=p.bonusRate||'';document.getElementById('pf-bonus-note').value=p.bonusNote||'';
   document.getElementById('pf-effective').value=p.effective||'';
   document.getElementById('pf-renewal').value=p.renewal||'';
   document.getElementById('pf-status').value=p.status||'Active';
