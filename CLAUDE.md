@@ -79,6 +79,6 @@ Paul Tadrous, owner of Fortex Insurance Group LLC (DBA Fortex Insure, fortexinsu
 - Phase 0: Audit and planning (done Nov 25, 2026)
 - Phase 1: Stabilize (done Nov 25, 2026)
 - Phase 2 (record tables and dashboard switch done and live Nov 25, 2026): New data model in Supabase (accounts, contacts, leads, quotes, policies, drivers, vehicles, properties, carriers, commissions, tasks, activities, documents) and migration of existing data
-- Phase 3: Redesigned UI (Home, Client 360, Leads pipeline, Policy detail, Commissions). Home + Client 360 + phone bar live Nov 26, 2026
+- Phase 3 (done and live Nov 26, 2026): Redesigned UI (Home, Client 360, Leads pipeline, Policy detail, Commissions, phone bottom bar)
 - Phase 4: Leads intake, commission reconciliation, documents and activity log, helper login with limited access
 - Phase 5: Automations (renewal and follow-up emails, reminders, scheduled reports)
