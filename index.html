@@ -3645,7 +3645,7 @@ function renderCarriers(){
   renderBookOfBusiness();
   const byC={};
   const livePols=data.policies.filter(isLive);
-  const asEntered=data.policies.reduce((s,p)=>s+Number(p.premium||0),0);
+  const inForce=data.policies.filter(isLive).reduce((s,p)=>s+Number(p.premium||0),0);
   const notLive=data.policies.length-livePols.length;
   livePols.forEach(p=>{
     const key=p.carrier||'Unknown';
@@ -3664,7 +3664,7 @@ function renderCarriers(){
   document.getElementById('carrier-metrics').innerHTML=`
     <div class="metric-card"><div class="metric-label">Total Carriers</div><div class="metric-value">${sorted.length}</div><div class="metric-sub">With active policies</div></div>
     <div class="metric-card"><div class="metric-label">Active Policies</div><div class="metric-value">${totalCount}</div><div class="metric-sub">${notLive?notLive+' cancelled or non-renewed not counted':'Across all carriers'}</div></div>
-    <div class="metric-card metric-gold"><div class="metric-label">Total Annual Premium</div><div class="metric-value">${fmtc(totalPrem)}</div><div class="metric-sub">Active policies, 6 month terms doubled. As entered: ${fmtc(asEntered)}</div></div>
+    <div class="metric-card metric-gold"><div class="metric-label">Total Annual Premium</div><div class="metric-value">${fmtc(totalPrem)}</div><div class="metric-sub">Active policies, 6 month terms doubled. Premium in force (current terms): ${fmtc(inForce)}</div></div>
     <div class="metric-card"><div class="metric-label">Total Est. Commission</div><div class="metric-value metric-value" style="color:#2a7a4a;">${fmtc(totalComm)}</div><div class="metric-sub">Annual estimate</div></div>`;
 
   // Bar chart

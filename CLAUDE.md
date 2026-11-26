@@ -66,6 +66,7 @@ Paul Tadrous, owner of Fortex Insurance Group LLC (DBA Fortex Insure, fortexinsu
 - Client 360 = page `page-client` (no more slide-in panel). `openProfile()` fills it; `c360Mount()` moves the old panel's tab sections (ptab-details/policies/vehicles/property/notes/driver) into `#c360-body` so all their edit functions still work. New tabs: ptab-overview (`refreshC360`), ptab-documents (Google Drive search link until Phase 4), ptab-commission (`loadC360Commission` reads commission_lines by client_id). `closeProfile()` returns to `lastPage`. refreshCurrentPage maps 'client' to refreshC360.
 - Phones (<=768px): sidebar hidden, bottom bar `#p3-tabbar` (Home, Clients, + sheet, Tasks, More opens sidebar drawer).
 - `du()` now parses YYYY-MM-DD as local date (was a day early in Texas).
+- Premium rule everywhere (Paul's decision): book size = annual premium of active policies (`annualPrem`: 6 month terms doubled). Book of Business also shows premium in force (current terms of active policies) under the total.
 
 ## Still open (later phases)
 - Remove the fortex_data mirror once nothing depends on it; drivers, activities, documents tables come with Phase 4 features.
@@ -75,6 +76,6 @@ Paul Tadrous, owner of Fortex Insurance Group LLC (DBA Fortex Insure, fortexinsu
 - Phase 0: Audit and planning (done Nov 25, 2026)
 - Phase 1: Stabilize (done Nov 25, 2026)
 - Phase 2 (record tables and dashboard switch done and live Nov 25, 2026): New data model in Supabase (accounts, contacts, leads, quotes, policies, drivers, vehicles, properties, carriers, commissions, tasks, activities, documents) and migration of existing data
-- Phase 3: Redesigned UI (Home, Client 360, Leads pipeline, Policy detail, Commissions)
+- Phase 3: Redesigned UI (Home, Client 360, Leads pipeline, Policy detail, Commissions). Home + Client 360 + phone bar live Nov 26, 2026
 - Phase 4: Leads intake, commission reconciliation, documents and activity log, helper login with limited access
 - Phase 5: Automations (renewal and follow-up emails, reminders, scheduled reports)
