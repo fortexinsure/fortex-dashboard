@@ -14,7 +14,7 @@ Paul Tadrous, owner of Fortex Insurance Group LLC (DBA Fortex Insure, fortexinsu
 - Front end: single file `index.html` (vanilla JS, no build step). `vercel.json` rewrites every path to it.
 - Hosting: Vercel team `fortex-insure`, project `fortex-dashboard` (prj_rDavGEQEiRxJDBwOt5d5BfvMflF8). Every push to `main` deploys to production at fortex-dashboard.vercel.app. Other branches get preview URLs.
 - Database and login: Supabase project "Fortex Dashboard" (ref `nuatfftxifgpyjugjqsb`, us-west-2). One user account (Paul).
-- Today ALL data lives in one row: table `public.fortex_data`, id `main`, column `data` (jsonb) with arrays: clients, policies, quotes, tasks, reshop, vehicles, properties, expenses, reminders. Every save overwrites the whole row.
+- Data lives in one table per record type (Phase 2, Nov 25, 2026): `clients`, `policies`, `quotes`, `tasks`, `reshop`, `vehicles`, `properties`, `expenses`, `reminders`. `public.fortex_data` (id `main`) is kept as an automatic mirror of all of them (see Phase 2 section).
 - Backup taken before redesign: `backups.fortex_data_20261125` (not exposed to the API).
 
 ## Rules for changing things
@@ -51,8 +51,17 @@ Paul Tadrous, owner of Fortex Insurance Group LLC (DBA Fortex Insure, fortexinsu
 - Policy fields `bonusRate` (%) and `bonusNote`. `bonusAmt(p)` = premium x bonusRate for the current term only; NOT included in commAmt/commAmtAnnual and never written to carrier_commission_rates.
 - Shown as "+ $X one-time bonus" (`bonusTag`) on policy lists and a "One-Time Bonuses" card on Commissions. `saveRenewal` moves the bonus into `bonusHistory` and clears it.
 
+## Phase 2 record tables (Nov 25, 2026)
+- Each table: `id` text PK, `rev` (bumped on every change by trigger `trg_rev`), `pos` (list order), typed columns, `extra` jsonb for any field without a column (e.g. dlClass, ssn), created_at/updated_at. RLS = is_app_user() AND mfa_ok(); anon revoked.
+- `private.book_map(tbl, js_key, col, typ)` maps dashboard field names to columns (typ text/numeric/int/date/jsonb/fk). Values that do not fit the column type are kept as typed in `extra`, so nothing is lost. To add a new field: add a column and a book_map row; until then it lands in `extra` automatically.
+- `private.rec_to_cols` / `private.row_to_rec` convert both ways (empty numerics/dates come back as '', 0 as number 0, other numbers as strings like the app stores them).
+- App: `load_book()` returns {data, revs, version}. `save_book_changes(p_changes, p_force)` takes [{t, op:'upsert'|'delete', id, rec, rev, pos}], checks each record's rev and raises VERSION_CONFLICT (detail lists records) if another device changed it; p_force skips the check ("Keep my version"). The app diffs `data` against `syncedRecs` (collectChanges) so only changed records are sent.
+- Mirror: after any table change `private.rebuild_blob()` rewrites fortex_data.data from the tables (version bumps, so other screens notice). If anything writes fortex_data directly (old dashboard tab, save_fortex_data), trigger `trg_blob_to_tables` applies only the records that changed to the tables. Guard: session setting `fortex.syncing='1'` stops the two triggers from looping.
+- History: per-record old versions in `backups.record_history` (tbl, rec_id, op, old_row, changed_at, changed_by). No automatic cleanup yet (add a cron job when it grows). Whole-book history and nightly snapshots still run on fortex_data.
+- FKs to clients are DEFERRABLE INITIALLY DEFERRED: policies/tasks/vehicles/properties/reminders cascade on delete; quotes/reshop set null.
+
 ## Still open (later phases)
-- Single JSON blob storage (fixed by the Phase 2 data model).
+- Remove the fortex_data mirror once nothing depends on it; drivers, activities, documents tables come with Phase 4 features.
 - No aggregator split or paid vs expected commission tracking (Phase 4).
 
 ## Roadmap (AMS redesign)
