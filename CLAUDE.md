@@ -26,7 +26,7 @@ Paul Tadrous, owner of Fortex Insurance Group LLC (DBA Fortex Insure, fortexinsu
 6. Files in this repo other than index.html and vercel.json are excluded from deploys by `.vercelignore`.
 
 ## Phase 1 (live Nov 25, 2026): how things work now
-- Saving: `save()` calls RPC `public.save_fortex_data(p_data, p_expected_version)`. A version mismatch raises VERSION_CONFLICT and the app shows a red banner (reload / download copy / keep mine). Other errors show a banner and auto-retry every 15s. If loading fails the app refuses to save.
+- Saving (since Phase 2): `save()` sends only changed records via `save_book_changes` (see Phase 2 section). The old RPC `save_fortex_data` still works for old tabs. A conflict raises VERSION_CONFLICT and the app shows a red banner (reload / download copy / keep mine). Other errors show a banner and auto-retry every 15s. If loading fails the app refuses to save.
 - History: trigger `trg_fortex_history` copies the previous row into `backups.fortex_data_history` on every change (30 days). pg_cron job `fortex-nightly-backup` (08:00 UTC) snapshots into `backups.fortex_data_nightly` (60 days).
 - Access: RLS policy `fortex_data_app_users` = `private.is_app_user()` (table `public.app_users`) AND `private.mfa_ok()` (requires aal2 once a verified TOTP factor exists). Add a future user by inserting into `app_users`.
 - UI helpers: `esc()` for all user text, `appConfirm()` / `appAlert()` in-app dialogs (never use browser alert/confirm), forms do not close on outside click, `closeModal()` resets edit state.
@@ -52,7 +52,7 @@ Paul Tadrous, owner of Fortex Insurance Group LLC (DBA Fortex Insure, fortexinsu
 - Shown as "+ $X one-time bonus" (`bonusTag`) on policy lists and a "One-Time Bonuses" card on Commissions. `saveRenewal` moves the bonus into `bonusHistory` and clears it.
 
 ## Phase 2 record tables (Nov 25, 2026)
-- Each table: `id` text PK, `rev` (bumped on every change by trigger `trg_rev`), `pos` (list order), typed columns, `extra` jsonb for any field without a column (e.g. dlClass, ssn), created_at/updated_at. RLS = is_app_user() AND mfa_ok(); anon revoked.
+- Each table: `id` text PK, `rev` (bumped on every change by trigger `trg_rev`), `pos` (list order), typed columns, `extra` jsonb for any field without a column (e.g. dlClass), created_at/updated_at. RLS = is_app_user() AND mfa_ok(); anon revoked.
 - `private.book_map(tbl, js_key, col, typ)` maps dashboard field names to columns (typ text/numeric/int/date/jsonb/fk). Values that do not fit the column type are kept as typed in `extra`, so nothing is lost. To add a new field: add a column and a book_map row; until then it lands in `extra` automatically.
 - `private.rec_to_cols` / `private.row_to_rec` convert both ways (empty numerics/dates come back as '', 0 as number 0, other numbers as strings like the app stores them).
 - App: `load_book()` returns {data, revs, version}. `save_book_changes(p_changes, p_force)` takes [{t, op:'upsert'|'delete', id, rec, rev, pos}], checks each record's rev and raises VERSION_CONFLICT (detail lists records) if another device changed it; p_force skips the check ("Keep my version"). The app diffs `data` against `syncedRecs` (collectChanges) so only changed records are sent.
@@ -67,7 +67,7 @@ Paul Tadrous, owner of Fortex Insurance Group LLC (DBA Fortex Insure, fortexinsu
 ## Roadmap (AMS redesign)
 - Phase 0: Audit and planning (done Nov 25, 2026)
 - Phase 1: Stabilize (done Nov 25, 2026)
-- Phase 2: New data model in Supabase (accounts, contacts, leads, quotes, policies, drivers, vehicles, properties, carriers, commissions, tasks, activities, documents) and migration of existing data
+- Phase 2 (record tables and dashboard switch done and live Nov 25, 2026): New data model in Supabase (accounts, contacts, leads, quotes, policies, drivers, vehicles, properties, carriers, commissions, tasks, activities, documents) and migration of existing data
 - Phase 3: Redesigned UI (Home, Client 360, Leads pipeline, Policy detail, Commissions)
 - Phase 4: Leads intake, commission reconciliation, documents and activity log, helper login with limited access
 - Phase 5: Automations (renewal and follow-up emails, reminders, scheduled reports)
