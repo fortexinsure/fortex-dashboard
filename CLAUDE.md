@@ -46,6 +46,7 @@ Paul Tadrous, owner of Fortex Insurance Group LLC (DBA Fortex Insure, fortexinsu
 - Policy form and Carrier Rates form use a custom dropdown `initCombo()` (no native datalist). Picking a carrier sets Written Through to `carrierDefaultChannel()` then runs `applyCarrierRate()`. "+ Add" saves a new carrier with its usual channel via `ensureCarrier()`; savePolicy also calls ensureCarrier.
 - Carriers can have one row per channel: unique (name_key, default_channel), `is_primary` marks the default. Dropdown shows each pair (e.g. Progressive via Progressive Direct, Progressive via Smart Choice); picking a pair sets that channel. Saving a policy with a known carrier through a new channel adds a non-primary row.
 - Progressive defaults to Progressive Direct (new Progressive business goes direct); older renewing Progressive policies are via Smart Choice.
+- Foremost (Paul, Nov 27): new Foremost business goes through First Connect (direct appointment), so carriers row Foremost / First Connect is primary; older Foremost policies (Mike Aziz auto and home, Michael Abraham auto) stay Smart Choice. Michael Abraham's home is Foremost Signature via First Connect.
 
 ## One-time bonus commission (Nov 25, 2026)
 - Policy fields `bonusRate` (%) and `bonusNote`. `bonusAmt(p)` = premium x bonusRate for the current term only; NOT included in commAmt/commAmtAnnual and never written to carrier_commission_rates.
