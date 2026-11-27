@@ -2957,7 +2957,7 @@ function reconRows(){
     const src=RC_SOURCE[p.channel]||null;const term=Number(p.term)||12;
     if(!p.effective)return;
     const first=src?rcFirstMonth(src):null;
-    const terms=[{start:p.effective,end:rcAddMonths(p.effective,term),cur:true,prem:Number(p.premium)||0,rate:rcRate(p),bonus:bonusAmt(p)}];
+    const last0=src?rcLastMonth(src):null;const pend=(Array.isArray(p.premiumChanges)?p.premiumChanges:[]).filter(c=>c&&c.date&&c.date>=p.effective&&(-du(c.date)<60||!last0||last0<rcAddMonths(c.date.slice(0,7)+'-01',1).slice(0,7)));const pendAmt=pend.reduce((a,c)=>a+((Number(c.to)||0)-(Number(c.from)||0)),0);const terms=[{start:p.effective,end:rcAddMonths(p.effective,term),cur:true,prem:(Number(p.premium)||0)-pendAmt,rate:rcRate(p),bonus:bonusAmt(p),pend}];
     const hist=Array.isArray(p.termHistory)?p.termHistory.filter(h=>h&&h.start&&h.start<p.effective):[];
     if(hist.length){hist.forEach(h=>terms.push({start:h.start,end:h.end||p.effective,cur:false,prem:h.premium!==''&&h.premium!=null?Number(h.premium):null,rate:h.rate!==''&&h.rate!=null?Number(h.rate):null,bonus:Number(h.bonus)||0}));}
     else if(p.commType==='Renewal'){terms.push({start:rcAddMonths(p.effective,-term),end:p.effective,cur:false,prem:null,rate:null,bonus:0});}
@@ -2975,6 +2975,7 @@ function reconRows(){
       else if(age<0){st='wait';why='Starts '+fd(t.start);}
       else if(!last||t.start.slice(0,7)>last){if(ls.length){st='paid';}else{st='wait';why='Statement for '+new Date(t.start+'T00:00:00').toLocaleDateString('en-US',{month:'short',year:'numeric'})+' not loaded yet';}}
       else if(!ls.length){if(age>=60){st='missing';why=t.cur?'No payment '+age+' days after the term started':'Earlier term never paid';}else{st='wait';why='Usually paid within 60 days';}}
+      if(!st&&exp!==null&&age<60&&got<exp-5){st='wait';why='Partly paid so far; Smart Choice and First Connect usually pay within 1 to 2 months of the bind';}
       if(!st){
         if(exp===null){st='paid';}
         else{const d=got-exp;
@@ -2984,13 +2985,17 @@ function reconRows(){
             else if(premOk){st='short';why='Full premium reported but paid at '+effRate.toFixed(1)+'% instead of '+t.rate+'%, '+fmt(Math.abs(d).toFixed(2))+' less';}
             else{st=d<0?'short':'over';why=fmt(Math.abs(d).toFixed(2))+(d<0?' less than expected':' more than expected')+'. Statements show '+fmt(stmtPrem.toFixed(2))+' premium vs '+fmt(t.prem.toFixed(2))+' on the policy';}}}
       }
-      polRows.push({p,src,start:t.start,cur:t.cur,exp,got,stmtPrem,lines:ls,st,why});
+      if(t.pend&&t.pend.length){const pn='Not counting the premium change on '+t.pend.map(c=>fd(c.date)+' ('+(Number(c.to)-Number(c.from)>=0?'+':'-')+fmt(Math.abs(Number(c.to)-Number(c.from)).toFixed(2))+')').join(', ')+' yet; carriers usually pay changes 1 to 2 months later';t.pn=pn;}
+      polRows.push({p,src,start:t.start,cur:t.cur,exp,got,stmtPrem,lines:ls,st,why,pn:t.pn||''});
     });
     // carrier netted one term against another: judge the terms together
     if(polRows.length>1&&polRows.some(r=>r.st==='short'||r.st==='over')&&polRows.every(r=>r.exp!==null||r.st==='wait')){
       const tg=polRows.reduce((a,r)=>a+(r.exp!==null?r.got:0),0),te=polRows.reduce((a,r)=>a+(r.exp!==null?r.exp:0),0);
-      if(Math.abs(tg-te)<=5)polRows.forEach(r=>{if(r.exp!==null){r.st='paid';r.why='Carrier over-credited one term and took it back on the other; both terms together are paid in full ('+fmt(tg.toFixed(2))+')';}});
+      const tol=5*polRows.filter(r=>r.exp!==null).length;
+      if(Math.abs(tg-te)<=tol)polRows.forEach(r=>{if(r.exp!==null){r.st='paid';r.why='Carrier over-credited one term and took it back on the other; both terms together are paid in full ('+fmt(tg.toFixed(2))+' of '+fmt(te.toFixed(2))+')';}});
+      else if(polRows.some(r=>r.cur&&r.st==='wait'))polRows.forEach(r=>{if(!r.cur&&r.st==='over'){r.st='wait';r.why='Carrier credited '+fmt((r.got-r.exp).toFixed(2))+' extra on this term; it is usually taken back at renewal. Checked again once the current term is fully paid';}});
     }
+    polRows.forEach(r=>{if(r.pn)r.why=r.why?r.why+'. '+r.pn:r.pn;});
     const cur=polRows.find(r=>r.cur),prev=polRows.find(r=>!r.cur&&r.exp===null&&r.lines.length);
     if(cur&&prev&&(cur.st==='short'||cur.st==='over'))cur.why+='. The earlier term was credited '+fmt(prev.got.toFixed(2))+' on '+fmt(prev.stmtPrem.toFixed(2))+' premium, and some carriers settle the difference at renewal. Add the earlier term premium to check both terms together';
     rows.push(...polRows);
@@ -3419,7 +3424,7 @@ function savePolicy(){
   const vals={clientId:document.getElementById('pf-client').value,type:document.getElementById('pf-type').value,term:document.getElementById('pf-term').value||'12',carrier:document.getElementById('pf-carrier').value.trim(),number:document.getElementById('pf-number').value.trim(),premium:document.getElementById('pf-premium').value,commRate:document.getElementById('pf-comm-rate').value||0,commRateRenewal:document.getElementById('pf-comm-rate-renewal').value||0,commType:document.getElementById('pf-comm-type').value,channel:document.getElementById('pf-channel').value,effective:document.getElementById('pf-effective').value,renewal:document.getElementById('pf-renewal').value,status:document.getElementById('pf-status').value||'Active',notes:document.getElementById('pf-notes').value.trim(),bonusRate:document.getElementById('pf-bonus-rate').value||'',bonusNote:document.getElementById('pf-bonus-note').value.trim()};
   if(!vals.clientId||!vals.carrier||!vals.renewal){appAlert('Client, carrier, and renewal date required.');return;}
   learnCarrierRate(vals);ensureCarrier(vals.carrier,vals.channel);
-  if(editingPolicyId){const idx=data.policies.findIndex(x=>x.id===editingPolicyId);if(idx!==-1)data.policies[idx]={...data.policies[idx],...vals,id:editingPolicyId};editingPolicyId=null;}
+  if(editingPolicyId){const idx=data.policies.findIndex(x=>x.id===editingPolicyId);if(idx!==-1){const old=data.policies[idx];const oldP=Number(old.premium)||0,newP=Number(vals.premium)||0;let chg=Array.isArray(old.premiumChanges)?old.premiumChanges.slice():[];if(old.effective&&old.effective===vals.effective&&oldP&&newP&&Math.abs(newP-oldP)>=0.01){const td=new Date().toISOString().slice(0,10);if(td>old.effective)chg.push({date:td,from:oldP,to:newP});}chg=chg.filter(c=>c&&c.date&&c.date>=(vals.effective||''));data.policies[idx]={...old,...vals,id:editingPolicyId,premiumChanges:chg};}editingPolicyId=null;}
   else{data.policies.push({...vals,id:'p'+Date.now()});}
   document.querySelector('#policy-modal .modal-header h3').textContent='Add Policy';
   save();closeModal('policy-modal');
