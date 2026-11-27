@@ -1617,6 +1617,7 @@ tr:hover td{background:#f4f6fa;}
       <div class="form-row"><div class="form-group"><label>Current carrier</label><input id="qf-cur-carrier" type="text" placeholder="Who they have now"></div><div class="form-group"><label>Current policy renews (X-date)</label><input id="qf-xdate" type="date"></div></div>
       <div class="form-row single"><div class="form-group"><label>Carrier(s) quoted</label><input id="qf-quoted" type="text" placeholder="e.g. Progressive, Nationwide"></div></div>
       <div class="form-row single"><div class="form-group"><label>Notes</label><textarea id="qf-notes"></textarea></div></div>
+      <div id="qf-files" style="display:none;margin:-4px 0 12px;"></div>
     </div>
     <div class="modal-footer"><button class="btn" onclick="closeModal('quote-modal')">Cancel</button><button class="btn btn-primary" onclick="saveQuote()">Save Quote</button></div>
   </div>
@@ -2727,7 +2728,7 @@ function deleteTask(id){data.tasks=data.tasks.filter(x=>x.id!==id);save();render
 const Q_STAGES=['New Lead','Quoted','Pending Docs','Closed Won','Closed Lost'];
 const Q_LABEL={'New Lead':'New','Quoted':'Quoted','Pending Docs':'Pending docs','Closed Won':'Won','Closed Lost':'Lost'};
 let quoteClientId=null,lqDrag=null;
-function newQuote(){quoteClientId=null;editingQuoteId=null;openModal('quote-modal');}
+function newQuote(){quoteClientId=null;editingQuoteId=null;const qfF=document.getElementById('qf-files');if(qfF){qfF.style.display='none';qfF.innerHTML='';}openModal('quote-modal');}
 function leadsTab(t){document.getElementById('lq-pipe').style.display=t==='pipe'?'':'none';document.getElementById('lq-pros').style.display=t==='pros'?'':'none';document.getElementById('lq-tab-pipe').classList.toggle('on',t==='pipe');document.getElementById('lq-tab-pros').classList.toggle('on',t==='pros');if(t==='pros')renderProspects();}
 let lqFilter={q:'',lob:'',src:'',showLost:true};
 function lqSet(k,v){lqFilter[k]=v;renderQuotes();}
@@ -3133,7 +3134,7 @@ function openModal(id){
   if(id==='reshop-modal'&&!editingReshopId){document.querySelector('#reshop-modal .modal-header h3').textContent='Add to Re-Shop Queue';document.querySelectorAll('#reshop-modal input,#reshop-modal select,#reshop-modal textarea').forEach(el=>{if(el.tagName==='SELECT'&&el.options.length)el.selectedIndex=0;else el.value='';});}
   document.getElementById(id).classList.add('open');
 }
-function closeModal(id){document.getElementById(id).classList.remove('open');resetEditingState();}
+function closeModal(id){document.getElementById(id).classList.remove('open');if(id==='quote-modal'){const qfF=document.getElementById('qf-files');if(qfF){qfF.style.display='none';qfF.innerHTML='';}}resetEditingState();}
 function populateClientSelects(){const opts=data.clients.map(c=>`<option value="${c.id}">${esc(cn(c.id))}</option>`).join('');['pf-client','tf-client','rf-client'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=(id==='tf-client'?'<option value="">None</option>':'')+opts;});}
 
 function switchCfTab(tab,el){
@@ -3554,6 +3555,7 @@ function editQuote(id){
   document.getElementById('qf-source').value=q.source||'Referral';
   document.getElementById('qf-due').value=q.due||'';
   document.getElementById('qf-priority').value=q.priority||'Medium';
+  const qfF=document.getElementById('qf-files');const wf=(Array.isArray(q.webFiles)?q.webFiles:[]).filter(f=>/^https:\/\//.test(f.url||''));qfF.style.display=wf.length?'block':'none';qfF.innerHTML=wf.length?'<label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Documents from the website form</label>'+wf.map(f=>`<a href="${esc(f.url)}" target="_blank" rel="noopener" class="p3-btn sm" style="margin:0 6px 6px 0;display:inline-block;">${esc(f.name||'Document')}</a>`).join(''):'';
   document.getElementById('qf-notes').value=q.notes||'';document.getElementById('qf-cur-carrier').value=q.currentCarrier||'';document.getElementById('qf-xdate').value=q.xDate||'';document.getElementById('qf-quoted').value=q.quotedCarriers||'';
   if(!canOpenModal('quote-modal'))return;
   document.querySelector('#quote-modal .modal-header h3').textContent='Edit Quote';
