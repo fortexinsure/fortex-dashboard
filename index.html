@@ -624,9 +624,9 @@ tr:hover td{background:#f4f6fa;}
       <button type="button" role="tab" class="profile-tab" onclick="switchProfileTab('vehicles',this)">Vehicles</button>
       <button type="button" role="tab" class="profile-tab" onclick="switchProfileTab('driver',this)">Drivers</button>
       <button type="button" role="tab" class="profile-tab" onclick="switchProfileTab('property',this)">Properties</button>
-      <button type="button" role="tab" class="profile-tab" onclick="switchProfileTab('notes',this)">Activity</button>
+      <button type="button" role="tab" class="profile-tab" onclick="switchProfileTab('notes',this);loadC360Activity()">Activity</button>
       <button type="button" role="tab" class="profile-tab" onclick="switchProfileTab('details',this)">Details</button>
-      <button type="button" role="tab" class="profile-tab" onclick="switchProfileTab('documents',this)">Documents</button>
+      <button type="button" role="tab" class="profile-tab" onclick="switchProfileTab('documents',this);renderC360Docs()">Documents</button>
       <button type="button" role="tab" class="profile-tab" onclick="switchProfileTab('commission',this);loadC360Commission()">Commission</button>
     </div>
     <div id="c360-body">
@@ -834,6 +834,9 @@ tr:hover td{background:#f4f6fa;}
   <div class="page-body">
    <div class="p3-wrap">
     <div class="p3-title"><div><h1>Commissions</h1><p>What you have been paid, and what your book should pay you</p></div></div>
+    <div class="p3-subtabs" role="tablist"><button type="button" id="cm-tab-ov" class="on" onclick="commTab('ov')">Overview</button><button type="button" id="cm-tab-rc" onclick="commTab('rc')">Reconcile</button></div>
+    <div id="comm-recon" style="display:none;flex-direction:column;gap:20px;"></div>
+    <div id="comm-ov" style="display:flex;flex-direction:column;gap:20px;">
     <div class="p3-kpis" id="comm-metrics"></div>
     <section class="p3-card" style="padding:18px 20px;"><div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:center;"><h2 class="p3-h2">Received by month</h2><span id="comm-chart-sub" style="font-size:13px;color:#5b6475;"></span></div><div id="comm-chart"></div></section>
     <div class="p3-cols">
@@ -842,6 +845,7 @@ tr:hover td{background:#f4f6fa;}
     </div>
     <section class="p3-card" style="padding:18px 20px;"><h2 class="p3-h2" style="margin-bottom:10px;">Statements by month and channel</h2><div id="comm-received"></div></section>
     <section class="p3-card" style="padding:18px 20px;"><h2 class="p3-h2" style="margin-bottom:10px;">Every active policy</h2><div class="p3-tablebox"><table class="p3-table"><thead><tr><th>Client</th><th>Policy</th><th>Carrier</th><th class="r">Annual premium</th><th class="r">Rate now</th><th class="r">Commission / yr</th></tr></thead><tbody id="comm-detail-tbody"></tbody></table></div></section>
+    </div>
    </div>
   </div>
 </div>
@@ -1105,6 +1109,8 @@ tr:hover td{background:#f4f6fa;}
 
     <!-- NOTES TAB -->
     <div class="profile-tab-content" id="ptab-notes">
+      <section class="p3-card" style="padding:18px 20px;margin-bottom:18px;"><h2 class="p3-h2" style="margin-bottom:10px;">Timeline</h2><div id="c360-timeline"></div></section>
+      <h2 class="p3-h2" style="margin:0 0 10px;">Notes</h2>
       <div class="notes-entry">
         <textarea id="new-note-text" placeholder="Add a note, activity log, callback result, or reminder..."></textarea>
         <div style="display:flex;justify-content:flex-end;"><button class="btn btn-primary" onclick="addNote()">Add Note</button></div>
@@ -1611,6 +1617,7 @@ tr:hover td{background:#f4f6fa;}
       <div class="form-row"><div class="form-group"><label>Current carrier</label><input id="qf-cur-carrier" type="text" placeholder="Who they have now"></div><div class="form-group"><label>Current policy renews (X-date)</label><input id="qf-xdate" type="date"></div></div>
       <div class="form-row single"><div class="form-group"><label>Carrier(s) quoted</label><input id="qf-quoted" type="text" placeholder="e.g. Progressive, Nationwide"></div></div>
       <div class="form-row single"><div class="form-group"><label>Notes</label><textarea id="qf-notes"></textarea></div></div>
+      <div id="qf-files" style="display:none;margin:-4px 0 12px;"></div>
     </div>
     <div class="modal-footer"><button class="btn" onclick="closeModal('quote-modal')">Cancel</button><button class="btn btn-primary" onclick="saveQuote()">Save Quote</button></div>
   </div>
@@ -1863,6 +1870,7 @@ async function loadCarrierRates(){
   if(!r.error){carrierRates=r.data||[];ratesLoaded=true;}
   if(!cr.error){carriersList=cr.data||[];carriersLoaded=true;}
   if(!st.error)commStatements=st.data||[];
+  if(allLines===null)loadAllLines();
   if(document.getElementById('page-dashboard').classList.contains('active'))renderDashboard();
   fillCarrierList();
 }
@@ -2129,6 +2137,7 @@ async function saveRenewal(){
   if(!prem){appAlert('Please enter the new premium (use the same amount if it did not change).');return;}
   const oldPrem=p.premium,oldRen=p.renewal,oldBonus=bonusAmt(p),oldBonusRate=p.bonusRate,oldBonusNote=p.bonusNote;
   if(oldBonus){if(!Array.isArray(p.bonusHistory))p.bonusHistory=[];p.bonusHistory.push({term:`${p.effective||''} to ${oldRen||''}`,rate:oldBonusRate,amount:oldBonus,note:oldBonusNote||''});p.bonusRate='';p.bonusNote='';}
+  if(p.effective){if(!Array.isArray(p.termHistory))p.termHistory=[];p.termHistory.push({start:p.effective,end:oldRen||eff,premium:oldPrem,rate:commRateFor(p),bonus:oldBonus||0});}
   p.term=document.getElementById('rn-term').value;p.effective=eff;p.renewal=ren;p.premium=prem;p.status='Active';p.commType='Renewal';
   if(rate)p.commRateRenewal=rate;
   const num=document.getElementById('rn-number').value.trim();if(num)p.number=num;
@@ -2185,7 +2194,7 @@ function p3Items(){
   overduePolicies().forEach(p=>items.push({kind:'ren',chip:'chip-red',label:p3Days(-du(p.renewal))+' overdue',title:cn(p.clientId),sub:`${p.type||'Policy'} · ${p.carrier||''} · ${fmtc(p.premium)}`,open:`openPolicy('${p.id}')`,btn:'Mark renewed',act:`renewPolicy('${p.id}')`,sort:du(p.renewal)}));
   data.policies.filter(p=>isLive(p)&&du(p.renewal)>=0&&du(p.renewal)<=30).forEach(p=>{const d=du(p.renewal);items.push({kind:'ren',chip:d<=14?'chip-red':'chip-amber',label:d===0?'Renews today':'Renews in '+p3Days(d),title:cn(p.clientId),sub:`${p.type||'Policy'} · ${p.carrier||''} · ${fmtc(p.premium)}`,open:`openPolicy('${p.id}')`,btn:d<=14?'Renew':'Open',act:d<=14?`renewPolicy('${p.id}')`:`openProfile('${p.clientId}')`,sort:d});});
   (data.tasks||[]).filter(t=>t.status!=='Done'&&t.due&&du(t.due)<=0).forEach(t=>{const d=du(t.due);items.push({kind:'task',chip:'chip-blue',label:d===0?'Task due today':'Task '+p3Days(-d)+' late',title:t.title,sub:(t.clientId?cn(t.clientId)+' · ':'')+(t.cat||'Task'),open:t.clientId?`openProfile('${t.clientId}')`:`navTo('followups')`,btn:'Done',act:`p3TaskDone('${t.id}')`,sort:d});});
-  (data.quotes||[]).filter(q=>!['Closed Won','Closed Lost'].includes(q.status)&&q.due&&du(q.due)<=0).forEach(q=>items.push({kind:'lead',chip:'chip-blue',label:'Quote follow-up',title:q.name,sub:`${q.lob||'Quote'} · ${q.status||''}`,open:`navTo('quotes')`,btn:'Open',act:`navTo('quotes')`,sort:du(q.due)}));
+  (data.quotes||[]).filter(q=>!['Closed Won','Closed Lost'].includes(q.status)&&q.due&&du(q.due)<=0).forEach(q=>items.push({kind:'lead',chip:q.source==='Website'&&q.status==='New Lead'?'chip-green':'chip-blue',label:q.source==='Website'&&q.status==='New Lead'?'New web lead':'Quote follow-up',title:q.name,sub:`${q.lob||'Quote'} · ${q.status||''}`,open:`navTo('quotes')`,btn:'Open',act:`navTo('quotes')`,sort:du(q.due)}));
   const noRate=data.policies.filter(p=>isLive(p)&&!Number(p.commRate)&&!Number(p.commRateRenewal));
   if(noRate.length)items.push({kind:'other',chip:'chip-purple',label:'Missing info',title:noRate.length===1?'1 policy has no commission rate':noRate.length+' policies have no commission rate',sub:'They show $0 commission until a rate is added',open:`editPolicy('${noRate[0].id}')`,btn:'Fix',act:`editPolicy('${noRate[0].id}')`,sort:50});
   if(ratesLoaded&&commStatements.length){
@@ -2193,6 +2202,8 @@ function p3Items(){
       const srcs=[...new Set(commStatements.map(x=>x.source))];const missing=srcs.filter(src=>!commStatements.some(x=>x.source===src&&x.statement_month===key));
       if(missing.length)items.push({kind:'other',chip:'chip-purple',label:'Statement due',title:pm.toLocaleDateString('en-US',{month:'long'})+' statements not loaded yet',sub:missing.join(', '),open:`navTo('commissions')`,btn:'Load',act:`p3StatementHelp()`,sort:60});}
   }
+  (data.quotes||[]).filter(q=>q.source==='Website'&&q.status==='New Lead'&&q.created&&du(q.created)>=-7&&!(q.due&&du(q.due)<=0)).forEach(q=>items.push({kind:'lead',chip:'chip-green',label:'New web lead',title:q.name,sub:`${q.lob||''} · ${q.phone||q.email||''}`,open:`navTo('quotes')`,btn:'Open',act:`editQuote('${q.id}')`,sort:-5}));
+  const rr=reconRows();if(rr){const bad=rr.filter(r=>r.st==='missing'||r.st==='short');if(bad.length)items.push({kind:'other',chip:'chip-red',label:'Commission',title:bad.length===1?'1 policy paid short or not paid':bad.length+' policies paid short or not paid',sub:'Expected commission has not arrived on your statements',open:`navTo('commissions');commTab('rc')`,btn:'Review',act:`navTo('commissions');commTab('rc')`,sort:40});}
   return items.sort((x,y)=>x.sort-y.sort);
 }
 function p3TaskDone(id){const t=data.tasks.find(x=>x.id===id);if(!t)return;t.status='Done';save();showToast('Task marked done');}
@@ -2438,7 +2449,7 @@ function refreshC360(){
         ${gaps.length?`<div class="c360-gaps"><strong style="color:#7a4a00;">Coverage to offer:</strong>${gaps.map(g=>`<span class="p3-chip chip-amber">${p3Esc(g)}</span>`).join('')}<button class="p3-btn" type="button" style="margin-left:auto;" onclick="c360Quote()">Create quote</button></div>`:''}
       </section>
       <section class="p3-card" style="padding:18px 20px;" aria-label="Activity and notes">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h2 class="p3-h2">Activity and notes</h2><button class="p3-btn sm" type="button" onclick="switchProfileTab('notes',document.querySelectorAll('#page-client .profile-tab')[5])">See all</button></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h2 class="p3-h2">Activity and notes</h2><button class="p3-btn sm" type="button" onclick="switchProfileTab('notes',document.querySelectorAll('#page-client .profile-tab')[5]);loadC360Activity()">See all</button></div>
         <label><span class="sr-only">New note</span><textarea id="c360-note" placeholder="Type a note, call summary or follow-up..." style="width:100%;box-sizing:border-box;min-height:64px;border:1px solid #d8dbe3;border-radius:10px;padding:10px 12px;font:inherit;font-size:14px;resize:vertical;"></textarea></label>
         <div style="display:flex;justify-content:flex-end;margin-top:8px;"><button class="p3-btn dark" type="button" onclick="c360AddNote()">Add note</button></div>
         ${[...notes].reverse().slice(0,4).map(n=>`<div style="padding:12px 0;border-top:1px solid #eef0f4;font-size:14px;margin-top:8px;white-space:pre-wrap;">${p3Esc(n.text)}<div style="font-size:12px;color:#5b6475;margin-top:3px;">${p3Esc(fd(n.date))}</div></div>`).join('')||'<p style="color:#5b6475;font-size:14px;margin-top:10px;">No notes yet.</p>'}
@@ -2456,7 +2467,8 @@ function refreshC360(){
       </section>
     </div></div>`;
   const q=encodeURIComponent(isBiz?c.bizName:[c.first,c.last].filter(Boolean).join(' '));
-  document.getElementById('ptab-documents').innerHTML=`<div class="p3-card" style="padding:24px;"><h2 class="p3-h2">Documents</h2><p style="color:#5b6475;font-size:14px;margin:8px 0 16px;">Dec pages and applications will attach here in Phase 4. For now, open this client's files in your Google Drive.</p><a class="p3-btn dark" href="https://drive.google.com/drive/search?q=${q}" target="_blank" rel="noopener">Find in Google Drive</a></div>`;
+  if(document.getElementById('ptab-documents').classList.contains('active'))renderC360Docs();
+  if(document.getElementById('ptab-notes').classList.contains('active')&&c360Act.client===c.id)renderC360Activity();
   loadPoliciesTab(c.id);
 }
 function c360AddNote(){const ta=document.getElementById('c360-note');const text=(ta.value||'').trim();if(!text)return;const c=data.clients.find(x=>x.id===activeClientId);if(!c)return;if(!Array.isArray(c.notes))c.notes=c.notes&&String(c.notes).trim()?[{date:'',text:String(c.notes)}]:[];c.notes.push({date:new Date().toISOString().split('T')[0],text});ta.value='';save();loadNotes(c);showToast('Note added');}
@@ -2717,7 +2729,7 @@ function deleteTask(id){data.tasks=data.tasks.filter(x=>x.id!==id);save();render
 const Q_STAGES=['New Lead','Quoted','Pending Docs','Closed Won','Closed Lost'];
 const Q_LABEL={'New Lead':'New','Quoted':'Quoted','Pending Docs':'Pending docs','Closed Won':'Won','Closed Lost':'Lost'};
 let quoteClientId=null,lqDrag=null;
-function newQuote(){quoteClientId=null;editingQuoteId=null;openModal('quote-modal');}
+function newQuote(){quoteClientId=null;editingQuoteId=null;const qfF=document.getElementById('qf-files');if(qfF){qfF.style.display='none';qfF.innerHTML='';}openModal('quote-modal');}
 function leadsTab(t){document.getElementById('lq-pipe').style.display=t==='pipe'?'':'none';document.getElementById('lq-pros').style.display=t==='pros'?'':'none';document.getElementById('lq-tab-pipe').classList.toggle('on',t==='pipe');document.getElementById('lq-tab-pros').classList.toggle('on',t==='pros');if(t==='pros')renderProspects();}
 let lqFilter={q:'',lob:'',src:'',showLost:true};
 function lqSet(k,v){lqFilter[k]=v;renderQuotes();}
@@ -2852,6 +2864,7 @@ function refreshPolicyPage(){
       </div>
       ${bonusAmt(p)?`<div class="c360-gaps" style="margin-bottom:12px;"><strong style="color:#7a4a00;">One-time bonus:</strong> ${fmtc(bonusAmt(p))} (${Number(p.bonusRate)}%)${p.bonusNote?' · '+p3Esc(p.bonusNote):''}</div>`:''}
       ${bh.length?`<div style="font-size:13px;color:#5b6475;margin-bottom:12px;">Past bonuses: ${bh.map(b=>p3Esc(fmtc(b.amount)+' ('+b.rate+'%) '+(b.term||''))).join('; ')}</div>`:''}
+      ${(()=>{const r=reconStatusFor(p);if(!r)return'';const [cc,cl]=RC_CHIP[r.st];return`<div style="margin-bottom:10px;"><span class="p3-chip ${cc}">${cl}</span>${r.why?` <span style="font-size:13px;color:#5b6475;">${p3Esc(r.why)}</span>`:''}</div>`;})()}
       <div class="p3-tablebox">${linesHtml}</div>
     </section>
     <section class="p3-card" style="padding:18px 20px;"><h2 class="p3-h2" style="margin-bottom:6px;">Policy details</h2>
@@ -2912,6 +2925,183 @@ function renderCommissions(){
   const sorted=[...live].sort((a,b)=>commAmtAnnual(b)-commAmtAnnual(a));
   document.getElementById('comm-detail-tbody').innerHTML=sorted.map(p=>`<tr class="link" onclick="openPolicy('${p.id}')"><td><strong>${p3Esc(cn(p.clientId))}</strong></td><td>${p3Esc(p.type||'')}${(Number(p.term)||12)===6?' <span class="p3-chip chip-gray">6 mo</span>':''}</td><td>${p3Esc(p.carrier||'')}</td><td class="r">${fmtc(annualPrem(p))}</td><td class="r">${commRateFor(p)}%</td><td class="r" style="font-weight:700;color:#1a6b3a;">${fmtc(commAmtAnnual(p))}${bonusAmt(p)?`<br><span style="font-size:11px;color:#b26b00;">+ ${fmtc(bonusAmt(p))} bonus</span>`:''}</td></tr>`).join('')+`<tr><td colspan="5" style="font-weight:700;">Total</td><td class="r" style="font-weight:800;color:#1a6b3a;">${fmtc(totalAnn)}</td></tr>`;
 }
+
+
+// ==================== PHASE 4: commission reconciliation ====================
+let allLines=null,allLinesLoading=false,reconFilter='problems';
+async function loadAllLines(){
+  if(allLinesLoading)return;allLinesLoading=true;
+  const {data:rows,error}=await _supabase.from('commission_lines').select('statement_key,source,carrier,insured,policy_number,policy_id,client_id,trans_type,eff_date,premium,agent_commission,kind');
+  allLinesLoading=false;if(error)return;allLines=rows||[];
+  const pg=document.querySelector('.page.active');if(!pg)return;
+  if(pg.id==='page-dashboard')renderDashboard();if(pg.id==='page-commissions')renderCommissions();if(pg.id==='page-policy')refreshPolicyPage();
+}
+const RC_SOURCE={'Smart Choice':'Smart Choice','First Connect':'First Connect','Progressive Direct':'Progressive Direct'};
+function rcAddMonths(iso,m){const d=new Date(iso+'T00:00:00');d.setMonth(d.getMonth()+m);return d.toISOString().split('T')[0];}
+function rcLastMonth(src){const ms=commStatements.filter(x=>x.source===src).map(x=>x.statement_month).sort();return ms.length?ms[ms.length-1]:null;}
+function rcFirstMonth(src){const ms=commStatements.filter(x=>x.source===src).map(x=>x.statement_month).sort();return ms.length?ms[0]:null;}
+// One row per policy term that statements should cover. Flag rule (Paul, Nov 26 2026): missing 60+ days after the term starts, or off by more than $5.
+// Reconciliation rules (Paul, Nov 27 2026):
+// - Earlier terms are only checked when the policy actually renewed with Fortex: terms saved in termHistory by Renew Policy,
+//   or, for a policy marked Renewal without history, the one term right before the current one. New business never has earlier terms.
+// - Statement lines count toward a term only if their policy number matches this policy (a different suffix such as 01 vs 02 is an older, rewritten policy).
+// - Flag Missing 60+ days after a term starts (statement month loaded), Short/Overpaid when off by more than $5.
+// - If a carrier over-credits one term and takes it back on the next (Foremost does this), both terms are shown as paid when they net out.
+function rcNorm(v){return String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'');}
+function rcLineIsThisPolicy(p,l){const a=rcNorm(p.number),b=rcNorm(l.policy_number);return !a||!b||a===b||b.startsWith(a)||a.startsWith(b);}
+function rcRate(p){return commRateFor(p);}
+function reconRows(){
+  if(!allLines)return null;
+  const rows=[];
+  data.policies.forEach(p=>{
+    const src=RC_SOURCE[p.channel]||null;const term=Number(p.term)||12;
+    if(!p.effective)return;
+    const first=src?rcFirstMonth(src):null;
+    const terms=[{start:p.effective,end:rcAddMonths(p.effective,term),cur:true,prem:Number(p.premium)||0,rate:rcRate(p),bonus:bonusAmt(p)}];
+    const hist=Array.isArray(p.termHistory)?p.termHistory.filter(h=>h&&h.start&&h.start<p.effective):[];
+    if(hist.length){hist.forEach(h=>terms.push({start:h.start,end:h.end||p.effective,cur:false,prem:h.premium!==''&&h.premium!=null?Number(h.premium):null,rate:h.rate!==''&&h.rate!=null?Number(h.rate):null,bonus:Number(h.bonus)||0}));}
+    else if(p.commType==='Renewal'){terms.push({start:rcAddMonths(p.effective,-term),end:p.effective,cur:false,prem:null,rate:null,bonus:0});}
+    const polRows=[];
+    terms.forEach(t=>{
+      if(!t.cur&&(!src||!first||t.start.slice(0,7)<first))return;
+      const ls=allLines.filter(l=>l.policy_id===p.id&&l.kind!=='carry_forward'&&l.eff_date&&l.eff_date>=t.start&&l.eff_date<t.end&&rcLineIsThisPolicy(p,l));
+      const got=ls.reduce((a,l)=>a+Number(l.agent_commission||0),0);
+      const stmtPrem=ls.reduce((a,l)=>a+Number(l.premium||0),0);
+      const exp=(t.prem!==null&&t.rate!==null)?t.prem*t.rate/100+(t.bonus||0):null;
+      const age=-du(t.start);const last=src?rcLastMonth(src):null;
+      let st,why='';
+      if(!src){if(!ls.length)return;st='info';why='Channel has no statements loaded';}
+      else if(!isLive(p)&&t.cur){if(!ls.length)return;st='info';why=p.status||'Not active';}
+      else if(age<0){st='wait';why='Starts '+fd(t.start);}
+      else if(!last||t.start.slice(0,7)>last){if(ls.length){st='paid';}else{st='wait';why='Statement for '+new Date(t.start+'T00:00:00').toLocaleDateString('en-US',{month:'short',year:'numeric'})+' not loaded yet';}}
+      else if(!ls.length){if(age>=60){st='missing';why=t.cur?'No payment '+age+' days after the term started':'Earlier term never paid';}else{st='wait';why='Usually paid within 60 days';}}
+      if(!st){
+        if(exp===null){st='paid';}
+        else{const d=got-exp;
+          if(Math.abs(d)<=5)st='paid';
+          else{const premOk=Math.abs(stmtPrem-t.prem)<=Math.max(5,t.prem*0.005);const effRate=stmtPrem?got/stmtPrem*100:0;
+            if(premOk&&d>0){st='paid';why='Full premium reported; part was paid at a higher rate ('+effRate.toFixed(1)+'% overall vs '+t.rate+'%)';}
+            else if(premOk){st='short';why='Full premium reported but paid at '+effRate.toFixed(1)+'% instead of '+t.rate+'%, '+fmt(Math.abs(d).toFixed(2))+' less';}
+            else{st=d<0?'short':'over';why=fmt(Math.abs(d).toFixed(2))+(d<0?' less than expected':' more than expected')+'. Statements show '+fmt(stmtPrem.toFixed(2))+' premium vs '+fmt(t.prem.toFixed(2))+' on the policy';}}}
+      }
+      polRows.push({p,src,start:t.start,cur:t.cur,exp,got,stmtPrem,lines:ls,st,why});
+    });
+    // carrier netted one term against another: judge the terms together
+    if(polRows.length>1&&polRows.some(r=>r.st==='short'||r.st==='over')&&polRows.every(r=>r.exp!==null||r.st==='wait')){
+      const tg=polRows.reduce((a,r)=>a+(r.exp!==null?r.got:0),0),te=polRows.reduce((a,r)=>a+(r.exp!==null?r.exp:0),0);
+      if(Math.abs(tg-te)<=5)polRows.forEach(r=>{if(r.exp!==null){r.st='paid';r.why='Carrier over-credited one term and took it back on the other; both terms together are paid in full ('+fmt(tg.toFixed(2))+')';}});
+    }
+    const cur=polRows.find(r=>r.cur),prev=polRows.find(r=>!r.cur&&r.exp===null&&r.lines.length);
+    if(cur&&prev&&(cur.st==='short'||cur.st==='over'))cur.why+='. The earlier term was credited '+fmt(prev.got.toFixed(2))+' on '+fmt(prev.stmtPrem.toFixed(2))+' premium, and some carriers settle the difference at renewal. Add the earlier term premium to check both terms together';
+    rows.push(...polRows);
+  });
+  return rows;
+}
+function reconStatusFor(p){const r=reconRows();if(!r)return null;return r.find(x=>x.p.id===p.id&&x.cur)||null;}
+const RC_CHIP={missing:['chip-red','Missing'],short:['chip-red','Short'],over:['chip-amber','Overpaid'],paid:['chip-green','Paid'],wait:['chip-gray','Waiting'],info:['chip-blue','Info']};
+function commTab(t){document.getElementById('comm-ov').style.display=t==='ov'?'flex':'none';document.getElementById('comm-recon').style.display=t==='rc'?'flex':'none';document.getElementById('cm-tab-ov').classList.toggle('on',t==='ov');document.getElementById('cm-tab-rc').classList.toggle('on',t==='rc');if(t==='rc')renderRecon();}
+function setReconFilter(f){reconFilter=f;renderRecon();}
+function renderRecon(){
+  const box=document.getElementById('comm-recon');if(!box)return;
+  if(!allLines){box.innerHTML='<div class="p3-card" style="padding:24px;color:#5b6475;">Loading statement lines...</div>';loadAllLines();return;}
+  const rows=reconRows();
+  const prob=rows.filter(r=>['missing','short','over'].includes(r.st));
+  const miss=rows.filter(r=>r.st==='missing'),short=rows.filter(r=>r.st==='short');
+  const missAmt=miss.reduce((a,r)=>a+(r.exp||0),0),shortAmt=short.reduce((a,r)=>a+((r.exp||0)-r.got),0);
+  const paid=rows.filter(r=>r.st==='paid');
+  const unmatched=allLines.filter(l=>!l.policy_id&&l.kind==='commission');
+  const lastBy=['Smart Choice','First Connect','Progressive Direct'].map(s=>{const m=rcLastMonth(s);return s+': '+(m?new Date(m+'-01T00:00:00').toLocaleDateString('en-US',{month:'short',year:'numeric'}):'none');}).join(' · ');
+  const list=reconFilter==='problems'?prob:reconFilter==='all'?rows:rows.filter(r=>r.st===reconFilter);
+  const f=(k,l,n)=>`<button type="button" class="${reconFilter===k?'on':''}" onclick="setReconFilter('${k}')">${l} ${n}</button>`;
+  box.innerHTML=`<div class="p3-kpis">
+    <div class="p3-card p3-kpi" onclick="setReconFilter('missing')"><div class="p3-lbl">Missing payments</div><div class="v" style="color:${miss.length?'#9b2c2c':'#1a6b3a'};">${miss.length}</div><div class="s">${miss.length?'About '+fmtc(missAmt)+' expected':'Nothing missing'}</div></div>
+    <div class="p3-card p3-kpi" onclick="setReconFilter('short')"><div class="p3-lbl">Paid short</div><div class="v" style="color:${short.length?'#9b2c2c':'#1a6b3a'};">${short.length}</div><div class="s">${short.length?fmtc(shortAmt)+' less than expected':'None over $5 short'}</div></div>
+    <div class="p3-card p3-kpi" onclick="setReconFilter('paid')"><div class="p3-lbl">Paid as expected</div><div class="v" style="color:#1a6b3a;">${paid.length}</div><div class="s">Within $5</div></div>
+    <div class="p3-card p3-kpi" onclick="document.getElementById('rc-unmatched').scrollIntoView({behavior:'smooth'})"><div class="p3-lbl">Unmatched lines</div><div class="v">${unmatched.length}</div><div class="s">Paid on a policy not in the dashboard</div></div></div>
+  <section class="p3-card" style="overflow:hidden;">
+    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;padding:16px 20px;"><div><h2 class="p3-h2">Policy by policy</h2><p style="margin:4px 0 0;font-size:12px;color:#5b6475;">Latest statements loaded: ${p3Esc(lastBy)}</p></div>
+    <div class="p3-filters">${f('problems','Problems',prob.length)}${f('missing','Missing',miss.length)}${f('short','Short',short.length)}${f('wait','Waiting',rows.filter(r=>r.st==='wait').length)}${f('paid','Paid',paid.length)}${f('all','All',rows.length)}</div></div>
+    <div class="p3-tablebox"><table class="p3-table"><thead><tr><th>Client</th><th>Policy</th><th>Term starts</th><th class="r">Expected</th><th class="r">Received</th><th>Status</th></tr></thead><tbody>
+    ${list.length?list.sort((a,b)=>String(b.start).localeCompare(String(a.start))).map(r=>{const [cc,cl]=RC_CHIP[r.st];return`<tr class="link" onclick="openPolicy('${r.p.id}')"><td><strong>${p3Esc(cn(r.p.clientId))}</strong></td><td>${p3Esc(r.p.type||'')}<br><span style="font-size:12px;color:#5b6475;">${p3Esc(r.p.carrier||'')}${r.p.channel?' via '+p3Esc(r.p.channel):''}${r.p.number?' · '+p3Esc(r.p.number):''}</span></td><td>${p3Esc(fd(r.start))}${r.cur?'':'<br><span style="font-size:12px;color:#5b6475;">earlier term</span>'}</td><td class="r">${r.exp!==null?fmt(r.exp.toFixed(2)):'<span style="color:#5b6475;">n/a</span>'}</td><td class="r" style="font-weight:600;">${r.lines.length?fmt(r.got.toFixed(2)):'<span style="color:#5b6475;">none</span>'}</td><td><span class="p3-chip ${cc}">${cl}</span>${r.why?`<br><span style="font-size:12px;color:#5b6475;">${p3Esc(r.why)}</span>`:''}</td></tr>`;}).join(''):`<tr><td colspan="6" class="empty-state">${reconFilter==='problems'?'No problems found. Every payment that should have arrived is within $5.':'Nothing in this view.'}</td></tr>`}
+    </tbody></table></div>
+    <p style="margin:0;padding:12px 20px 16px;font-size:12px;color:#5b6475;">Expected uses each policy's current premium and rate. If a policy changed mid-term (endorsement or cancellation), a small difference can be normal. Policies through AIM or direct appointments are not checked until their statements are loaded.</p>
+  </section>
+  <section class="p3-card" id="rc-unmatched" style="overflow:hidden;"><div style="padding:16px 20px;"><h2 class="p3-h2">Statement lines with no matching policy</h2><p style="margin:4px 0 0;font-size:13px;color:#5b6475;">Commission was paid on these, but the policy number is not in your dashboard. Add the policy (or fix its number) and they will match on the next statement load.</p></div>
+    <div class="p3-tablebox"><table class="p3-table"><thead><tr><th>Statement</th><th>Insured</th><th>Carrier</th><th>Policy number</th><th>Type</th><th class="r">Amount</th></tr></thead><tbody>${unmatched.length?unmatched.sort((a,b)=>String(b.statement_key).localeCompare(String(a.statement_key))).map(l=>`<tr><td>${p3Esc(String(l.statement_key).split('|').slice(0,2).join(' '))}</td><td>${p3Esc(l.insured||'')}</td><td>${p3Esc(l.carrier||'')}</td><td>${p3Esc(l.policy_number||'')}</td><td>${p3Esc(l.trans_type||'')}</td><td class="r">${fmt(Number(l.agent_commission||0).toFixed(2))}</td></tr>`).join(''):'<tr><td colspan="6" class="empty-state">Every statement line matches a policy.</td></tr>'}</tbody></table></div></section>`;
+}
+
+// ==================== PHASE 4: client activity timeline ====================
+let c360Act={client:null,rows:null,filter:'all'};
+const ACT_FIELDS={policies:{premium:'Premium',status:'Status',renewal_date:'Renewal date',effective_date:'Effective date',carrier:'Carrier',channel:'Written through',policy_number:'Policy number',policy_type:'Line',comm_rate:'NB rate',comm_rate_renewal:'Renewal rate',term_months:'Term'},clients:{tag:'Tag',phone_cell:'Cell phone',phone_home:'Home phone',email1:'Email',addr1:'Address',city:'City',zip:'ZIP',dob:'Date of birth',client_type:'Client type'},tasks:{status:'Status',due_date:'Due date',title:'Title',priority:'Priority'},quotes:{status:'Stage',premium:'Premium',lob:'Line'},vehicles:{},properties:{},reshop:{status:'Status'}};
+const ACT_JS={premium:'premium',status:'status',renewal_date:'renewal',effective_date:'effective',carrier:'carrier',channel:'channel',policy_number:'number',policy_type:'type',comm_rate:'commRate',comm_rate_renewal:'commRateRenewal',term_months:'term',tag:'tag',phone_cell:'phoneCell',phone_home:'phoneHome',email1:'email1',addr1:'addr1',city:'city',zip:'zip',dob:'dob',client_type:'clientType',due_date:'due',title:'title',priority:'priority',lob:'lob'};
+const ACT_TBL={policies:'policies',clients:'clients',tasks:'tasks',quotes:'quotes',vehicles:'vehicles',properties:'properties',reshop:'reshop'};
+function actNorm(v){if(v===null||v===undefined)return'';const s=String(v).trim();return /^-?\d+(\.\d+)?$/.test(s)?String(Number(s)):s;}
+function actLabel(tbl,o){if(!o)return tbl;if(tbl==='policies')return (o.policy_type||o.type||'Policy')+(o.carrier?' with '+o.carrier:'');if(tbl==='tasks')return 'Task "'+(o.title||'')+'"';if(tbl==='quotes')return 'Quote for '+(o.name||'')+(o.lob?' ('+o.lob+')':'');if(tbl==='vehicles')return [o.year,o.make,o.model].filter(Boolean).join(' ')||'Vehicle';if(tbl==='properties')return o.address||o.addr||'Property';if(tbl==='clients')return 'Client details';return tbl;}
+async function loadC360Activity(){
+  const c=data.clients.find(x=>x.id===activeClientId);if(!c)return;
+  const box=document.getElementById('c360-timeline');if(!box)return;
+  if(c360Act.client!==c.id){c360Act={client:c.id,rows:null,filter:'all'};box.innerHTML='<p style="color:#5b6475;font-size:14px;">Loading activity...</p>';}
+  if(!allLines)loadAllLines();
+  const {data:rows,error}=await _supabase.rpc('client_activity',{p_client_id:c.id});
+  if(c.id!==activeClientId)return;
+  c360Act.rows=error?[]:(rows||[]);renderC360Activity();
+}
+function setActFilter(f){c360Act.filter=f;renderC360Activity();}
+function renderC360Activity(){
+  const box=document.getElementById('c360-timeline');const c=data.clients.find(x=>x.id===activeClientId);if(!box||!c)return;
+  const ev=[];
+  (Array.isArray(c.notes)?c.notes:[]).forEach(n=>ev.push({kind:'note',date:n.date||'',text:n.text||'',chip:['chip-gray','Note']}));
+  (data.quotes||[]).filter(q=>q.clientId===c.id).forEach(q=>(Array.isArray(q.history)?q.history:[]).forEach(h=>ev.push({kind:'quote',date:h.date,text:'Quote '+(q.lob?'for '+q.lob+' ':'')+(h.from?'moved from '+(Q_LABEL[h.from]||h.from)+' to ':'started in ')+(Q_LABEL[h.to]||h.to)+(h.reason?' ('+h.reason+')':''),chip:['chip-blue','Quote']})));
+  (allLines||[]).filter(l=>l.client_id===c.id&&l.kind!=='carry_forward').forEach(l=>{const m=String(l.statement_key).split('|');ev.push({kind:'pay',date:(m[1]||'')+'-28',text:(Number(l.agent_commission)<0?'Commission charged back ':'Commission paid ')+fmt(Math.abs(Number(l.agent_commission||0)).toFixed(2))+' on '+(l.carrier||'')+' '+(l.policy_number||'')+(l.trans_type?' ('+l.trans_type+')':'')+', '+m[0]+' statement',chip:['chip-green','Payment'],month:true});});
+  // record history: describe what changed between each saved version and the next one
+  const byRec={};(c360Act.rows||[]).forEach(h=>{const k=h.tbl+'|'+h.id;(byRec[k]=byRec[k]||[]).push(h);});
+  Object.entries(byRec).forEach(([k,hs])=>{
+    const [tbl,id]=k.split('|');const map=ACT_FIELDS[tbl]||{};
+    const cur=(data[ACT_TBL[tbl]]||[]).find(x=>x.id===id);
+    hs.sort((a,b)=>String(a.at).localeCompare(String(b.at)));
+    hs.forEach((h,i)=>{
+      const day=String(h.at).slice(0,10);
+      if(h.op==='delete'){ev.push({kind:'change',date:day,text:actLabel(tbl,h.old)+' removed',chip:['chip-red','Removed']});return;}
+      const nextOld=hs[i+1]&&hs[i+1].old;
+      const changes=[];
+      Object.entries(map).forEach(([col,lab])=>{if(!h.old||!(col in h.old))return;const before=h.old[col];const after=nextOld?nextOld[col]:(cur?cur[ACT_JS[col]]:undefined);if(after===undefined)return;
+        if(actNorm(before)!==actNorm(after)){const fmtV=v=>{const n=actNorm(v);if(!n)return'blank';if(['premium','comm_rate','comm_rate_renewal'].includes(col))return col==='premium'?fmtc(n):n+'%';if(/date/.test(col)||col==='dob')return fd(n);return n;};changes.push(lab+' '+fmtV(before)+' → '+fmtV(after));}});
+      if(changes.length)ev.push({kind:'change',date:day,text:actLabel(tbl,h.old)+': '+changes.join(', '),chip:['chip-purple','Change']});
+    });
+  });
+  data.policies.filter(p=>p.clientId===c.id).forEach(p=>{if(p.effective)ev.push({kind:'change',date:p.effective,text:(p.type||'Policy')+' with '+(p.carrier||'')+' '+(p.commType==='Renewal'?'renewed':'started')+(p.number?' ('+p.number+')':''),chip:['chip-green','Policy']});});
+  const f=c360Act.filter;const shown=ev.filter(e=>f==='all'||e.kind===f).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  const cnt=k=>ev.filter(e=>k==='all'||e.kind===k).length;
+  const fb=(k,l)=>`<button type="button" class="${f===k?'on':''}" onclick="setActFilter('${k}')">${l} ${cnt(k)}</button>`;
+  box.innerHTML=`<div class="p3-filters" style="margin-bottom:12px;">${fb('all','All')}${fb('note','Notes')}${fb('change','Changes')}${fb('pay','Payments')}${fb('quote','Quotes')}</div>`+(shown.length?shown.slice(0,150).map(e=>`<div style="display:flex;gap:12px;padding:11px 0;border-top:1px solid #eef0f4;"><div style="width:92px;flex:none;font-size:12px;color:#5b6475;padding-top:2px;">${e.month?p3Esc(new Date(e.date.slice(0,7)+'-01T00:00:00').toLocaleDateString('en-US',{month:'short',year:'numeric'})):p3Esc(e.date?fd(e.date):'')}</div><div style="flex:1;min-width:0;"><span class="p3-chip ${e.chip[0]}" style="margin-right:6px;">${e.chip[1]}</span><span style="font-size:14px;white-space:pre-wrap;">${p3Esc(e.text)}</span></div></div>`).join(''):'<p style="color:#5b6475;font-size:14px;">Nothing here yet.</p>')+(c360Act.rows&&!c360Act.rows.length?'<p style="font-size:12px;color:#5b6475;margin-top:10px;">Detailed change history starts from Nov 25, 2026, when record-by-record saving began.</p>':'');
+}
+
+// ==================== PHASE 4: Google Drive documents ====================
+function driveDocs(c){return Array.isArray(c.driveFiles)?c.driveFiles:[];}
+function renderC360Docs(){
+  const c=data.clients.find(x=>x.id===activeClientId);if(!c)return;const box=document.getElementById('ptab-documents');
+  const isBiz=c.clientType==='commercial'&&c.bizName;const q=encodeURIComponent(isBiz?c.bizName:[c.first,c.last].filter(Boolean).join(' '));
+  const pols=data.policies.filter(p=>p.clientId===c.id);
+  const docs=driveDocs(c);
+  const icon=n=>/\.pdf$/i.test(n)?'PDF':/\.(png|jpe?g|heic)$/i.test(n)?'IMG':/\.(docx?|gdoc)$/i.test(n)?'DOC':'FILE';
+  box.innerHTML=`<div class="p3-cols"><div class="p3-main">
+    <section class="p3-card" style="padding:18px 20px;"><div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;margin-bottom:8px;"><h2 class="p3-h2">Documents in Google Drive</h2><div style="display:flex;gap:8px;flex-wrap:wrap;">${c.driveFolder?`<a class="p3-btn dark" href="${p3Esc(c.driveFolder)}" target="_blank" rel="noopener">Open client folder</a>`:''}<a class="p3-btn" href="https://drive.google.com/drive/search?q=${q}" target="_blank" rel="noopener">Search Drive</a></div></div>
+    ${docs.length?docs.map((d,i)=>{const pol=d.policyId?pols.find(p=>p.id===d.policyId):null;return`<div class="p3-kv" style="align-items:center;"><span style="display:flex;gap:10px;align-items:center;min-width:0;"><span class="p3-chip chip-gray">${icon(d.name||'')}</span><a href="${p3Esc(d.url)}" target="_blank" rel="noopener" style="color:#0c1e3a;font-weight:600;word-break:break-word;">${p3Esc(d.name||'Document')}</a></span><span style="display:flex;gap:8px;align-items:center;flex:none;">${pol?`<span style="font-size:12px;color:#5b6475;">${p3Esc(pol.type||'')}</span>`:''}<button class="p3-btn sm" type="button" aria-label="Remove link" onclick="removeDriveDoc(${i})">Remove</button></span></div>`;}).join(''):'<p style="color:#5b6475;font-size:14px;">No documents linked yet. Paste a Drive link on the right, or use Search Drive.</p>'}
+    </section></div>
+    <div class="p3-side"><section class="p3-card" style="padding:18px 20px;"><h2 class="p3-h2" style="margin-bottom:10px;">Link a document</h2>
+      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:4px;" for="dd-url">Google Drive link</label><input id="dd-url" type="url" placeholder="https://drive.google.com/..." style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid #d0d5dd;border-radius:8px;font:inherit;font-size:14px;margin-bottom:10px;">
+      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:4px;" for="dd-name">Name</label><input id="dd-name" type="text" placeholder="e.g. 2026 Auto dec page" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid #d0d5dd;border-radius:8px;font:inherit;font-size:14px;margin-bottom:10px;">
+      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:4px;" for="dd-pol">Policy (optional)</label><select id="dd-pol" style="width:100%;padding:9px 12px;border:1px solid #d0d5dd;border-radius:8px;font:inherit;font-size:14px;margin-bottom:12px;"><option value="">Whole client</option>${pols.map(p=>`<option value="${p.id}">${p3Esc((p.type||'Policy')+' · '+(p.carrier||''))}</option>`).join('')}</select>
+      <button class="p3-btn dark" type="button" style="width:100%;" onclick="addDriveDoc()">Add link</button>
+      <label style="display:block;font-size:13px;font-weight:600;margin:16px 0 4px;" for="dd-folder">Client folder link</label><div style="display:flex;gap:8px;"><input id="dd-folder" type="url" value="${p3Esc(c.driveFolder||'')}" placeholder="Drive folder link" style="flex:1;min-width:0;padding:9px 12px;border:1px solid #d0d5dd;border-radius:8px;font:inherit;font-size:14px;"><button class="p3-btn" type="button" onclick="saveDriveFolder()">Save</button></div>
+    </section></div></div>`;
+}
+function validDrive(u){return /^https:\/\/(drive|docs)\.google\.com\//i.test(String(u||'').trim());}
+function addDriveDoc(){const c=data.clients.find(x=>x.id===activeClientId);if(!c)return;const url=document.getElementById('dd-url').value.trim();const name=document.getElementById('dd-name').value.trim();const pol=document.getElementById('dd-pol').value;
+  if(!validDrive(url)){appAlert('Paste a Google Drive or Google Docs link (it starts with https://drive.google.com or https://docs.google.com).');return;}
+  if(!Array.isArray(c.driveFiles))c.driveFiles=[];c.driveFiles.push({name:name||'Document',url,policyId:pol||'',added:new Date().toISOString().split('T')[0]});save();renderC360Docs();showToast('Document linked');}
+async function removeDriveDoc(i){const c=data.clients.find(x=>x.id===activeClientId);if(!c||!Array.isArray(c.driveFiles))return;if(!await appConfirm('Remove this link from the dashboard? The file stays in your Google Drive.',{title:'Remove link',okText:'Remove'}))return;c.driveFiles.splice(i,1);save();renderC360Docs();}
+function saveDriveFolder(){const c=data.clients.find(x=>x.id===activeClientId);if(!c)return;const u=document.getElementById('dd-folder').value.trim();if(u&&!validDrive(u)){appAlert('Paste a Google Drive folder link.');return;}c.driveFolder=u;save();renderC360Docs();showToast(u?'Folder saved':'Folder link removed');}
 
 // ==================== REPORTS ====================
 function renderReports(){
@@ -2974,7 +3164,7 @@ function openModal(id){
   if(id==='reshop-modal'&&!editingReshopId){document.querySelector('#reshop-modal .modal-header h3').textContent='Add to Re-Shop Queue';document.querySelectorAll('#reshop-modal input,#reshop-modal select,#reshop-modal textarea').forEach(el=>{if(el.tagName==='SELECT'&&el.options.length)el.selectedIndex=0;else el.value='';});}
   document.getElementById(id).classList.add('open');
 }
-function closeModal(id){document.getElementById(id).classList.remove('open');resetEditingState();}
+function closeModal(id){document.getElementById(id).classList.remove('open');if(id==='quote-modal'){const qfF=document.getElementById('qf-files');if(qfF){qfF.style.display='none';qfF.innerHTML='';}}resetEditingState();}
 function populateClientSelects(){const opts=data.clients.map(c=>`<option value="${c.id}">${esc(cn(c.id))}</option>`).join('');['pf-client','tf-client','rf-client'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=(id==='tf-client'?'<option value="">None</option>':'')+opts;});}
 
 function switchCfTab(tab,el){
@@ -3395,6 +3585,7 @@ function editQuote(id){
   document.getElementById('qf-source').value=q.source||'Referral';
   document.getElementById('qf-due').value=q.due||'';
   document.getElementById('qf-priority').value=q.priority||'Medium';
+  const qfF=document.getElementById('qf-files');const wf=(Array.isArray(q.webFiles)?q.webFiles:[]).filter(f=>/^https:\/\//.test(f.url||''));qfF.style.display=wf.length?'block':'none';qfF.innerHTML=wf.length?'<label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Documents from the website form</label>'+wf.map(f=>`<a href="${esc(f.url)}" target="_blank" rel="noopener" class="p3-btn sm" style="margin:0 6px 6px 0;display:inline-block;">${esc(f.name||'Document')}</a>`).join(''):'';
   document.getElementById('qf-notes').value=q.notes||'';document.getElementById('qf-cur-carrier').value=q.currentCarrier||'';document.getElementById('qf-xdate').value=q.xDate||'';document.getElementById('qf-quoted').value=q.quotedCarriers||'';
   if(!canOpenModal('quote-modal'))return;
   document.querySelector('#quote-modal .modal-header h3').textContent='Edit Quote';
