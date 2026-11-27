@@ -2887,7 +2887,7 @@ async function policyCancel(id){const p=data.policies.find(x=>x.id===id);if(!p)r
 
 // ==================== COMMISSIONS (Phase 3) ====================
 let commLinesYear=null;
-async function loadCommLinesYear(yr){const {data:rows,error}=await _supabase.from('commission_lines').select('statement_key,carrier,agent_commission').like('statement_key','%|'+yr+'-%');commLinesYear=error?[]:(rows||[]);if(document.getElementById('page-commissions').classList.contains('active'))renderCommissions();}
+async function loadCommLinesYear(yr){const {data:rows,error}=await _supabase.from('commission_lines').select('statement_key,carrier,agent_commission,kind,note,trans_type').like('statement_key','%|'+yr+'-%');commLinesYear=error?[]:(rows||[]);if(document.getElementById('page-commissions').classList.contains('active'))renderCommissions();}
 function renderCommissions(){
   renderCommReceived();
   const now=new Date();const yr=String(now.getFullYear());
@@ -2914,9 +2914,14 @@ function renderCommissions(){
   // by carrier: expected vs received this year
   const byC={};const key=n=>typeof carrierKey==='function'?carrierKey(n):String(n||'').toLowerCase();
   live.forEach(p=>{const k=key(p.carrier||'Unknown');if(!byC[k])byC[k]={name:p.carrier||'Unknown',n:0,exp:0,rec:0};byC[k].n++;byC[k].exp+=commAmtAnnual(p);});
-  (commLinesYear||[]).forEach(r=>{const k=key(r.carrier||'Other');if(!byC[k])byC[k]={name:r.carrier||'Other',n:0,exp:0,rec:0};byC[k].rec+=Number(r.agent_commission||0);});
+  // regular commission only; carrier incentive bonuses are shown on their own and never mixed into regular rates
+  const isBonusLine=r=>r.kind==='bonus'||/bonus|incentive/i.test(String(r.trans_type||''));
+  (commLinesYear||[]).forEach(r=>{if(r.kind&&r.kind!=='commission'&&!isBonusLine(r))return;const k=key(r.carrier||'Other');if(!byC[k])byC[k]={name:r.carrier||'Other',n:0,exp:0,rec:0,bon:0};if(isBonusLine(r))byC[k].bon=(byC[k].bon||0)+Number(r.agent_commission||0);else byC[k].rec+=Number(r.agent_commission||0);});
   const rows=Object.values(byC).sort((a,b)=>b.exp-a.exp||b.rec-a.rec);
-  document.getElementById('comm-by-carrier').innerHTML=`<table class="p3-table"><thead><tr><th>Carrier</th><th class="r">Active policies</th><th class="r">Expected / yr</th><th class="r">Received ${yr}</th></tr></thead><tbody>${rows.map(r=>`<tr><td><strong>${p3Esc(r.name)}</strong></td><td class="r">${r.n||''}</td><td class="r" style="font-weight:600;">${r.exp?fmtc(r.exp):''}</td><td class="r" style="font-weight:600;color:#1a6b3a;">${r.rec?fmt(r.rec.toFixed(2)):''}</td></tr>`).join('')}</tbody></table>`;
+  const bonLines=(commLinesYear||[]).filter(isBonusLine);const bonTot=bonLines.reduce((a,r)=>a+Number(r.agent_commission||0),0);
+  const anyBon=rows.some(r=>r.bon);
+  const bonNote=bonLines.length?`<div style="padding:12px 16px;font-size:12.5px;color:#5b6475;border-top:1px solid #eef1f6;"><strong style="color:#b26b00;">Incentive bonuses ${yr}: ${fmt(bonTot.toFixed(2))}</strong> (kept separate from regular commission and carrier rates)<br>${bonLines.slice().sort((a,b)=>String(a.statement_key).localeCompare(String(b.statement_key))).map(r=>{const m=String(r.statement_key).split('|')[1]||'';return p3Esc(r.carrier||'')+' '+(m?new Date(m+'-01T00:00:00').toLocaleDateString('en-US',{month:'short'}):'')+': '+fmt(Number(r.agent_commission||0).toFixed(2));}).join(' · ')}</div>`:'';
+  document.getElementById('comm-by-carrier').innerHTML=`<table class="p3-table"><thead><tr><th>Carrier</th><th class="r">Active policies</th><th class="r">Expected / yr</th><th class="r">Received ${yr}</th>${anyBon?`<th class="r">Bonus ${yr}</th>`:''}</tr></thead><tbody>${rows.map(r=>`<tr><td><strong>${p3Esc(r.name)}</strong></td><td class="r">${r.n||''}</td><td class="r" style="font-weight:600;">${r.exp?fmtc(r.exp):''}</td><td class="r" style="font-weight:600;color:#1a6b3a;">${r.rec?fmt(r.rec.toFixed(2)):''}</td>${anyBon?`<td class="r" style="font-weight:600;color:#b26b00;">${r.bon?fmt(r.bon.toFixed(2)):''}</td>`:''}</tr>`).join('')}</tbody></table>${bonNote}`;
   // by line
   const byL={};live.forEach(p=>{const k=p.type||'Other';if(!byL[k])byL[k]={n:0,c:0};byL[k].n++;byL[k].c+=commAmtAnnual(p);});
   const lmx=Math.max(1,...Object.values(byL).map(v=>v.c));

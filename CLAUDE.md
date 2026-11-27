@@ -48,6 +48,9 @@ Paul Tadrous, owner of Fortex Insurance Group LLC (DBA Fortex Insure, fortexinsu
 - Progressive defaults to Progressive Direct (new Progressive business goes direct); older renewing Progressive policies are via Smart Choice.
 - Foremost (Paul, Nov 27): new Foremost business goes through First Connect (direct appointment), so carriers row Foremost / First Connect is primary; older Foremost policies (Mike Aziz auto and home, Michael Abraham auto) stay Smart Choice. Michael Abraham's home is Foremost Signature via First Connect.
 
+## Carrier incentive bonuses on statements (Nov 27, 2026)
+- First Connect pays a monthly Foremost Signature "Incentive Bonus" for policies bound in Paul's first 6 months with them (July $867, Aug $370, Sep $537 in 2026). Lines have kind 'bonus', line_of_business 'Bonus', no policy link. They count in money received (total_paid) but never in regular commission, carrier rates or reconciliation. Commissions page by-carrier table shows them in a separate Bonus column plus a note listing each month (`isBonusLine`).
+
 ## One-time bonus commission (Nov 25, 2026)
 - Policy fields `bonusRate` (%) and `bonusNote`. `bonusAmt(p)` = premium x bonusRate for the current term only; NOT included in commAmt/commAmtAnnual and never written to carrier_commission_rates.
 - Shown as "+ $X one-time bonus" (`bonusTag`) on policy lists and a "One-Time Bonuses" card on Commissions. `saveRenewal` moves the bonus into `bonusHistory` and clears it.
