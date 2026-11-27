@@ -82,6 +82,12 @@ Paul Tadrous, owner of Fortex Insurance Group LLC (DBA Fortex Insure, fortexinsu
 - Statement loading: Paul saves statements to Google Drive folder "Commission Statements" (id 1b__PPqYA9trk55QetmDA5H1KKVG42h9f, My Drive root). Scheduled task "Load commission statements" (trig_01KLhVvR97CgR27S8Zn3jXpc) runs the 2nd and 16th at 6:47 pm Central, loads new files into commission_statements/commission_lines after a backup, and reports by push notification (no email).
 - Helper login: waiting until Paul hires.
 
+## Phase 5 automations (started Nov 27, 2026)
+Paul's rules: build all 5 plus housekeeping one at a time and test each; client emails are always Gmail DRAFTS he reviews and sends, with a phone notification when drafts are ready. Never auto-send.
+- Engine: `private.run_automations()` (security definer, not callable by app users) runs daily via pg_cron job `fortex-automations` at 11:05 UTC (5:05 am Central). Each automation creates tasks through `private.put_rec('tasks', ...)` with idempotency key `extra.autoKey`, type `extra.auto`, and `extra.draftStatus` ('pending' when an email draft is wanted, 'none' otherwise; later 'drafted' or 'skipped').
+- Drafts: scheduled task "Draft client emails" (trig_01XWydUQvmci8Jc8VDyq1wS1) runs daily 6:33 am Central, writes Gmail drafts for tasks with draftStatus 'pending' (templates by auto type in its prompt), marks them drafted, and push-notifies Paul. Add a template there for each new auto type.
+- 1. Renewal reminders (live Nov 27): `private.auto_renewal_tasks()` makes one task per live policy renewing within 45 days (autoKey renewal|policy|renewal date), category Renewal, due 30 days before renewal (or today), High if within 14 days. Skips Cancelled, Non-Renewed, Lapsed, Pending Cancellation. Draft only if the client has a valid email1 and dnc is not yes.
+
 ## Still open (later phases)
 - Remove the fortex_data mirror once nothing depends on it; drivers, activities, documents tables come with Phase 4 features.
 - No aggregator split or paid vs expected commission tracking (Phase 4).
