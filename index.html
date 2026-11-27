@@ -2137,6 +2137,7 @@ async function saveRenewal(){
   if(!prem){appAlert('Please enter the new premium (use the same amount if it did not change).');return;}
   const oldPrem=p.premium,oldRen=p.renewal,oldBonus=bonusAmt(p),oldBonusRate=p.bonusRate,oldBonusNote=p.bonusNote;
   if(oldBonus){if(!Array.isArray(p.bonusHistory))p.bonusHistory=[];p.bonusHistory.push({term:`${p.effective||''} to ${oldRen||''}`,rate:oldBonusRate,amount:oldBonus,note:oldBonusNote||''});p.bonusRate='';p.bonusNote='';}
+  if(p.effective){if(!Array.isArray(p.termHistory))p.termHistory=[];p.termHistory.push({start:p.effective,end:oldRen||eff,premium:oldPrem,rate:commRateFor(p),bonus:oldBonus||0});}
   p.term=document.getElementById('rn-term').value;p.effective=eff;p.renewal=ren;p.premium=prem;p.status='Active';p.commType='Renewal';
   if(rate)p.commRateRenewal=rate;
   const num=document.getElementById('rn-number').value.trim();if(num)p.number=num;
@@ -2940,20 +2941,33 @@ function rcAddMonths(iso,m){const d=new Date(iso+'T00:00:00');d.setMonth(d.getMo
 function rcLastMonth(src){const ms=commStatements.filter(x=>x.source===src).map(x=>x.statement_month).sort();return ms.length?ms[ms.length-1]:null;}
 function rcFirstMonth(src){const ms=commStatements.filter(x=>x.source===src).map(x=>x.statement_month).sort();return ms.length?ms[0]:null;}
 // One row per policy term that statements should cover. Flag rule (Paul, Nov 26 2026): missing 60+ days after the term starts, or off by more than $5.
+// Reconciliation rules (Paul, Nov 27 2026):
+// - Earlier terms are only checked when the policy actually renewed with Fortex: terms saved in termHistory by Renew Policy,
+//   or, for a policy marked Renewal without history, the one term right before the current one. New business never has earlier terms.
+// - Statement lines count toward a term only if their policy number matches this policy (a different suffix such as 01 vs 02 is an older, rewritten policy).
+// - Flag Missing 60+ days after a term starts (statement month loaded), Short/Overpaid when off by more than $5.
+// - If a carrier over-credits one term and takes it back on the next (Foremost does this), both terms are shown as paid when they net out.
+function rcNorm(v){return String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'');}
+function rcLineIsThisPolicy(p,l){const a=rcNorm(p.number),b=rcNorm(l.policy_number);return !a||!b||a===b||b.startsWith(a)||a.startsWith(b);}
+function rcRate(p){return commRateFor(p);}
 function reconRows(){
   if(!allLines)return null;
   const rows=[];
   data.policies.forEach(p=>{
     const src=RC_SOURCE[p.channel]||null;const term=Number(p.term)||12;
     if(!p.effective)return;
-    const terms=[{start:p.effective,cur:true}];
     const first=src?rcFirstMonth(src):null;
-    if(src&&first){let s0=rcAddMonths(p.effective,-term);while(s0.slice(0,7)>=first&&terms.length<4){terms.push({start:s0,cur:false});s0=rcAddMonths(s0,-term);}}
+    const terms=[{start:p.effective,end:rcAddMonths(p.effective,term),cur:true,prem:Number(p.premium)||0,rate:rcRate(p),bonus:bonusAmt(p)}];
+    const hist=Array.isArray(p.termHistory)?p.termHistory.filter(h=>h&&h.start&&h.start<p.effective):[];
+    if(hist.length){hist.forEach(h=>terms.push({start:h.start,end:h.end||p.effective,cur:false,prem:h.premium!==''&&h.premium!=null?Number(h.premium):null,rate:h.rate!==''&&h.rate!=null?Number(h.rate):null,bonus:Number(h.bonus)||0}));}
+    else if(p.commType==='Renewal'){terms.push({start:rcAddMonths(p.effective,-term),end:p.effective,cur:false,prem:null,rate:null,bonus:0});}
+    const polRows=[];
     terms.forEach(t=>{
-      const end=rcAddMonths(t.start,term);
-      const ls=allLines.filter(l=>l.policy_id===p.id&&l.kind!=='carry_forward'&&l.eff_date&&l.eff_date>=t.start&&l.eff_date<end);
+      if(!t.cur&&(!src||!first||t.start.slice(0,7)<first))return;
+      const ls=allLines.filter(l=>l.policy_id===p.id&&l.kind!=='carry_forward'&&l.eff_date&&l.eff_date>=t.start&&l.eff_date<t.end&&rcLineIsThisPolicy(p,l));
       const got=ls.reduce((a,l)=>a+Number(l.agent_commission||0),0);
-      const exp=t.cur?commAmt(p)+bonusAmt(p):null;
+      const stmtPrem=ls.reduce((a,l)=>a+Number(l.premium||0),0);
+      const exp=(t.prem!==null&&t.rate!==null)?t.prem*t.rate/100+(t.bonus||0):null;
       const age=-du(t.start);const last=src?rcLastMonth(src):null;
       let st,why='';
       if(!src){if(!ls.length)return;st='info';why='Channel has no statements loaded';}
@@ -2961,9 +2975,25 @@ function reconRows(){
       else if(age<0){st='wait';why='Starts '+fd(t.start);}
       else if(!last||t.start.slice(0,7)>last){if(ls.length){st='paid';}else{st='wait';why='Statement for '+new Date(t.start+'T00:00:00').toLocaleDateString('en-US',{month:'short',year:'numeric'})+' not loaded yet';}}
       else if(!ls.length){if(age>=60){st='missing';why=t.cur?'No payment '+age+' days after the term started':'Earlier term never paid';}else{st='wait';why='Usually paid within 60 days';}}
-      if(!st){if(exp===null){st='paid';}else{const d=got-exp;st=Math.abs(d)<=5?'paid':d<0?'short':'over';if(st!=='paid')why=fmt(Math.abs(d).toFixed(2))+(d<0?' less than expected':' more than expected');}}
-      rows.push({p,src,start:t.start,cur:t.cur,exp,got,lines:ls,st,why});
+      if(!st){
+        if(exp===null){st='paid';}
+        else{const d=got-exp;
+          if(Math.abs(d)<=5)st='paid';
+          else{const premOk=Math.abs(stmtPrem-t.prem)<=Math.max(5,t.prem*0.005);const effRate=stmtPrem?got/stmtPrem*100:0;
+            if(premOk&&d>0){st='paid';why='Full premium reported; part was paid at a higher rate ('+effRate.toFixed(1)+'% overall vs '+t.rate+'%)';}
+            else if(premOk){st='short';why='Full premium reported but paid at '+effRate.toFixed(1)+'% instead of '+t.rate+'%, '+fmt(Math.abs(d).toFixed(2))+' less';}
+            else{st=d<0?'short':'over';why=fmt(Math.abs(d).toFixed(2))+(d<0?' less than expected':' more than expected')+'. Statements show '+fmt(stmtPrem.toFixed(2))+' premium vs '+fmt(t.prem.toFixed(2))+' on the policy';}}}
+      }
+      polRows.push({p,src,start:t.start,cur:t.cur,exp,got,stmtPrem,lines:ls,st,why});
     });
+    // carrier netted one term against another: judge the terms together
+    if(polRows.length>1&&polRows.some(r=>r.st==='short'||r.st==='over')&&polRows.every(r=>r.exp!==null||r.st==='wait')){
+      const tg=polRows.reduce((a,r)=>a+(r.exp!==null?r.got:0),0),te=polRows.reduce((a,r)=>a+(r.exp!==null?r.exp:0),0);
+      if(Math.abs(tg-te)<=5)polRows.forEach(r=>{if(r.exp!==null){r.st='paid';r.why='Carrier over-credited one term and took it back on the other; both terms together are paid in full ('+fmt(tg.toFixed(2))+')';}});
+    }
+    const cur=polRows.find(r=>r.cur),prev=polRows.find(r=>!r.cur&&r.exp===null&&r.lines.length);
+    if(cur&&prev&&(cur.st==='short'||cur.st==='over'))cur.why+='. The earlier term was credited '+fmt(prev.got.toFixed(2))+' on '+fmt(prev.stmtPrem.toFixed(2))+' premium, and some carriers settle the difference at renewal. Add the earlier term premium to check both terms together';
+    rows.push(...polRows);
   });
   return rows;
 }
